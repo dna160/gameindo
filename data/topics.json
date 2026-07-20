@@ -1,0 +1,8 @@
+[
+  { "id": 1, "label": "MPL ID S16", "query": "MPL ID S16" },
+  { "id": 2, "label": "GTA 6", "query": "GTA 6" },
+  { "id": 3, "label": "RTX 50 Series", "query": "RTX 5090" },
+  { "id": 4, "label": "Genshin Impact", "query": "Genshin Impact" },
+  { "id": 5, "label": "M7 World Championship", "query": "M7 World Championship" },
+  { "id": 6, "label": "Solo Leveling", "query": "Solo Leveling" }
+]

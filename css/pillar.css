@@ -1,0 +1,39 @@
+/* Pillar landing (e.g. Esports) — tinted masthead + klasemen/match panel. */
+
+.gi-masthead { background: var(--pillar-tint); border-bottom: 1px solid var(--pillar-tint-2); }
+.gi-masthead__inner { max-width: var(--container); margin-inline: auto; padding: 34px var(--gutter) 26px; display: flex; flex-direction: column; gap: 14px; }
+.gi-masthead__title {
+  margin: 0; font-family: var(--font-display); font-weight: 900; font-style: italic; text-transform: uppercase;
+  font-size: clamp(2.4rem, 1.4rem + 3.6vw, 4rem); line-height: .92; letter-spacing: var(--ls-tight); color: var(--ink);
+}
+.gi-masthead__desc { margin: 0; font-family: var(--font-body); font-weight: 600; font-size: 15px; color: var(--ink-3); max-width: 60ch; }
+.gi-filters { display: flex; gap: 10px; flex-wrap: wrap; }
+.gi-filter {
+  font-family: var(--font-condensed); font-weight: 700; font-size: 12.5px; letter-spacing: var(--ls-wide);
+  text-transform: uppercase; padding: 7px 13px; border-radius: var(--radius-sm); text-decoration: none;
+  background: var(--surface); border: 1px solid var(--pillar-tint-2); color: var(--ink-2);
+}
+.gi-filter[aria-current="true"] { background: var(--pillar); border-color: transparent; color: var(--pillar-contrast); }
+
+.gi-standings { display: flex; flex-direction: column; }
+.gi-standings__head {
+  display: grid; grid-template-columns: 32px 1fr 52px 52px; gap: 8px; padding: 9px 16px;
+  border-bottom: 1px solid var(--line); font-family: var(--font-condensed); font-weight: 700; font-size: 10.5px;
+  letter-spacing: var(--ls-wide); text-transform: uppercase; color: var(--ink-4);
+}
+.gi-standings__head span:nth-child(3), .gi-standings__head span:nth-child(4) { text-align: right; }
+.gi-standings__row {
+  display: grid; grid-template-columns: 32px 1fr 52px 52px; gap: 8px; padding: 11px 16px;
+  border-bottom: 1px solid var(--line); align-items: center;
+}
+.gi-standings__row:last-child { border-bottom: none; }
+.gi-standings__row--top { background: var(--pillar-tint); }
+.gi-standings__rank { font-family: var(--font-condensed); font-weight: 900; font-style: italic; font-size: 16px; color: var(--ink-4); }
+.gi-standings__row--top .gi-standings__rank { color: var(--pillar); }
+.gi-standings__team { font-family: var(--font-condensed); font-weight: 700; font-size: 14px; color: var(--ink); }
+.gi-standings__wl { font-family: var(--font-mono); font-size: 12px; text-align: right; color: var(--ink-2); }
+.gi-standings__pts { font-family: var(--font-mono); font-weight: 700; font-size: 12px; text-align: right; color: var(--ink); }
+
+@media (max-width: 720px) {
+  .gi-masthead__inner { padding: 24px 14px 20px; }
+}

@@ -1,0 +1,11 @@
+{
+  "competition": "Klasemen MPL ID",
+  "season_label": "S16 · PEKAN 8",
+  "rows": [
+    { "rank": 1, "team": "RRQ Hoshi", "wl": "11–2", "pts": 31, "top": true },
+    { "rank": 2, "team": "ONIC", "wl": "10–3", "pts": 29, "top": false },
+    { "rank": 3, "team": "EVOS Glory", "wl": "9–4", "pts": 26, "top": false },
+    { "rank": 4, "team": "Alter Ego", "wl": "7–6", "pts": 21, "top": false },
+    { "rank": 5, "team": "Bigetron", "wl": "6–7", "pts": 18, "top": false }
+  ]
+}

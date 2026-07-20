@@ -1,0 +1,127 @@
+/* Article reader — 720px measure, pull-quote in pillar color, related grid. */
+
+.gi-article-head { max-width: 720px; margin-inline: auto; padding: 36px 24px 20px; display: flex; flex-direction: column; gap: 18px; }
+.gi-article-head__kicker { display: flex; align-items: center; gap: 10px; }
+.gi-article-head__kicker-meta { font-family: var(--font-mono); font-size: 11px; color: var(--ink-4); }
+.gi-article-head__title {
+  margin: 0; font-family: var(--font-display); font-weight: 900; font-style: italic; text-transform: uppercase;
+  font-size: clamp(1.9rem, 1.2rem + 2.6vw, 2.75rem); line-height: .98; letter-spacing: var(--ls-tight); color: var(--ink);
+}
+.gi-article-head__dek { margin: 0; font-family: var(--font-body); font-weight: 600; font-size: 17px; line-height: 1.55; color: var(--ink-3); }
+.gi-article-head__bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 12px 0; flex-wrap: wrap; }
+.gi-article-head__actions { display: flex; gap: 4px; }
+
+.gi-article-media { max-width: 960px; margin: 0 auto; padding: 0 24px; display: flex; flex-direction: column; gap: 8px; }
+.gi-article-media img { width: 100%; height: 440px; object-fit: cover; border-radius: var(--radius-md); display: block; }
+.gi-article-media figcaption { font-family: var(--font-mono); font-size: 11px; color: var(--ink-4); }
+
+.gi-article-body { max-width: 720px; margin: 0 auto; padding: 28px 24px 24px; display: flex; flex-direction: column; gap: 20px; }
+
+/* ── Prose: raw CMS HTML (post.content) rendered on-brand ───────────
+   #gi-article-body (.gi-prose) carries whatever the CMS emits — clean
+   semantic HTML *or* WordPress/Gutenberg block markup
+   (figure.wp-block-image, .aligncenter, .wp-block-quote, …). Vertical
+   rhythm is margin-based, not flex gap, because these are normal-flow
+   children. Any valid article HTML lands on-brand with no hand cleanup.
+   See ARTICLE-CONTRACT.md for the supported vocabulary. */
+.gi-prose { overflow-wrap: break-word; }
+.gi-prose > * { margin: 0; }
+.gi-prose > * + * { margin-top: 22px; }
+
+/* body text */
+.gi-prose p, .gi-prose ul, .gi-prose ol { font-family: var(--font-body); font-size: 17px; line-height: 1.7; color: var(--ink-2); }
+.gi-prose > p:first-of-type { font-size: 18.5px; }
+
+/* subheads — display face, pillar-tight, magazine feel */
+.gi-prose h2, .gi-prose h3, .gi-prose h4 { font-family: var(--font-display); font-weight: 800; letter-spacing: var(--ls-tight); color: var(--ink); line-height: 1.12; clear: both; }
+.gi-prose h2 { font-size: clamp(1.5rem, 1.15rem + 1.4vw, 1.9rem); font-style: italic; text-transform: uppercase; margin-top: 40px; }
+.gi-prose h3 { font-size: 1.3rem; margin-top: 34px; }
+.gi-prose h4 { font-size: 1.1rem; margin-top: 28px; }
+.gi-prose > :is(h2, h3, h4):first-child { margin-top: 0; }
+
+/* links + emphasis */
+.gi-prose a { color: var(--link); text-decoration: underline; text-underline-offset: 2px; text-decoration-thickness: 1px; transition: color var(--dur-fast) var(--ease-out); }
+.gi-prose a:hover { color: var(--link-hover); }
+.gi-prose strong, .gi-prose b { font-weight: 700; color: var(--ink); }
+.gi-prose em, .gi-prose i { font-style: italic; }
+
+/* lists — pillar-colored markers */
+.gi-prose ul, .gi-prose ol { padding-left: 1.4em; }
+.gi-prose li + li { margin-top: 8px; }
+.gi-prose li > ul, .gi-prose li > ol { margin-top: 8px; }
+.gi-prose ul { list-style: none; }
+.gi-prose ul > li { position: relative; }
+.gi-prose ul > li::before { content: ""; position: absolute; left: -1.15em; top: .62em; width: 6px; height: 6px; border-radius: 2px; background: var(--pillar); }
+.gi-prose ol { list-style: decimal; }
+.gi-prose ol > li::marker { color: var(--pillar); font-weight: 800; }
+
+/* inline images / figures — same designed treatment as the hero media */
+.gi-prose figure { margin-inline: 0; margin-top: 28px; }
+.gi-prose img { display: block; max-width: 100%; height: auto; border-radius: var(--radius-md); }
+.gi-prose figure img, .gi-prose img.size-full, .gi-prose .wp-block-image img { width: 100%; }
+.gi-prose figcaption, .gi-prose .wp-caption-text { margin-top: 8px; font-family: var(--font-mono); font-size: 11px; line-height: 1.5; color: var(--ink-4); }
+.gi-prose .wp-block-image { margin-top: 28px; }
+.gi-prose > .wp-block-image:first-child, .gi-prose > figure:first-child { margin-top: 0; }
+
+/* WordPress alignment — float small, break wide/full past the 720 measure */
+.gi-prose .aligncenter { margin-inline: auto; text-align: center; }
+.gi-prose img.aligncenter { margin-inline: auto; }
+.gi-prose .alignleft { float: left; margin: 6px 26px 14px 0; max-width: 48%; }
+.gi-prose .alignright { float: right; margin: 6px 0 14px 26px; max-width: 48%; }
+.gi-prose .alignleft img, .gi-prose .alignright img { width: 100%; }
+.gi-prose .alignwide { width: min(920px, 92vw); max-width: none; margin-left: 50%; transform: translateX(-50%); }
+.gi-prose .alignfull { width: 100vw; max-width: none; margin-left: 50%; transform: translateX(-50%); }
+.gi-prose .alignfull img { border-radius: 0; }
+
+/* block + pull quotes */
+.gi-prose blockquote, .gi-prose .wp-block-quote {
+  border-left: 4px solid var(--pillar); background: var(--pillar-tint); border-radius: var(--radius-sm);
+  padding: 20px 24px; font-family: var(--font-display); font-weight: 800; font-style: italic; font-size: 22px; line-height: 1.25; color: var(--ink);
+}
+.gi-prose blockquote p, .gi-prose .wp-block-quote p { font: inherit; color: inherit; }
+.gi-prose blockquote cite, .gi-prose .wp-block-quote cite { display: block; margin-top: 10px; font-family: var(--font-mono); font-style: normal; font-weight: 500; font-size: 12px; color: var(--ink-4); }
+.gi-prose .wp-block-pullquote { border: 0; border-block: 3px solid var(--pillar); background: transparent; border-radius: 0; padding: 24px 0; text-align: center; }
+.gi-prose .wp-block-pullquote p { font-size: 26px; }
+
+/* separators */
+.gi-prose hr, .gi-prose .wp-block-separator { border: 0; height: 1px; background: var(--line); margin-top: 32px; clear: both; }
+.gi-prose > hr + * { margin-top: 32px; }
+
+/* code */
+.gi-prose code { font-family: var(--font-mono); font-size: .88em; background: var(--surface-3); padding: 2px 6px; border-radius: var(--radius-xs); }
+.gi-prose pre { font-family: var(--font-mono); font-size: 13px; line-height: 1.6; background: var(--night); color: var(--on-night); padding: 18px 20px; border-radius: var(--radius-md); overflow-x: auto; }
+.gi-prose pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+
+/* tables */
+.gi-prose figure.wp-block-table { overflow-x: auto; }
+.gi-prose table { width: 100%; border-collapse: collapse; font-family: var(--font-body); font-size: 15px; }
+.gi-prose th, .gi-prose td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.gi-prose thead th { font-family: var(--font-condensed); text-transform: uppercase; letter-spacing: var(--ls-wide); font-size: 12px; color: var(--ink-3); background: var(--surface-2); }
+
+/* responsive embeds (YouTube, X, etc.) */
+.gi-prose figure.wp-block-embed { margin-top: 28px; }
+.gi-prose iframe { max-width: 100%; border: 0; border-radius: var(--radius-md); }
+.gi-prose .wp-has-aspect-ratio .wp-block-embed__wrapper { position: relative; padding-top: 56.25%; }
+.gi-prose .wp-has-aspect-ratio iframe { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+/* call-to-action button */
+.gi-prose .wp-block-button__link { display: inline-block; background: var(--pillar); color: var(--pillar-contrast); font-family: var(--font-condensed); font-weight: 700; text-transform: uppercase; letter-spacing: var(--ls-wide); text-decoration: none; padding: 12px 22px; border-radius: var(--radius-sm); }
+.gi-article-tags { display: flex; gap: 8px; flex-wrap: wrap; border-top: 1px solid var(--line); padding-top: 18px; }
+.gi-tag { font-family: var(--font-condensed); font-weight: 600; font-size: 12px; letter-spacing: var(--ls-wide); text-transform: uppercase; background: var(--surface-3); color: var(--ink-2); padding: 6px 10px; border-radius: var(--radius-sm); text-decoration: none; }
+
+.gi-related { background: var(--surface-2); border-top: 1px solid var(--line); }
+.gi-related__inner { max-width: var(--container); margin-inline: auto; padding: 30px var(--gutter) 40px; }
+
+@media (max-width: 720px) {
+  .gi-article-head { padding: 20px 18px 16px; }
+  .gi-article-media { padding: 0; }
+  .gi-article-media img { height: 230px; border-radius: 0; }
+  .gi-article-body { padding: 18px 18px 24px; }
+  .gi-prose p, .gi-prose ul, .gi-prose ol { font-size: 15px; }
+  .gi-prose > p:first-of-type { font-size: 16.5px; }
+  .gi-prose blockquote, .gi-prose .wp-block-quote { font-size: 16.5px; padding: 14px 16px; }
+  .gi-prose .wp-block-pullquote p { font-size: 20px; }
+  .gi-prose .alignleft, .gi-prose .alignright { float: none; max-width: 100%; margin-inline: 0; }
+  .gi-prose .alignwide { width: auto; margin-left: 0; transform: none; }
+  .gi-prose .alignfull { width: calc(100% + 36px); margin-left: -18px; transform: none; }
+}

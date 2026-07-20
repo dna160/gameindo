@@ -1,0 +1,52 @@
+/* ============================================================
+   GAMEINDO · BASE — light reset + document defaults.
+   Consumers get sensible typography the moment they link styles.css.
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; }
+* { margin: 0; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--lh-normal);
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+img, picture, svg, video { display: block; max-width: 100%; }
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  color: var(--text-strong);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-tight);
+  font-weight: var(--fw-extra);
+}
+
+a { color: var(--link); text-decoration: none; }
+a:hover { color: var(--link-hover); }
+
+button, input, select, textarea { font: inherit; color: inherit; }
+
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+::selection { background: var(--pillar); color: var(--pillar-contrast); }
+
+/* ---- A couple of shared editorial primitives ---- */
+.gi-eyebrow {
+  font-family: var(--font-condensed);
+  font-weight: var(--fw-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wider);
+  font-size: var(--text-xs);
+  color: var(--pillar);
+}
+.gi-container { max-width: var(--container); margin-inline: auto; padding-inline: var(--gutter); }
+.gi-container--wide { max-width: var(--container-wide); }

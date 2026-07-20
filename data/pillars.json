@@ -1,0 +1,7 @@
+[
+  { "id": 1, "slug": "home", "name": "Video Game", "count": 1204 },
+  { "id": 2, "slug": "esports", "name": "Esports", "count": 986 },
+  { "id": 3, "slug": "streamer", "name": "Streamer", "count": 578 },
+  { "id": 4, "slug": "tech", "name": "Tech", "count": 743 },
+  { "id": 5, "slug": "entertainment", "name": "Entertainment", "count": 861 }
+]

@@ -1,0 +1,190 @@
+/* Homepage — "Meja Redaksi Extended" direction: mega-menu, hero locked to
+   a live match panel, and a full band-per-pillar page down to the footer. */
+
+/* ============================================================
+   HOT TOPICS BAR — second header row
+   ============================================================ */
+.gi-hottopics {
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+}
+.gi-hottopics__row {
+  max-width: var(--container); margin-inline: auto; height: 40px;
+  padding-inline: var(--gutter); display: flex; align-items: center; gap: 22px;
+  overflow-x: auto; scrollbar-width: none;
+}
+.gi-hottopics__row::-webkit-scrollbar { display: none; }
+.gi-hottopics__label {
+  font-family: var(--font-condensed); font-weight: 700; font-size: 11px; letter-spacing: var(--ls-wider);
+  text-transform: uppercase; color: var(--ink-4); flex: none;
+}
+.gi-hottopics__item {
+  font-family: var(--font-condensed); font-weight: 600; font-size: 13px; letter-spacing: var(--ls-wide);
+  text-transform: uppercase; color: var(--ink-2); text-decoration: none; flex: none; white-space: nowrap;
+}
+.gi-hottopics__item:hover { color: var(--pillar); }
+
+/* ============================================================
+   MEGA-MENU — toggled open/closed via the header "Menu" button
+   ============================================================ */
+.gi-megamenu {
+  display: none;
+  position: relative; z-index: 3;
+  background: var(--surface); border-bottom: 2px solid var(--ink);
+  box-shadow: 0 12px 28px rgba(16,16,20,.14), 0 4px 10px rgba(16,16,20,.08);
+}
+.gi-megamenu.is-open { display: block; }
+.gi-megamenu__grid {
+  max-width: var(--container); margin-inline: auto; padding: 26px var(--gutter) 24px;
+  display: grid; grid-template-columns: repeat(5, 1fr) 220px; gap: 28px;
+}
+.gi-megamenu__col { display: flex; flex-direction: column; gap: 10px; }
+.gi-megamenu__col-title {
+  font-family: var(--font-condensed); font-weight: 800; font-size: 13px; letter-spacing: var(--ls-wide);
+  text-transform: uppercase; color: var(--pillar); border-bottom: 2px solid var(--pillar); padding-bottom: 6px;
+}
+.gi-megamenu__col a { font-family: var(--font-body); font-size: 13px; color: var(--ink-2); text-decoration: none; }
+.gi-megamenu__col a:hover { color: var(--pillar); }
+.gi-megamenu__trending {
+  background: var(--surface-2); border-radius: var(--radius-md); padding: 14px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.gi-megamenu__trending-label {
+  font-family: var(--font-condensed); font-weight: 700; font-size: 11px; letter-spacing: var(--ls-wider);
+  text-transform: uppercase; color: var(--ink-4);
+}
+.gi-megamenu__trending a { font-family: var(--font-body); font-size: 12.5px; color: var(--ink-2); text-decoration: none; line-height: 1.4; }
+.gi-megamenu__trending a:hover { color: var(--pillar); }
+
+/* ============================================================
+   HERO — feature + (trending cards + Jadwal Match) side column
+   ============================================================ */
+.gi-hero {
+  background: var(--night);
+  color: var(--on-night);
+  position: relative;
+  overflow: hidden;
+}
+.gi-hero::before {
+  content: "";
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(90% 80% at 10% 0%, color-mix(in srgb, var(--gi-blue) 16%, transparent), transparent 55%),
+    radial-gradient(80% 70% at 100% 100%, color-mix(in srgb, var(--gi-red) 14%, transparent), transparent 55%);
+}
+.gi-hero__grid {
+  max-width: var(--container); margin-inline: auto; padding: 28px var(--gutter);
+  display: grid; grid-template-columns: 2fr 1fr; gap: 24px; align-items: stretch; position: relative;
+}
+.gi-hero__side { display: flex; flex-direction: column; gap: 16px; }
+
+.gi-matchpanel {
+  background: var(--night); color: var(--on-night); position: relative; overflow: hidden;
+  border-radius: var(--radius-md); padding: 18px; display: flex; flex-direction: column; gap: 12px; flex: 1;
+}
+.gi-matchpanel::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(130% 90% at 100% 0%, color-mix(in srgb, var(--pillar) 20%, transparent), transparent 60%);
+}
+.gi-matchpanel__head { display: flex; align-items: center; justify-content: space-between; position: relative; }
+.gi-matchpanel__title { font-family: var(--font-display); font-weight: 900; font-style: italic; text-transform: uppercase; font-size: 16px; letter-spacing: -.01em; }
+.gi-matchpanel__meta { font-family: var(--font-mono); font-size: 10.5px; color: var(--on-night-muted); }
+.gi-matchpanel__rows { display: flex; flex-direction: column; gap: 8px; position: relative; flex: 1; justify-content: center; }
+.gi-matchpanel__row { display: flex; align-items: center; gap: 10px; background: var(--night-3); border-radius: var(--radius-sm); padding: 9px 12px; }
+.gi-matchpanel__team { font-family: var(--font-condensed); font-weight: 700; font-size: 13px; flex: 1; }
+.gi-matchpanel__team--right { text-align: right; }
+.gi-matchpanel__score { font-family: var(--font-mono); font-weight: 700; font-size: 13px; flex: none; }
+.gi-matchpanel__status { font-family: var(--font-mono); font-size: 9.5px; color: var(--on-night-muted); flex: none; width: 100%; text-align: right; }
+.gi-matchpanel__status--live { color: var(--live); font-weight: 700; }
+.gi-matchpanel__cta {
+  display: block; text-align: center; padding: 8px; border-radius: var(--radius-sm); position: relative;
+  background: rgba(255,255,255,.08); font-family: var(--font-condensed); font-weight: 700; font-size: 12px;
+  letter-spacing: var(--ls-wide); text-transform: uppercase; color: #fff; text-decoration: none;
+}
+.gi-matchpanel__cta:hover { background: rgba(255,255,255,.14); }
+
+/* ============================================================
+   LATEST NEWS + sidebar (Terpopuler rail + newsletter)
+   ============================================================ */
+.gi-latest-layout { display: grid; grid-template-columns: 1fr 340px; gap: 36px; align-items: start; }
+
+.gi-newsletter {
+  background: var(--night); color: var(--on-night); position: relative; overflow: hidden;
+  border-radius: var(--radius-md); padding: 24px; display: flex; flex-direction: column; gap: 12px;
+}
+.gi-newsletter::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--gi-red) 22%, transparent), transparent 60%);
+}
+.gi-newsletter__title { position: relative; font-family: var(--font-display); font-weight: 900; font-style: italic; text-transform: uppercase; font-size: 22px; line-height: 1; letter-spacing: -.01em; }
+.gi-newsletter__desc { position: relative; margin: 0; font-family: var(--font-body); font-size: 13px; line-height: 1.55; color: var(--on-night-2); }
+.gi-newsletter__form { position: relative; display: flex; gap: 8px; }
+.gi-newsletter__form input {
+  flex: 1; height: 40px; border-radius: var(--radius-sm); border: 1px solid var(--on-night-line);
+  background: rgba(255,255,255,.06); padding: 0 12px; font-family: var(--font-body); font-size: 13px; color: #fff;
+}
+.gi-newsletter__form input::placeholder { color: var(--on-night-muted); }
+.gi-newsletter__note { position: relative; margin: 0; font-family: var(--font-mono); font-size: 11px; color: var(--on-night-muted); }
+
+/* ============================================================
+   PILLAR BANDS — Esports / Video Game / Streamer / Tech / Entertainment
+   ============================================================ */
+.gi-pillarband { border-top: 1px solid var(--line); }
+.gi-pillarband--alt { background: var(--surface-2); }
+.gi-pillarband__inner { max-width: var(--container); margin-inline: auto; padding: 32px var(--gutter) 40px; }
+
+/* ============================================================
+   PILLAR TILES (still used as an in-page anchor target)
+   ============================================================ */
+.gi-pillar-tiles a {
+  background: var(--pillar-tint); border-radius: var(--radius-md); padding: 18px; text-decoration: none;
+  display: flex; flex-direction: column; gap: 4px; transition: transform var(--dur-base) var(--ease-out);
+}
+.gi-pillar-tiles a:hover { transform: translateY(-2px); }
+.gi-pillar-tiles__name { font-family: var(--font-display); font-weight: 900; font-style: italic; text-transform: uppercase; font-size: 18px; color: var(--pillar-strong); }
+.gi-pillar-tiles__count { font-family: var(--font-mono); font-size: 10.5px; color: var(--ink-3); }
+
+/* ============================================================
+   MOBILE — pillar pill row + "Match Hari Ini" horizontal cards
+   ============================================================ */
+.gi-mobile-pillars {
+  display: none; gap: 8px; padding: 0 14px 12px; overflow-x: auto; scrollbar-width: none;
+}
+.gi-mobile-pillars::-webkit-scrollbar { display: none; }
+.gi-mobile-pill {
+  font-family: var(--font-condensed); font-weight: 700; font-size: 12px; letter-spacing: var(--ls-wide);
+  text-transform: uppercase; padding: 8px 13px; border-radius: var(--radius-sm); flex: none;
+  text-decoration: none; background: var(--pillar-tint); color: var(--pillar-strong);
+}
+.gi-mobile-pill[aria-current="page"] { background: var(--pillar); color: var(--pillar-contrast); }
+
+.gi-mobile-matches { display: none; }
+.gi-mobile-matches__inner { padding: 16px 0 4px; }
+.gi-mobile-matches__head { display: flex; align-items: center; gap: 8px; padding: 0 14px 10px; }
+.gi-mobile-matches__tick { width: 6px; height: 16px; background: var(--pillar); border-radius: 2px; }
+.gi-mobile-matches__title { font-family: var(--font-display); font-weight: 900; font-style: italic; text-transform: uppercase; font-size: 15px; color: var(--ink); }
+.gi-mobile-matches__row { display: flex; gap: 10px; padding: 0 14px; overflow-x: auto; scrollbar-width: none; }
+.gi-mobile-matches__row::-webkit-scrollbar { display: none; }
+.gi-mobile-matchcard {
+  flex: none; width: 180px; background: var(--night); border-radius: var(--radius-md); padding: 12px 14px;
+  color: var(--on-night); display: flex; flex-direction: column; gap: 8px;
+}
+.gi-mobile-matchcard--live { border: 1px solid color-mix(in srgb, var(--live) 50%, transparent); }
+.gi-mobile-matchcard__status { font-family: var(--font-mono); font-size: 9.5px; color: var(--on-night-muted); }
+.gi-mobile-matchcard__status--live { color: var(--live); font-weight: 700; }
+.gi-mobile-matchcard__teams { font-family: var(--font-condensed); font-weight: 700; font-size: 15px; }
+.gi-mobile-matchcard__comp { font-family: var(--font-mono); font-size: 9.5px; color: var(--on-night-muted); }
+
+@media (max-width: 720px) {
+  .gi-hottopics { display: none; }
+  .gi-megamenu__grid { grid-template-columns: 1fr 1fr; }
+  .gi-megamenu__grid > .gi-megamenu__trending { grid-column: 1 / -1; }
+
+  .gi-mobile-pillars { display: flex; }
+  .gi-mobile-matches { display: block; }
+  .gi-hero__side { display: none; }
+
+  .gi-hero__grid { grid-template-columns: 1fr; padding: 18px 14px; gap: 18px; }
+  .gi-latest-layout { grid-template-columns: 1fr; }
+  .gi-pillarband__inner { padding: 24px 14px 28px; }
+}

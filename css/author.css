@@ -1,0 +1,31 @@
+/* Author profile — night masthead + archive tabs. */
+
+.gi-author-head { background: var(--night); color: var(--on-night); position: relative; overflow: hidden; }
+.gi-author-head::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(110% 90% at 90% 0%, color-mix(in srgb, var(--pillar) 22%, transparent), transparent 60%);
+}
+.gi-author-head__inner { max-width: var(--container); margin-inline: auto; padding: 38px var(--gutter); display: flex; align-items: center; gap: 28px; position: relative; flex-wrap: wrap; }
+.gi-author-avatar {
+  width: 104px; height: 104px; border-radius: 50%; background: var(--night-3); border: 2px solid var(--on-night-line);
+  flex: none; display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-weight: 900; font-style: italic; font-size: 36px; color: var(--on-night-muted);
+}
+.gi-author-info { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 240px; }
+.gi-author-info__role { font-family: var(--font-condensed); font-weight: 700; font-size: 12px; letter-spacing: var(--ls-widest); text-transform: uppercase; color: var(--pillar); }
+.gi-author-info__name { margin: 0; font-family: var(--font-display); font-weight: 900; font-style: italic; text-transform: uppercase; font-size: clamp(1.8rem, 1.2rem + 2.4vw, 2.5rem); line-height: .98; letter-spacing: var(--ls-tight); color: var(--on-night); }
+.gi-author-info__bio { margin: 0; font-family: var(--font-body); font-size: 14px; line-height: 1.55; color: var(--on-night-2); max-width: 64ch; }
+.gi-author-stats { display: flex; gap: 20px; font-family: var(--font-mono); font-size: 11.5px; color: var(--on-night-muted); margin-top: 4px; flex-wrap: wrap; }
+.gi-author-stats b { color: var(--on-night); }
+
+.gi-tabs { max-width: var(--container); margin-inline: auto; padding-inline: var(--gutter); display: flex; gap: 26px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.gi-tab {
+  font-family: var(--font-condensed); font-weight: 600; font-size: 14px; letter-spacing: var(--ls-wide); text-transform: uppercase;
+  color: var(--ink-4); padding: 16px 0 12px; border-bottom: 3px solid transparent; background: none; border-left: none; border-right: none; border-top: none; cursor: pointer; white-space: nowrap;
+}
+.gi-tab[aria-current="true"] { font-weight: 800; color: var(--ink); border-bottom-color: var(--pillar); }
+
+@media (max-width: 720px) {
+  .gi-author-head__inner { padding: 26px 14px; gap: 16px; }
+  .gi-author-avatar { width: 76px; height: 76px; font-size: 26px; }
+}

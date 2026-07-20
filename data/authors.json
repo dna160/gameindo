@@ -1,0 +1,42 @@
+[
+  {
+    "id": 1,
+    "slug": "sari-wulandari",
+    "name": "Sari Wulandari",
+    "description": "Menulis seputar video game dan budaya pop Jepang-Indonesia.",
+    "avatar_urls": { "96": null },
+    "gi_profile": { "role": "Reporter", "articles_count": 412, "since_year": 2021, "monthly_reads": "1,1 JT" }
+  },
+  {
+    "id": 2,
+    "slug": "rizky-pratama",
+    "name": "Rizky Pratama",
+    "description": "Meliput skena MLBB kompetitif sejak MPL Season 3. Sebelumnya analis di salah satu organisasi esports nasional; sekarang menulis hasil match, transfer roster, dan cerita di balik layar.",
+    "avatar_urls": { "96": null },
+    "gi_profile": { "role": "Editor Esports", "articles_count": 1248, "since_year": 2019, "monthly_reads": "4,2 JT" }
+  },
+  {
+    "id": 3,
+    "slug": "bagas-nugroho",
+    "name": "Bagas Nugroho",
+    "description": "Fokus pada esports FPS/tactical shooter dan entertainment lintas platform.",
+    "avatar_urls": { "96": null },
+    "gi_profile": { "role": "Reporter", "articles_count": 356, "since_year": 2022, "monthly_reads": "890 RB" }
+  },
+  {
+    "id": 4,
+    "slug": "dinda-ayu",
+    "name": "Dinda Ayu",
+    "description": "Meliput dunia streamer dan kreator konten gaming Indonesia.",
+    "avatar_urls": { "96": null },
+    "gi_profile": { "role": "Reporter", "articles_count": 289, "since_year": 2022, "monthly_reads": "760 RB" }
+  },
+  {
+    "id": 5,
+    "slug": "fajar-ramadhan",
+    "name": "Fajar Ramadhan",
+    "description": "Review hardware, panduan build PC, dan rekomendasi gear gaming.",
+    "avatar_urls": { "96": null },
+    "gi_profile": { "role": "Editor Tech", "articles_count": 674, "since_year": 2020, "monthly_reads": "2,3 JT" }
+  }
+]
