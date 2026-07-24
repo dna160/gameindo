@@ -1,0 +1,41 @@
+/* ============================================================
+   GAMEINDO · EFFECTS — radii, borders, shadows, motion.
+   Editorial + esports: mostly square corners, crisp hairlines,
+   restrained shadows, one pillar-tinted "glow" for hover pop.
+   ============================================================ */
+:root {
+  /* ---- Corner radii (kept tight — magazine, not app) ---- */
+  --radius-xs:   3px;
+  --radius-sm:   5px;   /* pills, tags        */
+  --radius-md:   8px;   /* cards, inputs      */
+  --radius-lg:   12px;
+  --radius-xl:   18px;
+  --radius-pill: 999px;
+
+  /* ---- Borders ---- */
+  --border:        1px solid var(--line);
+  --border-2:      1px solid var(--line-2);
+  --border-strong: 2px solid var(--ink);
+
+  /* ---- Elevation ---- */
+  --shadow-xs: 0 1px 2px rgba(16,16,20,.06);
+  --shadow-sm: 0 1px 3px rgba(16,16,20,.08), 0 1px 2px rgba(16,16,20,.04);
+  --shadow-md: 0 4px 12px rgba(16,16,20,.10), 0 2px 4px rgba(16,16,20,.06);
+  --shadow-lg: 0 12px 28px rgba(16,16,20,.14), 0 4px 10px rgba(16,16,20,.08);
+  --shadow-xl: 0 24px 60px rgba(16,16,20,.20);
+
+  /* Pillar-tinted hover glow (color-mix keeps it in sync w/ theme) */
+  --glow-pillar: 0 8px 24px color-mix(in srgb, var(--pillar) 34%, transparent);
+
+  /* Image "protection" gradient for text-over-photo (dark base) */
+  --scrim-bottom: linear-gradient(to top, rgba(4,5,10,.92) 0%, rgba(4,5,10,.72) 34%, rgba(4,5,10,0) 78%);   /* @kind other */
+  --scrim-full:   linear-gradient(to top, rgba(4,5,10,.90) 0%, rgba(4,5,10,.35) 55%, rgba(4,5,10,.10) 100%); /* @kind other */
+
+  /* ---- Motion ---- */
+  --ease-out:   cubic-bezier(0.22, 1, 0.36, 1);     /* @kind other */
+  --ease-in-out:cubic-bezier(0.65, 0, 0.35, 1);     /* @kind other */
+  --ease-pop:   cubic-bezier(0.34, 1.56, 0.64, 1);  /* @kind other */
+  --dur-fast:   120ms;   /* @kind other */
+  --dur-base:   200ms;   /* @kind other */
+  --dur-slow:   340ms;   /* @kind other */
+}

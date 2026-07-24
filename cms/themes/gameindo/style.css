@@ -1,0 +1,24 @@
+/*
+Theme Name: GameIndo
+Theme URI: https://gameindo.com
+Author: GameIndo
+Author URI: https://gameindo.com
+Description: Native WordPress theme for GameIndo — Indonesia's Gaming and Pop Culture. Server-rendered port of the original static build, fully manageable via wp-admin (posts, pages, menus, categories, authors, and the esports live widgets via the GameIndo Core plugin).
+Version: 1.0.0
+Requires at least: 6.0
+Tested up to: 6.7
+Requires PHP: 7.4
+License: GNU General Public License v2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: gameindo
+Tags: news, magazine, gaming, esports
+*/
+
+/* The real design system lives in assets/css/main.css (+ tokens and per-page
+   sheets), enqueued from functions.php. This file only carries the required
+   WordPress theme header. A couple of WP-admin/editor niceties below. */
+
+.admin-bar .gi-ticker { top: 32px; }
+@media screen and (max-width: 782px) {
+  .admin-bar .gi-ticker { top: 46px; }
+}

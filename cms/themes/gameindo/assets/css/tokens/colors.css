@@ -1,0 +1,96 @@
+/* ============================================================
+   GAMEINDO · COLOR SYSTEM
+   Light editorial base + a per-pillar accent system.
+   Each of the 5 pillars carries its own signature color, applied
+   through the [data-pillar] scope so pills, rules, hovers and
+   links re-skin automatically.
+   ============================================================ */
+:root {
+  /* ---- Brand core (from the GAMEINDO wordmark) ---- */
+  --gi-red:        #EC1B2E;   /* "GAME" red  */
+  --gi-red-600:    #C40E20;
+  --gi-red-700:    #9E0A18;
+  --gi-blue:       #1F4FE0;   /* "INDO" blue */
+  --gi-blue-600:   #1740BE;
+  --gi-blue-700:   #12329A;
+
+  /* ---- Ink / neutrals (cool near-black) ---- */
+  --ink:           #101014;   /* primary headline black          */
+  --ink-2:         #2A2C34;   /* strong body                     */
+  --ink-3:         #575A66;   /* secondary text                  */
+  --ink-4:         #8A8D99;   /* muted / meta                    */
+
+  /* ---- Surfaces ---- */
+  --bg:            #FFFFFF;
+  --surface:       #FFFFFF;
+  --surface-2:     #F5F6F8;   /* app background / zebra          */
+  --surface-3:     #ECEEF2;   /* chips, inset wells              */
+  --line:          #E4E6EB;   /* hairline dividers               */
+  --line-2:        #D3D6DE;   /* stronger dividers / inputs      */
+
+  /* ---- Night surfaces (hero, footer, spotlight rails) ---- */
+  --night:         #0B0D14;   /* deep navy-black                 */
+  --night-2:       #12141F;
+  --night-3:       #1C1F2E;
+  --on-night:            #FFFFFF;
+  --on-night-2:          rgba(255,255,255,.72);
+  --on-night-muted:      rgba(255,255,255,.52);
+  --on-night-line:       rgba(255,255,255,.14);
+
+  /* ---- Pillar signature colors ---- */
+  --pillar-home:          #EC1B2E;   /* red — the master brand   */
+  --pillar-esports:       #6D28D9;   /* violet — competitive      */
+  --pillar-streamer:      #FF2D78;   /* magenta — creators        */
+  --pillar-tech:          #08B7D4;   /* cyan — hardware / tech    */
+  --pillar-entertainment: #FF7A00;   /* orange — pop culture      */
+
+  /* ---- Feedback ---- */
+  --success:       #17A46A;
+  --warning:       #F4A400;
+  --danger:        #E4002B;
+  --live:          #EC1B2E;   /* the "LIVE" dot / breaking       */
+
+  /* ---- Default active pillar = Home (red) ---- */
+  --pillar:          var(--pillar-home);
+  --pillar-strong:   var(--gi-red-600);
+  --pillar-contrast: #FFFFFF;                 /* text on --pillar */
+  --pillar-tint:     #FDE9EB;                 /* pale wash        */
+  --pillar-tint-2:   #FBD5D9;
+
+  /* ---- Semantic aliases ---- */
+  --text-strong:   var(--ink);
+  --text:          var(--ink-2);
+  --text-muted:    var(--ink-4);
+  --text-inverse:  #FFFFFF;
+  --link:          var(--gi-blue);
+  --link-hover:    var(--gi-blue-600);
+  --accent:        var(--pillar);
+  --focus-ring:    var(--gi-blue);
+  --category-pill-bg:   var(--pillar);
+  --category-pill-text: var(--pillar-contrast);
+}
+
+/* ============================================================
+   PILLAR SCOPES — set [data-pillar="…"] on any element/section
+   to re-theme every accent within it.
+   ============================================================ */
+[data-pillar="home"] {
+  --pillar: var(--pillar-home); --pillar-strong: var(--gi-red-600);
+  --pillar-contrast:#fff; --pillar-tint:#FDE9EB; --pillar-tint-2:#FBD5D9;
+}
+[data-pillar="esports"] {
+  --pillar: var(--pillar-esports); --pillar-strong:#571FB0;
+  --pillar-contrast:#fff; --pillar-tint:#F1EBFD; --pillar-tint-2:#E2D4FB;
+}
+[data-pillar="streamer"] {
+  --pillar: var(--pillar-streamer); --pillar-strong:#DB1560;
+  --pillar-contrast:#fff; --pillar-tint:#FFE7F0; --pillar-tint-2:#FFCFE0;
+}
+[data-pillar="tech"] {
+  --pillar: var(--pillar-tech); --pillar-strong:#0693AB;
+  --pillar-contrast:#04252B; --pillar-tint:#DEF6FA; --pillar-tint-2:#BFEDF4;
+}
+[data-pillar="entertainment"] {
+  --pillar: var(--pillar-entertainment); --pillar-strong:#DB6800;
+  --pillar-contrast:#2A1500; --pillar-tint:#FFEEDD; --pillar-tint-2:#FFD9B8;
+}

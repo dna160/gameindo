@@ -1,0 +1,9 @@
+{
+  "competition": "MPL ID S16",
+  "matches": [
+    { "id": 1, "status": "live", "status_label": "● LIVE", "team_a": "ONIC", "score_a": 1, "team_b": "BTR", "score_b": 0 },
+    { "id": 2, "status": "finished", "status_label": "SELESAI", "team_a": "RRQ", "score_a": 2, "team_b": "EVOS", "score_b": 1 },
+    { "id": 3, "status": "scheduled", "status_label": "19:30", "team_a": "AE", "score_a": null, "team_b": "GEEK", "score_b": null },
+    { "id": 4, "status": "scheduled", "status_label": "21:00", "team_a": "DEWA", "score_a": null, "team_b": "NAVI", "score_b": null }
+  ]
+}
