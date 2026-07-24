@@ -77,11 +77,42 @@ $gi_initial = 6; // grid items visible before "Muat Lebih Banyak"
         </div>
         <a class="gi-night-panel__cta" href="<?php echo esc_url( gameindo_pillar_url( 'esports' ) ); ?>">Klasemen Lengkap →</a>
       </div>
-      <?php endif; ?>
+      <?php else :
+	      // Non-esports pillars: a "Terpopuler" leaderboard panel to fill the
+	      // same slot the esports standings occupy. Ranked by reads, newest as
+	      // tiebreaker; the [data-pillar] scope colours it per pillar.
+	      $gi_pop = get_posts( array(
+		      'post_type'      => 'post',
+		      'post_status'    => 'publish',
+		      'posts_per_page' => 30,
+		      'category_name'  => $gi_slug,
+		      'orderby'        => 'date',
+		      'order'          => 'DESC',
+	      ) );
+	      usort( $gi_pop, function ( $a, $b ) {
+		      return gameindo_parse_reads( gameindo_meta( $b->ID, 'reads' ) ) - gameindo_parse_reads( gameindo_meta( $a->ID, 'reads' ) );
+	      } );
+	      $gi_pop = array_slice( $gi_pop, 0, 5 );
+	      if ( ! empty( $gi_pop ) ) : ?>
+      <div class="gi-night-panel">
+        <div class="gi-night-panel__head">
+          <span class="gi-night-panel__head-title">Terpopuler</span>
+          <span class="gi-night-panel__head-meta"><?php echo esc_html( mb_strtoupper( $gi_name ) ); ?></span>
+        </div>
+        <div class="gi-night-panel__list"><?php
+          $gi_ri = 0;
+          foreach ( $gi_pop as $gi_pp ) {
+	          $gi_ri++;
+	          echo gameindo_rank_row( $gi_pp, $gi_ri, array( 'thumb' => true ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+          }
+        ?></div>
+        <a class="gi-night-panel__cta" href="#gi-pillar-latest">Artikel Terbaru ↓</a>
+      </div>
+      <?php endif; endif; ?>
     </div>
   </div>
 
-  <div class="gi-container" style="padding-top:36px;padding-bottom:40px">
+  <div class="gi-container" id="gi-pillar-latest" style="padding-top:36px;padding-bottom:40px;scroll-margin-top:80px">
     <div class="gi-section-head">
       <div class="gi-section-head__main">
         <span class="gi-section-head__tick" aria-hidden="true"></span>

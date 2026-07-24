@@ -34,6 +34,13 @@
 .gi-standings__wl { font-family: var(--font-mono); font-size: 12px; text-align: right; color: var(--ink-2); }
 .gi-standings__pts { font-family: var(--font-mono); font-weight: 700; font-size: 12px; text-align: right; color: var(--ink); }
 
+/* Non-esports pillar "Terpopuler" panel: rank rows inside the night-panel shell. */
+.gi-night-panel__list { padding: 2px 16px; }
+.gi-night-panel__list .gi-rank { grid-template-columns: auto 48px 1fr; gap: 12px; padding: 11px 0; }
+.gi-night-panel__list .gi-rank__thumb { width: 48px; height: 48px; }
+.gi-night-panel__list .gi-rank__num { font-size: 26px; width: 26px; }
+.gi-night-panel__list .gi-rank__title { font-size: 14px; }
+
 @media (max-width: 720px) {
   .gi-masthead__inner { padding: 24px 14px 20px; }
 }
