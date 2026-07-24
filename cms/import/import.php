@@ -18,8 +18,32 @@ require_once ABSPATH . 'wp-admin/includes/image.php';
 require_once ABSPATH . 'wp-admin/includes/file.php';
 require_once ABSPATH . 'wp-admin/includes/media.php';
 
-define( 'GI_DATA', '/var/www/html/wp-content/gameindo-data' );
-define( 'GI_ASSETS', '/var/www/html/wp-content/gameindo-assets' );
+/**
+ * Resolve the data/ and assets/ directories portably so the same script works
+ * both in the local Docker environment (bind-mounted into wp-content) and on a
+ * real host like Hostinger (run from the cloned repo). Order of preference:
+ * env override → repo-relative (repo_root/data, repo_root/assets) → Docker mount.
+ */
+function gi_resolve_dir( $candidates ) {
+	foreach ( $candidates as $c ) {
+		if ( $c && is_dir( $c ) ) {
+			return $c;
+		}
+	}
+	return end( $candidates );
+}
+$gi_repo_root = dirname( __DIR__, 2 ); // .../cms/import -> repo root
+
+define( 'GI_DATA', gi_resolve_dir( array(
+	getenv( 'GI_DATA' ) ?: null,
+	$gi_repo_root . '/data',
+	'/var/www/html/wp-content/gameindo-data',
+) ) );
+define( 'GI_ASSETS', gi_resolve_dir( array(
+	getenv( 'GI_ASSETS' ) ?: null,
+	$gi_repo_root . '/assets',
+	'/var/www/html/wp-content/gameindo-assets',
+) ) );
 
 function gi_json( $file ) {
 	return json_decode( file_get_contents( GI_DATA . '/' . $file ), true );
