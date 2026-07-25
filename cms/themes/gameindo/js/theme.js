@@ -29,6 +29,82 @@
     document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
   })();
 
+  /* ---- Hero slider (auto-advancing latest-articles carousel) */
+  (function () {
+    var slider = document.getElementById("gi-hero-slider");
+    var track = document.getElementById("gi-hero-slider-track");
+    var dotsWrap = document.getElementById("gi-hero-slider-dots");
+    if (!slider || !track) return;
+    var slides = Array.prototype.slice.call(track.children);
+    if (slides.length < 2) return;
+
+    var index = 0;
+    var autoplayMs = parseInt(slider.getAttribute("data-autoplay"), 10) || 6000;
+    var timer = null;
+    var dots = [];
+
+    if (dotsWrap) {
+      slides.forEach(function (_, i) {
+        var dot = document.createElement("button");
+        dot.type = "button";
+        dot.className = "gi-hero-slider__dot";
+        dot.setAttribute("aria-label", "Ke slide " + (i + 1));
+        dot.addEventListener("click", function () { goTo(i); restart(); });
+        dotsWrap.appendChild(dot);
+      });
+      dots = Array.prototype.slice.call(dotsWrap.children);
+    }
+
+    function updateDots() {
+      dots.forEach(function (d, i) { d.setAttribute("aria-current", i === index ? "true" : "false"); });
+    }
+    function goTo(i) {
+      index = (i + slides.length) % slides.length;
+      track.scrollTo({ left: slides[index].offsetLeft, behavior: "smooth" });
+      updateDots();
+    }
+    function next() { goTo(index + 1); }
+    function prev() { goTo(index - 1); }
+    function play() { stop(); timer = setInterval(next, autoplayMs); }
+    function stop() { if (timer) { clearInterval(timer); timer = null; } }
+    function restart() { play(); }
+
+    var prevBtn = slider.querySelector("[data-slider-prev]");
+    var nextBtn = slider.querySelector("[data-slider-next]");
+    if (prevBtn) prevBtn.addEventListener("click", function () { prev(); restart(); });
+    if (nextBtn) nextBtn.addEventListener("click", function () { next(); restart(); });
+
+    slider.addEventListener("mouseenter", stop);
+    slider.addEventListener("mouseleave", play);
+    slider.addEventListener("touchstart", stop, { passive: true });
+    slider.addEventListener("touchend", play);
+
+    slider.setAttribute("tabindex", "0");
+    slider.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowRight") { next(); restart(); }
+      else if (e.key === "ArrowLeft") { prev(); restart(); }
+    });
+
+    // Keep the active dot in sync when the user drags/swipes the track directly.
+    var scrollTimer = null;
+    track.addEventListener("scroll", function () {
+      clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(function () {
+        var nearest = 0;
+        var best = Infinity;
+        slides.forEach(function (s, i) {
+          var d = Math.abs(s.offsetLeft - track.scrollLeft);
+          if (d < best) { best = d; nearest = i; }
+        });
+        index = nearest;
+        updateDots();
+      }, 100);
+    });
+
+    updateDots();
+    play();
+  })();
+
   /* ---- Mega menu -------------------------------------------- */
   (function () {
     var toggle = document.getElementById("gi-megamenu-toggle");

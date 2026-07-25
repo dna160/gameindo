@@ -79,6 +79,37 @@
 .gi-hero__side { display: flex; flex-direction: column; gap: 16px; }
 .gi-hero__trending { display: flex; flex-direction: column; gap: 12px; }
 
+/* ---- Hero slider (auto-advancing latest-articles carousel) ---- */
+.gi-hero-slider { position: relative; min-width: 0; align-self: start; }
+.gi-hero-slider__track {
+  display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth;
+  scrollbar-width: none; border-radius: var(--radius-md); height: 100%;
+}
+.gi-hero-slider__track::-webkit-scrollbar { display: none; }
+.gi-hero-slider__track > * { flex: 0 0 100%; scroll-snap-align: start; scroll-snap-stop: always; }
+.gi-hero-slider__dots {
+  position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 2;
+  display: flex; gap: 6px;
+}
+.gi-hero-slider__dot {
+  width: 8px; height: 8px; padding: 0; border: none; border-radius: 4px;
+  background: rgba(255,255,255,.4); cursor: pointer;
+  transition: background var(--dur-base) var(--ease-out), width var(--dur-base) var(--ease-out);
+}
+.gi-hero-slider__dot[aria-current="true"] { background: #fff; width: 22px; }
+.gi-hero-slider__arrow {
+  position: absolute; top: 50%; transform: translateY(-50%); z-index: 2;
+  width: 36px; height: 36px; border: none; border-radius: 50%; cursor: pointer;
+  background: rgba(16,16,20,.5); color: #fff; font-size: 18px; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
+}
+.gi-hero-slider:hover .gi-hero-slider__arrow,
+.gi-hero-slider:focus-within .gi-hero-slider__arrow { opacity: 1; }
+.gi-hero-slider__arrow:hover { background: rgba(16,16,20,.75); }
+.gi-hero-slider__arrow--prev { left: 14px; }
+.gi-hero-slider__arrow--next { right: 14px; }
+
 .gi-matchpanel {
   background: var(--night); color: var(--on-night); position: relative; overflow: hidden;
   border-radius: var(--radius-md); padding: 18px; display: flex; flex-direction: column; gap: 12px; flex: 1;
@@ -188,4 +219,7 @@
   .gi-hero__grid { grid-template-columns: 1fr; padding: 18px 14px; gap: 18px; }
   .gi-latest-layout { grid-template-columns: 1fr; }
   .gi-pillarband__inner { padding: 24px 14px 28px; }
+
+  .gi-hero-slider__arrow { display: none; }
+  .gi-hero-slider__dots { bottom: 12px; }
 }

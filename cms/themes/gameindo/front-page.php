@@ -57,10 +57,26 @@ if ( count( $gi_hero_trending ) < 2 ) {
 	}
 }
 
-// Latest grid: posts excluding featured + hero trending, first 4.
-$gi_exclude = array();
+// Hero slider: editor-picked "featured" post leads (if set), then the next
+// latest articles fill the rest — an auto-advancing feed of what's new.
+$gi_hero_slides = array();
 if ( $gi_featured ) {
-	$gi_exclude[] = $gi_featured->ID;
+	$gi_hero_slides[] = $gi_featured;
+}
+foreach ( $gi_all as $gi_p ) {
+	if ( count( $gi_hero_slides ) >= 5 ) {
+		break;
+	}
+	if ( $gi_featured && $gi_p->ID === $gi_featured->ID ) {
+		continue;
+	}
+	$gi_hero_slides[] = $gi_p;
+}
+
+// Latest grid: posts excluding hero slides + hero trending, first 4.
+$gi_exclude = array();
+foreach ( $gi_hero_slides as $gi_p ) {
+	$gi_exclude[] = $gi_p->ID;
 }
 foreach ( $gi_hero_trending as $gi_p ) {
 	$gi_exclude[] = $gi_p->ID;
@@ -81,11 +97,18 @@ $gi_matches = gameindo_get_matches();
 <main>
   <section class="gi-hero" data-pillar="<?php echo esc_attr( $gi_featured_pillar ? $gi_featured_pillar : 'home' ); ?>">
     <div class="gi-hero__grid">
-      <div id="gi-hero-feature"><?php
-        if ( $gi_featured ) {
-	        echo gameindo_feature( $gi_featured ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-        }
-      ?></div>
+      <div class="gi-hero-slider" id="gi-hero-slider" data-autoplay="6000">
+        <div class="gi-hero-slider__track" id="gi-hero-slider-track"><?php
+          foreach ( $gi_hero_slides as $gi_sp ) {
+	          echo gameindo_feature( $gi_sp ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+          }
+        ?></div>
+        <?php if ( count( $gi_hero_slides ) > 1 ) : ?>
+        <div class="gi-hero-slider__dots" id="gi-hero-slider-dots"></div>
+        <button type="button" class="gi-hero-slider__arrow gi-hero-slider__arrow--prev" data-slider-prev aria-label="Slide sebelumnya">‹</button>
+        <button type="button" class="gi-hero-slider__arrow gi-hero-slider__arrow--next" data-slider-next aria-label="Slide berikutnya">›</button>
+        <?php endif; ?>
+      </div>
       <div class="gi-hero__side" id="gi-hero-side">
         <div class="gi-hero__trending" id="gi-hero-trending"><?php
           foreach ( $gi_hero_trending as $gi_p ) {
