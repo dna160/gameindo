@@ -87,7 +87,7 @@ $gi_matches = gameindo_get_matches();
         }
       ?></div>
       <div class="gi-hero__side" id="gi-hero-side">
-        <div id="gi-hero-trending"><?php
+        <div class="gi-hero__trending" id="gi-hero-trending"><?php
           foreach ( $gi_hero_trending as $gi_p ) {
 	          echo gameindo_card( $gi_p, array( 'variant' => 'h' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
           }

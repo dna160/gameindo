@@ -243,8 +243,11 @@ body { background: var(--surface); overflow-x: hidden; }
 /* orientation: horizontal */
 .gi-card--h { display: grid; grid-template-columns: 132px 1fr; gap: 14px; }
 .gi-card--h .gi-card__media { aspect-ratio: 1 / 1; }
-.gi-card--h .gi-card__body { padding: 2px 12px 2px 0; }
+.gi-card--h .gi-card__body { padding: 10px 14px 10px 0; gap: 6px; }
 .gi-card--h .gi-card__pill { position: static; margin-bottom: 2px; }
+.gi-card--h .gi-card__title {
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
 
 /* ============================================================
    FEATURE CARD (hero)
