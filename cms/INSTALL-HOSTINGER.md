@@ -94,19 +94,18 @@ sekaligus, dan bersifat aman diulang (idempoten).
   - **Subkategori** — label pill di kartu (mis. `MPL ID`, `Handheld`).
   - **Waktu baca** — kosongkan untuk hitung otomatis.
   - **Jumlah dibaca** — angka popularitas (mis. `128 rb`) untuk rail Terpopuler.
-    Boleh dikosongkan: peringkat Terpopuler menggabungkan angka ini dengan
-    tanggal terbit, jadi artikel baru tetap tampil (lihat bagian di bawah).
+    Boleh dikosongkan: kalau kosong, rail Terpopuler jatuh ke urutan artikel
+    terbaru (lihat "Cara kerja rail Terpopuler" di bawah).
   - **Featured** — jadikan hero utama beranda (pilih satu artikel saja).
   - **Spotlight** — tampil di rail trending beranda.
 - **Tag:** dipakai sebagai hashtag di bawah artikel & di tag cloud pencarian.
 - **Gambar Unggulan:** jadi gambar hero & thumbnail kartu.
 
 ### Widget esports (menu kiri wp-admin)
-- **Live Ticker** — teks berjalan di header. **Artikel terbaru otomatis masuk
-  ke ticker**, jadi menu ini hanya perlu diisi untuk pengumuman khusus
-  (judul = teks, isi tautan tujuan). Ticker diurutkan dari yang terbaru:
-  pengumuman yang baru dibuat tampil paling depan, item lawas turun sendiri.
-  Item demo bawaan boleh dihapus.
+- **Live Ticker** — teks berjalan di header sekarang **terisi otomatis dari 12
+  artikel terbaru** Anda, jadi menu ini **tidak lagi memengaruhi tampilan situs**
+  dan tidak perlu diisi. Item demo bawaan boleh dihapus atau dibiarkan — sama
+  saja, tidak akan muncul.
 - **Topik Hangat** — chip di bawah header beranda. Judul = label, isi kata kunci.
 - **Match Center** — jadwal/skor. Atur kompetisi, status (live/selesai/terjadwal), tim & skor.
 - **Klasemen** — satu entri = satu tim (peringkat, M–K, poin). Urut otomatis by peringkat.
@@ -114,15 +113,20 @@ sekaligus, dan bersifat aman diulang (idempoten).
 Semua bisa di-*drag* untuk mengubah urutan (kolom "Urutan").
 
 ### Cara kerja rail "Terpopuler"
-Peringkat dihitung otomatis dari dua hal: **angka "Jumlah dibaca"** dan
-**seberapa baru** artikelnya (bobot kebaruan sedikit lebih besar). Efeknya:
+Aturannya sederhana dan bisa diprediksi:
 
-- Artikel yang baru terbit langsung naik ke rail, walau kolom "Jumlah dibaca"
-  masih kosong — ditandai label merah **BARU** dan keterangan "2 jam lalu".
-- Artikel lama yang benar-benar ramai tetap bisa bertahan di rail.
-- Rail hanya menilai artikel **30 hari terakhir** (kalau belum cukup, otomatis
-  melebar ke seluruh arsip), sehingga satu artikel lawas tidak menempel selamanya.
-- Satu baris selalu dijatah untuk artikel paling baru.
+1. Ambil artikel yang terbit dalam **7 hari terakhir**.
+2. Urutkan dari **"Jumlah dibaca" terbesar**.
+3. Kalau angkanya **seri atau kosong**, yang **terbit paling baru** menang.
+
+Efeknya di lapangan: selama kolom "Jumlah dibaca" belum Anda isi, rail ini
+otomatis menampilkan artikel terbaru Anda — artikel < 48 jam ditandai label
+merah **BARU** dengan keterangan "2 jam lalu". Begitu Anda mulai mengisi angka
+dibaca, artikel yang benar-benar ramai minggu itu naik ke puncak.
+
+Kalau dalam 7 hari terakhir belum ada cukup artikel, sisa barisnya diisi
+**artikel terbaru** dari arsip — bukan artikel lama yang angka dibacanya besar.
+Jadi artikel lawas tidak akan pernah menempel di puncak lagi.
 
 Rail ini dipakai di beranda, halaman pilar, hasil pencarian, dan halaman penulis.
 

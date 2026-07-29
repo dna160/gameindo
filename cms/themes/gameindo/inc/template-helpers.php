@@ -352,82 +352,23 @@ function gameindo_latest_ticker_items( $count = 8 ) {
 }
 
 /**
- * Live ticker feed = editor-pinned items (Live Ticker CPT) merged with the
- * newest articles, ordered newest-first. Ordering by time is what makes this
- * a live feed: a pin published today leads the marquee, an article published
- * ten minutes ago overtakes a pin from last month, and nobody has to hand-write
- * a ticker entry for a new article. Items inside the freshness window get a
- * "Baru" badge. The bundled JSON fixture is only a last resort on an empty site.
+ * Live ticker feed: the newest published articles, newest first. Nothing else
+ * — no hand-written entries, no fixtures. Whatever went live most recently
+ * leads the marquee, and items inside the freshness window get a "Baru" badge.
+ *
+ * The Live Ticker CPT is deliberately no longer rendered here (see
+ * gameindo_core_get_ticker()); the header is an automatic feed of articles.
+ * Returns an empty array on a site with no posts, which hides the bar.
  */
 function gameindo_get_ticker() {
-	$items = array();
-
-	if ( function_exists( 'gameindo_core_get_ticker' ) ) {
-		$pinned = array_slice( gameindo_core_get_ticker(), 0, (int) apply_filters( 'gameindo_ticker_pinned_max', 4 ) );
-		foreach ( $pinned as $p ) {
-			$items[] = array(
-				'id'   => isset( $p['id'] ) ? $p['id'] : 0,
-				'text' => isset( $p['text'] ) ? $p['text'] : '',
-				'url'  => isset( $p['url'] ) ? $p['url'] : '',
-				'time' => isset( $p['id'] ) ? (int) get_post_time( 'U', true, $p['id'] ) : 0,
-				'kind' => 'pinned',
-			);
-		}
-	}
-
-	$article_urls = array();
-	foreach ( gameindo_latest_ticker_items( (int) apply_filters( 'gameindo_ticker_latest_count', 8 ) ) as $a ) {
-		$a['kind']                                   = 'article';
-		$article_urls[ gameindo_ticker_url_key( $a['url'] ) ] = true;
-		$items[]                                     = $a;
-	}
-
-	// Newest first; usort isn't stable, so the original position breaks ties.
-	$order = array_keys( $items );
-	usort( $order, function ( $a, $b ) use ( $items ) {
-		if ( $items[ $a ]['time'] === $items[ $b ]['time'] ) {
-			return $a - $b;
-		}
-		return $items[ $b ]['time'] - $items[ $a ]['time'];
-	} );
-
-	$seen_text    = array();
-	$feed         = array();
+	$items        = gameindo_latest_ticker_items( (int) apply_filters( 'gameindo_ticker_max', 12 ) );
 	$fresh_before = time() - ( gameindo_fresh_hours() * HOUR_IN_SECONDS );
 
-	foreach ( $order as $i ) {
-		$item    = $items[ $i ];
-		$by_text = strtolower( trim( (string) $item['text'] ) );
-		if ( '' === $by_text || isset( $seen_text[ $by_text ] ) ) {
-			continue;
-		}
-		// A pin that just links to an article already in the run is redundant.
-		// URLs are only matched against article permalinks — two pins may well
-		// point at the same category page and both still deserve a slot.
-		if ( 'pinned' === $item['kind'] ) {
-			$key = gameindo_ticker_url_key( $item['url'] );
-			if ( '' !== $key && isset( $article_urls[ $key ] ) ) {
-				continue;
-			}
-		}
-		$seen_text[ $by_text ] = true;
-
-		$item['badge'] = ( $item['time'] && $item['time'] >= $fresh_before ) ? 'Baru' : '';
-		$feed[]        = $item;
+	foreach ( $items as $i => $item ) {
+		$items[ $i ]['badge'] = ( $item['time'] && $item['time'] >= $fresh_before ) ? 'Baru' : '';
 	}
 
-	if ( empty( $feed ) ) {
-		return gameindo_fixture( 'ticker.json', array() );
-	}
-	return array_slice( $feed, 0, (int) apply_filters( 'gameindo_ticker_max', 12 ) );
-}
-
-/**
- * Normalized key for comparing ticker URLs (scheme/trailing slash/case).
- */
-function gameindo_ticker_url_key( $url ) {
-	$url = untrailingslashit( strtolower( trim( (string) $url ) ) );
-	return preg_replace( '#^https?://#', '', $url );
+	return $items;
 }
 
 function gameindo_get_topics() {
@@ -441,27 +382,12 @@ function gameindo_get_topics() {
 }
 
 /**
- * Tuning knobs for the "Terpopuler" ranking. Filterable so the mix can be
- * tweaked per site (or seasonally) without touching the theme.
- *
- * - window_days:      popularity is measured over a rolling window, the way
- *                     newsroom "most read" rails work — not all-time, so a
- *                     year-old hit can't squat the rail forever.
- * - half_life_hours:  a post's freshness score halves every N hours.
- * - weight_reads:     how much the editorial reads figure counts.
- * - weight_fresh:     how much recency counts. Fresh outweighs reads by
- *                     default so newly published articles surface fast.
- * - fresh_slots:      rows reserved for the newest article(s) — a hard
- *                     guarantee that what just went live is always visible.
+ * How many days back the "Terpopuler" rails look. Only articles published
+ * inside this window compete, so the rail is always about the current news
+ * cycle and an old article can never squat it.
  */
-function gameindo_trending_config() {
-	return apply_filters( 'gameindo_trending_config', array(
-		'window_days'     => 30,
-		'half_life_hours' => 36,
-		'weight_reads'    => 0.45,
-		'weight_fresh'    => 0.55,
-		'fresh_slots'     => 1,
-	) );
+function gameindo_popular_window_days() {
+	return (int) apply_filters( 'gameindo_popular_window_days', 7 );
 }
 
 /**
@@ -484,29 +410,13 @@ function gameindo_is_fresh( $post_id ) {
 }
 
 /**
- * Trending score in 0..1 — a blend of normalized popularity and exponential
- * recency decay. $max_reads is the loudest reads figure in the pool being
- * ranked, so the popularity axis is relative to the current field.
+ * Rank posts (objects or IDs) for the "Terpopuler" rails: most-read first,
+ * newest first whenever the reads figures tie. Since an article with no reads
+ * figure counts as zero, a site that never fills that field in gets a rail
+ * ordered purely newest-first — which is the intended behaviour, not a
+ * degenerate case. Returns post IDs.
  */
-function gameindo_trending_score( $post_id, $max_reads = 0 ) {
-	$cfg = gameindo_trending_config();
-
-	$fresh = pow( 0.5, gameindo_post_age_hours( $post_id ) / max( 1, (float) $cfg['half_life_hours'] ) );
-
-	// sqrt() compresses the popularity axis: one runaway article lifts the
-	// whole field instead of flattening everything else to zero.
-	$reads = gameindo_parse_reads( gameindo_meta( $post_id, 'reads' ) );
-	$pop   = $max_reads > 0 ? sqrt( min( 1, $reads / $max_reads ) ) : 0.0;
-
-	return ( (float) $cfg['weight_reads'] * $pop ) + ( (float) $cfg['weight_fresh'] * $fresh );
-}
-
-/**
- * Rank an already-fetched set of posts (objects or IDs) by trending score and
- * return the top $count IDs. The newest post(s) in the pool are guaranteed a
- * slot even if their score alone wouldn't earn one.
- */
-function gameindo_rank_trending( $posts, $count = 3 ) {
+function gameindo_rank_popular( $posts, $count = 3 ) {
 	$ids = array();
 	foreach ( $posts as $p ) {
 		$ids[] = is_object( $p ) ? (int) $p->ID : (int) $p;
@@ -515,62 +425,32 @@ function gameindo_rank_trending( $posts, $count = 3 ) {
 		return array();
 	}
 
-	$max_reads = 0;
+	$reads = array();
+	$times = array();
 	foreach ( $ids as $id ) {
-		$max_reads = max( $max_reads, gameindo_parse_reads( gameindo_meta( $id, 'reads' ) ) );
+		$reads[ $id ] = gameindo_parse_reads( gameindo_meta( $id, 'reads' ) );
+		$times[ $id ] = (int) get_post_time( 'U', true, $id );
 	}
 
-	$scores = array();
-	foreach ( $ids as $id ) {
-		$scores[ $id ] = gameindo_trending_score( $id, $max_reads );
-	}
-
-	$ranked = $ids;
-	usort( $ranked, function ( $a, $b ) use ( $scores ) {
-		if ( $scores[ $a ] === $scores[ $b ] ) {
-			return get_post_time( 'U', true, $b ) - get_post_time( 'U', true, $a );
+	usort( $ids, function ( $a, $b ) use ( $reads, $times ) {
+		if ( $reads[ $a ] !== $reads[ $b ] ) {
+			return $reads[ $b ] - $reads[ $a ];
 		}
-		return ( $scores[ $a ] < $scores[ $b ] ) ? 1 : -1;
+		return $times[ $b ] - $times[ $a ];
 	} );
 
-	$top = array_slice( $ranked, 0, $count );
-
-	// Reserve slots for the newest articles: swap out the weakest entries for
-	// any brand-new post that didn't make the cut on score alone.
-	$cfg     = gameindo_trending_config();
-	$reserve = min( (int) $cfg['fresh_slots'], $count );
-	if ( $reserve > 0 ) {
-		$newest = $ids;
-		usort( $newest, function ( $a, $b ) {
-			return get_post_time( 'U', true, $b ) - get_post_time( 'U', true, $a );
-		} );
-		foreach ( array_slice( $newest, 0, $reserve ) as $fresh_id ) {
-			if ( in_array( $fresh_id, $top, true ) ) {
-				continue;
-			}
-			array_pop( $top );
-			$top[] = $fresh_id;
-			usort( $top, function ( $a, $b ) use ( $scores ) {
-				if ( $scores[ $a ] === $scores[ $b ] ) {
-					return get_post_time( 'U', true, $b ) - get_post_time( 'U', true, $a );
-				}
-				return ( $scores[ $a ] < $scores[ $b ] ) ? 1 : -1;
-			} );
-		}
-	}
-
-	return $top;
+	return array_slice( $ids, 0, $count );
 }
 
 /**
- * Trending posts for the "Terpopuler" rails. Returns an array of post IDs.
+ * Posts for the "Terpopuler" rails: the most-read articles of the last seven
+ * days, newest first when reads tie. Returns an array of post IDs.
  *
- * $args: category (slug), author (ID), exclude (IDs), pool (posts to score).
+ * $args: category (slug), author (ID), exclude (IDs), pool (posts to rank).
  * Posts without a reads figure are included — a new article is never filtered
  * out just because nobody has typed a popularity number for it yet.
  */
 function gameindo_trending_posts( $count = 3, $args = array() ) {
-	$cfg  = gameindo_trending_config();
 	$args = wp_parse_args( $args, array(
 		'category' => '',
 		'author'   => 0,
@@ -597,28 +477,38 @@ function gameindo_trending_posts( $count = 3, $args = array() ) {
 		$query['post__not_in'] = array_map( 'intval', (array) $args['exclude'] );
 	}
 
-	// The pool is memoized per request: the homepage asks for trending twice
+	// The pool is memoized per request: the homepage asks for this twice
 	// (rail + mega-menu) and that shouldn't cost two round trips.
 	static $pools = array();
 	$key = md5( serialize( $query ) );
 
 	if ( ! isset( $pools[ $key ] ) ) {
 		$windowed = $query;
-		$windowed['date_query'] = array( array( 'after' => (int) $cfg['window_days'] . ' days ago' ) );
+		$windowed['date_query'] = array( array( 'after' => gameindo_popular_window_days() . ' days ago' ) );
 		$pools[ $key ] = array( 'window' => get_posts( $windowed ), 'all' => null );
 	}
 
-	// Rolling window first; widen to all-time on quiet sites so the rail is
-	// never short.
-	$posts = $pools[ $key ]['window'];
-	if ( count( $posts ) < $count ) {
+	$top = gameindo_rank_popular( $pools[ $key ]['window'], $count );
+
+	// Quiet week: top the rail up with the newest articles from outside the
+	// window, rather than re-ranking the whole archive by reads. Re-ranking is
+	// what used to let a months-old article with a big reads figure squat the
+	// top of the rail forever.
+	if ( count( $top ) < $count ) {
 		if ( null === $pools[ $key ]['all'] ) {
-			$pools[ $key ]['all'] = get_posts( $query );
+			$pools[ $key ]['all'] = get_posts( $query ); // already newest-first
 		}
-		$posts = $pools[ $key ]['all'];
+		foreach ( $pools[ $key ]['all'] as $p ) {
+			if ( count( $top ) >= $count ) {
+				break;
+			}
+			if ( ! in_array( (int) $p->ID, $top, true ) ) {
+				$top[] = (int) $p->ID;
+			}
+		}
 	}
 
-	return gameindo_rank_trending( $posts, $count );
+	return $top;
 }
 
 /**

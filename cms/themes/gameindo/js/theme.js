@@ -174,13 +174,11 @@
     function apply(sort) {
       var nodes = initial.slice();
       if (sort === "popular") {
-        // data-score is the reads + recency blend; data-reads is the fallback
-        // for markup rendered before that attribute existed.
-        var rank = function (n) {
-          var s = parseInt(n.getAttribute("data-score"), 10);
-          return isNaN(s) ? (parseInt(n.getAttribute("data-reads"), 10) || 0) : s;
-        };
-        nodes.sort(function (a, b) { return rank(b) - rank(a); });
+        // Array.sort is stable, and the cards start out newest-first, so equal
+        // reads (including "no reads anywhere") keep the newest-first order.
+        nodes.sort(function (a, b) {
+          return (parseInt(b.getAttribute("data-reads"), 10) || 0) - (parseInt(a.getAttribute("data-reads"), 10) || 0);
+        });
       }
       nodes.forEach(function (n) {
         var show = true;

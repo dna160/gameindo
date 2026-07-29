@@ -39,15 +39,21 @@ cms/
 - **Widget esports** (ticker, topik, match, klasemen) = custom post type,
   dirender server-side oleh tema via helper plugin; ada fallback JSON di tema
   bila plugin nonaktif.
-- **Live ticker = feed.** `gameindo_get_ticker()` menggabungkan item CPT
-  `gi_ticker` (pengumuman) dengan artikel terbaru, lalu mengurutkannya
-  **kronologis (terbaru dulu)** dan menandai item < 48 jam dengan badge "Baru".
-  Fixture JSON hanya dipakai kalau situs benar-benar kosong.
-- **Terpopuler = skor gabungan.** `gameindo_trending_posts()` menilai artikel
-  dalam jendela 30 hari dengan `0.45 × popularitas + 0.55 × kebaruan`
-  (kebaruan meluruh eksponensial, half-life 36 jam), plus jatah slot untuk
-  artikel terbaru. Artikel tanpa `_gi_reads` **tidak** dibuang. Semua angka
-  bisa disetel lewat filter `gameindo_trending_config`.
+- **Live ticker = artikel terbaru.** `gameindo_get_ticker()` mengembalikan 12
+  artikel terbit terakhir (terbaru dulu), menandai yang < 48 jam dengan badge
+  "Baru". CPT `gi_ticker` **sengaja tidak lagi dirender** di header — menunya
+  tetap ada di wp-admin tapi tidak memengaruhi tampilan. Kalau tidak ada pos
+  sama sekali, ticker mengembalikan array kosong dan bar-nya disembunyikan.
+- **Terpopuler = paling banyak dibaca dalam 7 hari.** `gameindo_trending_posts()`
+  mengambil artikel dalam jendela 7 hari lalu mengurutkannya via
+  `gameindo_rank_popular()`: `_gi_reads` terbesar dulu, **terbaru dulu bila
+  seri**. Artikel tanpa `_gi_reads` bernilai 0, jadi situs yang tidak pernah
+  mengisi kolom itu otomatis mendapat rail murni urut-terbaru — ini perilaku
+  yang diinginkan, bukan kasus rusak. Bila jendela 7 hari kurang dari jumlah
+  baris, sisanya **ditambal artikel terbaru di luar jendela**, bukan dengan
+  memeringkat ulang seluruh arsip (itulah dulu penyebab artikel lawas ber-reads
+  besar menempel di puncak). Jendela bisa diubah lewat filter
+  `gameindo_popular_window_days`.
 - **Menu** header/footer/drawer memakai WP Menu (Tampilan → Menu) dengan walker
   khusus yang mempertahankan atribut `data-pillar`; bila menu belum diatur,
   nav otomatis dibangun dari kategori pilar.
