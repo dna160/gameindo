@@ -174,9 +174,13 @@
     function apply(sort) {
       var nodes = initial.slice();
       if (sort === "popular") {
-        nodes.sort(function (a, b) {
-          return (parseInt(b.getAttribute("data-reads"), 10) || 0) - (parseInt(a.getAttribute("data-reads"), 10) || 0);
-        });
+        // data-score is the reads + recency blend; data-reads is the fallback
+        // for markup rendered before that attribute existed.
+        var rank = function (n) {
+          var s = parseInt(n.getAttribute("data-score"), 10);
+          return isNaN(s) ? (parseInt(n.getAttribute("data-reads"), 10) || 0) : s;
+        };
+        nodes.sort(function (a, b) { return rank(b) - rank(a); });
       }
       nodes.forEach(function (n) {
         var show = true;

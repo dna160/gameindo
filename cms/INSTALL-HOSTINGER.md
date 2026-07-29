@@ -94,18 +94,37 @@ sekaligus, dan bersifat aman diulang (idempoten).
   - **Subkategori** — label pill di kartu (mis. `MPL ID`, `Handheld`).
   - **Waktu baca** — kosongkan untuk hitung otomatis.
   - **Jumlah dibaca** — angka popularitas (mis. `128 rb`) untuk rail Terpopuler.
+    Boleh dikosongkan: peringkat Terpopuler menggabungkan angka ini dengan
+    tanggal terbit, jadi artikel baru tetap tampil (lihat bagian di bawah).
   - **Featured** — jadikan hero utama beranda (pilih satu artikel saja).
   - **Spotlight** — tampil di rail trending beranda.
 - **Tag:** dipakai sebagai hashtag di bawah artikel & di tag cloud pencarian.
 - **Gambar Unggulan:** jadi gambar hero & thumbnail kartu.
 
 ### Widget esports (menu kiri wp-admin)
-- **Live Ticker** — teks berjalan di header. Judul = teks, isi tautan tujuan.
+- **Live Ticker** — teks berjalan di header. **Artikel terbaru otomatis masuk
+  ke ticker**, jadi menu ini hanya perlu diisi untuk pengumuman khusus
+  (judul = teks, isi tautan tujuan). Ticker diurutkan dari yang terbaru:
+  pengumuman yang baru dibuat tampil paling depan, item lawas turun sendiri.
+  Item demo bawaan boleh dihapus.
 - **Topik Hangat** — chip di bawah header beranda. Judul = label, isi kata kunci.
 - **Match Center** — jadwal/skor. Atur kompetisi, status (live/selesai/terjadwal), tim & skor.
 - **Klasemen** — satu entri = satu tim (peringkat, M–K, poin). Urut otomatis by peringkat.
 
 Semua bisa di-*drag* untuk mengubah urutan (kolom "Urutan").
+
+### Cara kerja rail "Terpopuler"
+Peringkat dihitung otomatis dari dua hal: **angka "Jumlah dibaca"** dan
+**seberapa baru** artikelnya (bobot kebaruan sedikit lebih besar). Efeknya:
+
+- Artikel yang baru terbit langsung naik ke rail, walau kolom "Jumlah dibaca"
+  masih kosong — ditandai label merah **BARU** dan keterangan "2 jam lalu".
+- Artikel lama yang benar-benar ramai tetap bisa bertahan di rail.
+- Rail hanya menilai artikel **30 hari terakhir** (kalau belum cukup, otomatis
+  melebar ke seluruh arsip), sehingga satu artikel lawas tidak menempel selamanya.
+- Satu baris selalu dijatah untuk artikel paling baru.
+
+Rail ini dipakai di beranda, halaman pilar, hasil pencarian, dan halaman penulis.
 
 ### Profil penulis
 **Pengguna → (pilih penulis) → bagian "GameIndo — Profil Penulis":**

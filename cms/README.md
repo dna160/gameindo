@@ -39,6 +39,15 @@ cms/
 - **Widget esports** (ticker, topik, match, klasemen) = custom post type,
   dirender server-side oleh tema via helper plugin; ada fallback JSON di tema
   bila plugin nonaktif.
+- **Live ticker = feed.** `gameindo_get_ticker()` menggabungkan item CPT
+  `gi_ticker` (pengumuman) dengan artikel terbaru, lalu mengurutkannya
+  **kronologis (terbaru dulu)** dan menandai item < 48 jam dengan badge "Baru".
+  Fixture JSON hanya dipakai kalau situs benar-benar kosong.
+- **Terpopuler = skor gabungan.** `gameindo_trending_posts()` menilai artikel
+  dalam jendela 30 hari dengan `0.45 × popularitas + 0.55 × kebaruan`
+  (kebaruan meluruh eksponensial, half-life 36 jam), plus jatah slot untuk
+  artikel terbaru. Artikel tanpa `_gi_reads` **tidak** dibuang. Semua angka
+  bisa disetel lewat filter `gameindo_trending_config`.
 - **Menu** header/footer/drawer memakai WP Menu (Tampilan → Menu) dengan walker
   khusus yang mempertahankan atribut `data-pillar`; bila menu belum diatur,
   nav otomatis dibangun dari kategori pilar.

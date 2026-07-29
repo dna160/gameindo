@@ -72,10 +72,23 @@ body { background: var(--surface); overflow-x: hidden; }
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
-  gap: 18px;
+  gap: 8px;
 }
 .gi-ticker__item:hover { color: #fff; }
-.gi-ticker__item::after { content: "—"; color: var(--gi-red); font-weight: 800; }
+.gi-ticker__item::after { content: "—"; color: var(--gi-red); font-weight: 800; margin-left: 10px; }
+.gi-ticker__badge {
+  flex: none;
+  background: var(--gi-red);
+  color: #fff;
+  font-family: var(--font-condensed);
+  font-weight: var(--fw-extra);
+  text-transform: uppercase;
+  letter-spacing: var(--ls-wider);
+  font-size: 10px;
+  line-height: 1;
+  padding: 3px 5px 2px;
+  border-radius: 3px;
+}
 
 /* ============================================================
    HEADER + PILLAR NAV
@@ -298,6 +311,11 @@ body { background: var(--surface); overflow-x: hidden; }
 .gi-rank__thumb { width: 56px; height: 56px; border-radius: var(--radius-sm); overflow: hidden; background: var(--surface-3); display: block; }
 .gi-rank__thumb img { width: 100%; height: 100%; object-fit: cover; }
 .gi-rank__category { display: block; font-family: var(--font-condensed); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide); font-size: 11px; color: var(--pillar); margin-bottom: 3px; }
+.gi-rank__badge {
+  display: inline-block; margin-left: 6px; padding: 2px 5px 1px; border-radius: 3px;
+  background: var(--gi-red); color: #fff; font-size: 9.5px; letter-spacing: var(--ls-wider);
+  vertical-align: 1px;
+}
 .gi-rank__title { display: block; font-family: var(--font-display); font-weight: 700; font-size: 15px; line-height: 1.22; letter-spacing: -.005em; color: var(--ink); transition: color var(--dur-base) var(--ease-out); }
 .gi-rank:hover .gi-rank__title { color: var(--pillar); }
 .gi-rank__meta { display: block; font-family: var(--font-mono); font-size: 10.5px; color: var(--ink-4); margin-top: 4px; }

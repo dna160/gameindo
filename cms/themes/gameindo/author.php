@@ -41,6 +41,13 @@ $gi_author_posts = get_posts( array(
 	'orderby'        => 'date',
 	'order'          => 'DESC',
 ) );
+
+// Loudest reads figure in this author's set — the popularity axis for the
+// "Terpopuler" tab is relative to their own field.
+$gi_author_max_reads = 0;
+foreach ( $gi_author_posts as $gi_ap ) {
+	$gi_author_max_reads = max( $gi_author_max_reads, gameindo_parse_reads( gameindo_meta( $gi_ap->ID, 'reads' ) ) );
+}
 ?>
 
 <main>
@@ -75,10 +82,13 @@ $gi_author_posts = get_posts( array(
 	        foreach ( $gi_author_posts as $gi_ap ) {
 		        $gi_sub   = gameindo_meta( $gi_ap->ID, 'subcategory' );
 		        $gi_rd    = gameindo_parse_reads( gameindo_meta( $gi_ap->ID, 'reads' ) );
+		        // data-score drives the "Terpopuler" tab: same reads + recency
+		        // blend as the rails, scaled to an int for the client-side sort.
+		        $gi_score = (int) round( gameindo_trending_score( $gi_ap->ID, $gi_author_max_reads ) * 1000 );
 		        echo gameindo_card( $gi_ap, array(
 			        'variant'     => 'md',
 			        'show_author' => false,
-			        'attrs'       => array( 'data-reads' => $gi_rd, 'data-sub' => $gi_sub ),
+			        'attrs'       => array( 'data-reads' => $gi_rd, 'data-score' => $gi_score, 'data-sub' => $gi_sub ),
 		        ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	        }
         } else {
@@ -92,13 +102,9 @@ $gi_author_posts = get_posts( array(
         </div>
         <div id="gi-author-popular">
           <?php
-          $gi_pop = $gi_author_posts;
-          usort( $gi_pop, function ( $a, $b ) {
-	          return gameindo_parse_reads( gameindo_meta( $b->ID, 'reads' ) ) - gameindo_parse_reads( gameindo_meta( $a->ID, 'reads' ) );
-          } );
-          $gi_pop = array_slice( array_filter( $gi_pop, function ( $p ) {
-	          return gameindo_meta( $p->ID, 'reads' );
-          } ), 0, 3 );
+          // Reads + recency, so this author's newest piece isn't held back by
+          // having no popularity figure typed in yet.
+          $gi_pop = gameindo_rank_trending( $gi_author_posts, 3 );
           $gi_pi = 0;
           foreach ( $gi_pop as $gi_pp ) {
 	          $gi_pi++;

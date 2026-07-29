@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GAMEINDO_VERSION', '1.0.2' );
+define( 'GAMEINDO_VERSION', '1.0.3' );
 define( 'GAMEINDO_DIR', get_template_directory() );
 define( 'GAMEINDO_URI', get_template_directory_uri() );
 

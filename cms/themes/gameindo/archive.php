@@ -79,20 +79,10 @@ $gi_initial = 6; // grid items visible before "Muat Lebih Banyak"
       </div>
       <?php else :
 	      // Non-esports pillars: a "Terpopuler" leaderboard panel to fill the
-	      // same slot the esports standings occupy. Ranked by reads, newest as
-	      // tiebreaker; the [data-pillar] scope colours it per pillar.
-	      $gi_pop = get_posts( array(
-		      'post_type'      => 'post',
-		      'post_status'    => 'publish',
-		      'posts_per_page' => 30,
-		      'category_name'  => $gi_slug,
-		      'orderby'        => 'date',
-		      'order'          => 'DESC',
-	      ) );
-	      usort( $gi_pop, function ( $a, $b ) {
-		      return gameindo_parse_reads( gameindo_meta( $b->ID, 'reads' ) ) - gameindo_parse_reads( gameindo_meta( $a->ID, 'reads' ) );
-	      } );
-	      $gi_pop = array_slice( $gi_pop, 0, 5 );
+	      // same slot the esports standings occupy. Same reads + recency blend
+	      // as the homepage rail, scoped to this pillar; the [data-pillar]
+	      // scope colours it per pillar.
+	      $gi_pop = gameindo_trending_posts( 5, array( 'category' => $gi_slug ) );
 	      if ( ! empty( $gi_pop ) ) : ?>
       <div class="gi-night-panel">
         <div class="gi-night-panel__head">

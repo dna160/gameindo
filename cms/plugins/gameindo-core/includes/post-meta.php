@@ -60,7 +60,8 @@ function gameindo_core_render_post_metabox( $post ) {
 	echo '<input type="text" name="gi_read_time" id="gi_read_time" value="' . esc_attr( $read_time ) . '" style="width:100%" placeholder="mis. 4 min read (kosong = otomatis)"></p>';
 
 	echo '<p><label for="gi_reads"><strong>Jumlah dibaca (popularitas)</strong></label><br>';
-	echo '<input type="text" name="gi_reads" id="gi_reads" value="' . esc_attr( $reads ) . '" style="width:100%" placeholder="mis. 128 rb"></p>';
+	echo '<input type="text" name="gi_reads" id="gi_reads" value="' . esc_attr( $reads ) . '" style="width:100%" placeholder="mis. 128 rb (boleh dikosongkan)">';
+	echo '<span class="description">Opsional. Rail <em>Terpopuler</em> menggabungkan angka ini dengan tanggal terbit, jadi artikel baru tetap muncul walau kolom ini kosong.</span></p>';
 
 	echo '<p><label><input type="checkbox" name="gi_featured" value="1"' . checked( $featured, '1', false ) . '> <strong>Featured</strong> (hero utama home)</label></p>';
 	echo '<p><label><input type="checkbox" name="gi_spotlight" value="1"' . checked( $spotlight, '1', false ) . '> <strong>Spotlight</strong> (rail trending home)</label></p>';

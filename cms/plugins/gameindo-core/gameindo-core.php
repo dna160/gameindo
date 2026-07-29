@@ -82,7 +82,7 @@ add_action( 'admin_menu', 'gameindo_core_admin_menu' );
 function gameindo_core_dashboard_page() {
 	echo '<div class="wrap"><h1>GameIndo Core</h1>';
 	echo '<p>Kelola konten dinamis GameIndo dari sini:</p><ul style="list-style:disc;margin-left:20px">';
-	echo '<li><a href="' . esc_url( admin_url( 'edit.php?post_type=gi_ticker' ) ) . '">Live Ticker</a> — teks berjalan di atas header.</li>';
+	echo '<li><a href="' . esc_url( admin_url( 'edit.php?post_type=gi_ticker' ) ) . '">Live Ticker</a> — teks berjalan di atas header. <em>Artikel terbaru otomatis masuk ke ticker;</em> isi menu ini hanya untuk pengumuman khusus. Ticker diurutkan dari yang paling baru (item lama otomatis turun), jadi item demo lawas boleh dihapus.</li>';
 	echo '<li><a href="' . esc_url( admin_url( 'edit.php?post_type=gi_topic' ) ) . '">Topik Hangat</a> — chip topik di bawah header home.</li>';
 	echo '<li><a href="' . esc_url( admin_url( 'edit.php?post_type=gi_match' ) ) . '">Match Center</a> — jadwal & skor pertandingan.</li>';
 	echo '<li><a href="' . esc_url( admin_url( 'edit.php?post_type=gi_standing' ) ) . '">Klasemen</a> — baris klasemen tim.</li>';
