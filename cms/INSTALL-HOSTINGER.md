@@ -102,15 +102,86 @@ sekaligus, dan bersifat aman diulang (idempoten).
 - **Gambar Unggulan:** jadi gambar hero & thumbnail kartu.
 
 ### Widget esports (menu kiri wp-admin)
+- **PandaScore** — **sumber utama jadwal match.** Isi token API di sini, lalu
+  jadwal enam game terisi otomatis. Lihat bagian di bawah.
 - **Live Ticker** — teks berjalan di header sekarang **terisi otomatis dari 12
   artikel terbaru** Anda, jadi menu ini **tidak lagi memengaruhi tampilan situs**
   dan tidak perlu diisi. Item demo bawaan boleh dihapus atau dibiarkan — sama
   saja, tidak akan muncul.
 - **Topik Hangat** — chip di bawah header beranda. Judul = label, isi kata kunci.
-- **Match Center** — jadwal/skor. Atur kompetisi, status (live/selesai/terjadwal), tim & skor.
-- **Klasemen** — satu entri = satu tim (peringkat, M–K, poin). Urut otomatis by peringkat.
+- **Match Center** — jadwal/skor manual. Sekarang hanya dipakai **sebagai
+  cadangan**: isinya baru tampil kalau token PandaScore kosong atau API-nya
+  sedang bermasalah.
+- **Klasemen** — **tidak lagi ditampilkan di situs.** Panel klasemen di halaman
+  Esports sudah diganti panel Jadwal. Data lama tetap aman tersimpan di sini
+  kalau suatu saat mau dipakai lagi.
 
 Semua bisa di-*drag* untuk mengubah urutan (kolom "Urutan").
+
+### Jadwal match otomatis (PandaScore)
+
+Jadwal di **beranda** dan **halaman Esports** diambil dari
+[PandaScore](https://pandascore.co) untuk enam game: **ML:BB, CS:GO, Valorant,
+LoL, DotA 2, Overwatch**.
+
+**Pasang token:**
+
+1. Daftar di PandaScore, salin token dari dasbor mereka.
+2. Cara paling aman — tambahkan di `wp-config.php`, **di atas** baris
+   `/* That's all, stop editing! */`:
+
+   ```php
+   define( 'GAMEINDO_PANDASCORE_TOKEN', 'token-anda-di-sini' );
+   ```
+
+   Token tidak masuk database dan tidak ikut ter-backup ke tempat lain.
+3. Alternatifnya: **GameIndo → PandaScore** di wp-admin, tempel di kolom
+   *Token API*, Simpan. (Kalau konstanta di `wp-config.php` ada, konstanta itu
+   yang dipakai dan kolom ini diabaikan.)
+4. Klik **Tes koneksi** untuk memastikan token valid, lalu **Bersihkan cache &
+   ambil ulang** supaya jadwal langsung terisi.
+
+**Yang perlu diketahui:**
+
+- Semua pengambilan data dilakukan **di server** — token tidak pernah terkirim
+  ke browser pengunjung.
+- Hasilnya di-*cache*: skor live disegarkan tiap **3 menit**, jadwal tiap
+  **15 menit**, dan sebuah cron tiap 5 menit menjaga cache tetap hangat.
+  Pengunjung tidak pernah menunggu PandaScore — halaman selalu tampil instan.
+- Kuota gratis PandaScore 1.000 request/jam; pemakaian pola ini sekitar
+  **±100 request/jam**, jadi jauh di bawah batas.
+- Kalau API mati, situs **tetap menampilkan jadwal terakhir** yang tersimpan
+  (sampai 24 jam), lalu jatuh ke data manual **Match Center**. Panel tidak
+  pernah kosong mendadak.
+- Baris jadwal yang punya siaran resmi bisa **diklik langsung ke streamnya**
+  (YouTube/Twitch/Kick). Siaran resmi berbahasa Indonesia diprioritaskan —
+  MPL Indonesia menandai stream YouTube resminya, jadi tombolnya tampil
+  sebagai **▶ YouTube ID**.
+- Beranda menampilkan **4 baris turnamen bergengsi**, dengan urutan:
+  1. **Gengsi turnamen lebih dulu** — status live saja tidak cukup. Kualifikasi
+     kecil (NODWIN, Exort Fiesta, kualifikasi tertutup CCT) tidak boleh memakan
+     slot beranda hanya karena kebetulan sedang live.
+  2. Di antara yang bergengsi: yang **sedang live** dulu, lalu **hari terdekat**,
+     lalu **ML:BB** diprioritaskan dalam hari yang sama.
+  3. **Maksimal 2 baris per game**, supaya beranda tidak habis dipakai satu liga
+     yang malam itu kebetulan ramai.
+
+  Batas gengsinya = **tier C ke atas**. Ini menjaga Overwatch World Cup, KeSPA
+  Cup, dan ESL Challenger League tetap tampil bersama MPL, LEC, VCT, dan The
+  International — sekaligus menyingkirkan kualifikasi. Perlu dicatat: match tier
+  rendah **tidak dibuang, hanya diturunkan**. Kalau suatu hari tidak ada event
+  besar sama sekali, beranda tetap terisi dan tidak pernah kosong.
+
+  Mau lebih ketat (hanya turnamen major) atau lebih longgar? Ubah lewat filter
+  di `functions.php`:
+
+  ```php
+  add_filter( 'gameindo_prestige_tier_floor', function () { return 'b'; } );
+  ```
+- Chip di halaman Esports (**Semua / ML:BB / CS:GO / Valorant / LoL / DotA 2 /
+  Overwatch**) menyaring **panel Jadwal saja**; daftar artikel di bawahnya tetap
+  seluruh artikel pilar Esports. Filter tersimpan di URL (`?game=csgo`) jadi bisa
+  dibagikan.
 
 ### Cara kerja rail "Terpopuler"
 Aturannya sederhana dan bisa diprediksi:

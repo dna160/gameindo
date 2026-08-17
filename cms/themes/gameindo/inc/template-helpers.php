@@ -267,35 +267,367 @@ function gameindo_standings_row( $row ) {
 	return $html;
 }
 
+/* ============================================================
+   MATCH SCHEDULE — live from PandaScore via GameIndo Core
+   ============================================================ */
+
 /**
- * Match-panel row. Mirrors templates.js `matchPanelRow()`.
+ * The six games the schedule covers, in display order. Mirrors the plugin's
+ * registry; kept here as a fallback so the filter chips still render (and the
+ * page doesn't fatal) when the plugin is inactive.
+ */
+function gameindo_esports_games() {
+	if ( function_exists( 'gameindo_core_pandascore_games' ) ) {
+		return gameindo_core_pandascore_games();
+	}
+	return array(
+		'mlbb'     => array( 'label' => 'ML:BB',     'name' => 'Mobile Legends: Bang Bang' ),
+		'csgo'     => array( 'label' => 'CS:GO',     'name' => 'Counter-Strike 2' ),
+		'valorant' => array( 'label' => 'Valorant',  'name' => 'Valorant' ),
+		'lol'      => array( 'label' => 'LoL',       'name' => 'League of Legends' ),
+		'dota2'    => array( 'label' => 'DotA 2',    'name' => 'Dota 2' ),
+		'ow'       => array( 'label' => 'Overwatch', 'name' => 'Overwatch' ),
+	);
+}
+
+/**
+ * Which game the esports page is filtered to, from ?game=… — 'all' unless the
+ * value is one of the six keys.
+ */
+function gameindo_current_game() {
+	$g = isset( $_GET['game'] ) ? sanitize_key( wp_unslash( $_GET['game'] ) ) : 'all'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	return array_key_exists( $g, gameindo_esports_games() ) ? $g : 'all';
+}
+
+/**
+ * Lowest tournament tier that still counts as a marquee event for the homepage
+ * panel. Matches below it get demoted behind everything else — never hidden.
+ *
+ * 'c' is the line that matters in practice: it keeps the Overwatch World Cup,
+ * the KeSPA Cup and the ESL Challenger League alongside MPL, the LEC, VCT and
+ * The International, while pushing back open and closed qualifiers (NODWIN,
+ * Exort Fiesta, CCT qualifiers) that would otherwise take homepage slots purely
+ * for being live. Raise it to 'b' for majors only, or 'd'/'' to rank purely by
+ * time again.
+ */
+function gameindo_prestige_floor() {
+	return (string) apply_filters( 'gameindo_prestige_tier_floor', 'c' );
+}
+
+/**
+ * Human label for the panel heading: "Jadwal" or "Jadwal ML:BB".
+ */
+function gameindo_schedule_title( $game ) {
+	$games = gameindo_esports_games();
+	return isset( $games[ $game ] ) ? 'Jadwal ' . $games[ $game ]['label'] : 'Jadwal';
+}
+
+/**
+ * The schedule rows. Live matches first, then upcoming by matchday.
+ *
+ * Prefers PandaScore (live, six games). When there's no token or the API is
+ * unreachable, falls back to the hand-maintained gi_match entries so the panel
+ * degrades to the old editable behaviour instead of vanishing.
+ *
+ * $args: limit (int), priority (game key floated up within each matchday).
+ */
+function gameindo_get_schedule( $game = 'all', $args = array() ) {
+	if ( function_exists( 'gameindo_core_get_schedule' ) ) {
+		$rows = gameindo_core_get_schedule( $game, $args );
+		if ( ! empty( $rows ) ) {
+			return $rows;
+		}
+	}
+
+	// Fallback: the manual Match Center rows carry their own status label and
+	// no kickoff timestamp, so they render as-is.
+	if ( 'all' !== $game ) {
+		return array();
+	}
+	$legacy = gameindo_get_matches();
+	$rows   = array();
+	foreach ( (array) $legacy['matches'] as $m ) {
+		$rows[] = array(
+			'id'           => isset( $m['id'] ) ? (int) $m['id'] : 0,
+			'game'         => '',
+			'game_label'   => '',
+			'status'       => isset( $m['status'] ) && 'live' === $m['status'] ? 'running' : 'not_started',
+			'status_label' => isset( $m['status_label'] ) ? $m['status_label'] : '',
+			'begin_ts'     => 0,
+			'team_a'       => $m['team_a'],
+			'team_a_name'  => $m['team_a'],
+			'team_b'       => $m['team_b'],
+			'team_b_name'  => $m['team_b'],
+			'score_a'      => ( '' === $m['score_a'] ) ? null : $m['score_a'],
+			'score_b'      => ( '' === $m['score_b'] ) ? null : $m['score_b'],
+			'league'       => isset( $legacy['competition'] ) ? $legacy['competition'] : '',
+			'serie'        => '',
+			'stage'        => '',
+			'tier'         => '',
+			'competition'  => isset( $legacy['competition'] ) ? $legacy['competition'] : '',
+			'best_of'      => 0,
+			'stream_url'   => '',
+			'stream_lang'  => '',
+		);
+	}
+	if ( ! empty( $args['limit'] ) ) {
+		$rows = array_slice( $rows, 0, (int) $args['limit'] );
+	}
+	return $rows;
+}
+
+/**
+ * Short kickoff label for a row: "● LIVE", "19:30" today, "Bsk 19:30",
+ * "Sab 19:30" this week, "21 Agu" beyond it. Times are rendered in the site
+ * timezone, so an Indonesian site shows WIB.
+ */
+function gameindo_match_time_label( $m ) {
+	if ( ! empty( $m['status_label'] ) ) {
+		return $m['status_label'];
+	}
+	if ( isset( $m['status'] ) && 'running' === $m['status'] ) {
+		return '● LIVE';
+	}
+	$ts = isset( $m['begin_ts'] ) ? (int) $m['begin_ts'] : 0;
+	if ( ! $ts ) {
+		return 'TBD';
+	}
+
+	$day  = wp_date( 'Ymd', $ts );
+	$time = wp_date( 'H:i', $ts );
+	if ( wp_date( 'Ymd' ) === $day ) {
+		return $time;
+	}
+	if ( wp_date( 'Ymd', time() + DAY_IN_SECONDS ) === $day ) {
+		return 'Bsk ' . $time;
+	}
+	if ( ( $ts - time() ) < 6 * DAY_IN_SECONDS ) {
+		return wp_date( 'D', $ts ) . ' ' . $time;
+	}
+	return wp_date( 'j M', $ts );
+}
+
+/**
+ * Day heading for the grouped schedule list: "Hari ini · Sab, 17 Agu".
+ */
+function gameindo_match_day_label( $ts ) {
+	if ( ! $ts ) {
+		return 'Jadwal menyusul';
+	}
+	$day  = wp_date( 'Ymd', $ts );
+	$date = wp_date( 'D, j M', $ts );
+	if ( wp_date( 'Ymd' ) === $day ) {
+		return 'Hari ini · ' . $date;
+	}
+	if ( wp_date( 'Ymd', time() + DAY_IN_SECONDS ) === $day ) {
+		return 'Besok · ' . $date;
+	}
+	return $date;
+}
+
+/**
+ * Score for a row, or "vs" while it hasn't started.
+ */
+function gameindo_match_score( $m ) {
+	if ( null === $m['score_a'] || '' === $m['score_a'] || null === $m['score_b'] || '' === $m['score_b'] ) {
+		return 'vs';
+	}
+	return $m['score_a'] . ' — ' . $m['score_b'];
+}
+
+/**
+ * The competition line: "ML:BB · MPL Indonesia". The game prefix is dropped
+ * when the panel is already filtered to a single game.
+ */
+function gameindo_match_competition( $m, $with_game = true ) {
+	$parts = array();
+	if ( $with_game && ! empty( $m['game_label'] ) ) {
+		$parts[] = $m['game_label'];
+	}
+	if ( ! empty( $m['league'] ) ) {
+		$parts[] = $m['league'];
+	} elseif ( ! empty( $m['competition'] ) ) {
+		$parts[] = $m['competition'];
+	}
+	return implode( ' · ', $parts );
+}
+
+/**
+ * Distinct competitions present in a set of rows — used to spell out which
+ * tournaments a game's schedule actually covers (MPL Indonesia vs MPL
+ * Philippines vs a one-off invitational), which is otherwise invisible.
+ */
+function gameindo_schedule_competitions( $rows, $max = 4 ) {
+	$names = array();
+	foreach ( $rows as $m ) {
+		$name = ! empty( $m['league'] ) ? $m['league'] : $m['competition'];
+		if ( $name && ! in_array( $name, $names, true ) ) {
+			$names[] = $name;
+		}
+	}
+	if ( count( $names ) > $max ) {
+		$rest  = count( $names ) - $max;
+		$names = array_slice( $names, 0, $max );
+		/* translators: %d: number of further competitions. */
+		$names[] = sprintf( _n( '+%d lainnya', '+%d lainnya', $rest, 'gameindo' ), $rest );
+	}
+	return $names;
+}
+
+/**
+ * Name the broadcaster behind a stream URL so the watch button says where the
+ * click leads. Roughly 90% of matches carry one, mostly Twitch and YouTube.
+ * Anything unrecognised falls back to a neutral "Live".
+ */
+function gameindo_stream_platform( $url ) {
+	$host = strtolower( (string) wp_parse_url( $url, PHP_URL_HOST ) );
+	if ( '' === $host ) {
+		return '';
+	}
+	$known = array(
+		'youtube'   => 'YouTube',
+		'youtu.be'  => 'YouTube',
+		'twitch'    => 'Twitch',
+		'kick.com'  => 'Kick',
+		'sooplive'  => 'SOOP',
+		'afreeca'   => 'SOOP',
+		'trovo'     => 'Trovo',
+		'huya'      => 'Huya',
+		'douyu'     => 'Douyu',
+		'nimo'      => 'Nimo TV',
+		'facebook'  => 'Facebook',
+		'bilibili'  => 'Bilibili',
+		'vk.com'    => 'VK',
+	);
+	foreach ( $known as $needle => $label ) {
+		if ( false !== strpos( $host, $needle ) ) {
+			return $label;
+		}
+	}
+	return 'Live';
+}
+
+/**
+ * The watch-now button for a row with an official broadcast. Indonesian-
+ * language streams are flagged, since an MPL ID broadcast in Indonesian is a
+ * materially better click for this audience than the English world feed.
+ */
+function gameindo_stream_button( $m, $compact = false ) {
+	if ( empty( $m['stream_url'] ) ) {
+		return '';
+	}
+	$platform = gameindo_stream_platform( $m['stream_url'] );
+	$live     = ( isset( $m['status'] ) && 'running' === $m['status'] );
+	$label    = $compact ? $platform : ( $live ? 'Tonton' : $platform );
+	if ( ! $compact && ! empty( $m['stream_lang'] ) && 'id' === $m['stream_lang'] ) {
+		$label .= ' ID';
+	}
+	return '<span class="gi-watch' . ( $live ? ' gi-watch--live' : '' ) . '">'
+		. '<span class="gi-watch__glyph" aria-hidden="true">▶</span>'
+		. '<span class="gi-watch__label">' . esc_html( $label ) . '</span></span>';
+}
+
+/**
+ * Accessible label for a row that links out to a broadcast.
+ */
+function gameindo_stream_aria( $m ) {
+	$who = $m['team_a'] . ' vs ' . $m['team_b'];
+	$at  = gameindo_stream_platform( $m['stream_url'] );
+	return ( isset( $m['status'] ) && 'running' === $m['status'] )
+		? sprintf( 'Tonton %s yang sedang berlangsung di %s', $who, $at )
+		: sprintf( 'Buka siaran resmi %s di %s', $who, $at );
+}
+
+/**
+ * Match-panel row (homepage hero side panel). Two lines: the fixture, then the
+ * competition and kickoff time. Rows with an official broadcast link straight
+ * out to it, so a live match is one click from the homepage.
  */
 function gameindo_match_panel_row( $m ) {
-	$score = ( null === $m['score_a'] || '' === $m['score_a'] || null === $m['score_b'] || '' === $m['score_b'] )
-		? 'vs'
-		: $m['score_a'] . ' — ' . $m['score_b'];
-	$live  = ( isset( $m['status'] ) && 'live' === $m['status'] ) ? ' gi-matchpanel__status--live' : '';
-	$html  = '<div class="gi-matchpanel__row">';
+	$is_live = ( isset( $m['status'] ) && 'running' === $m['status'] );
+	$live    = $is_live ? ' gi-matchpanel__status--live' : '';
+	$comp    = gameindo_match_competition( $m );
+	$stream  = ! empty( $m['stream_url'] );
+
+	$open = $stream
+		? '<a class="gi-matchpanel__row gi-matchpanel__row--link' . ( $is_live ? ' gi-matchpanel__row--live' : '' ) . '"'
+			. ' href="' . esc_url( $m['stream_url'] ) . '" target="_blank" rel="noopener noreferrer"'
+			. ' aria-label="' . esc_attr( gameindo_stream_aria( $m ) ) . '">'
+		: '<div class="gi-matchpanel__row">';
+
+	$html  = $open;
+	$html .= '<span class="gi-matchpanel__main">';
 	$html .= '<span class="gi-matchpanel__team">' . esc_html( $m['team_a'] ) . '</span>';
-	$html .= '<span class="gi-matchpanel__score">' . esc_html( $score ) . '</span>';
+	$html .= '<span class="gi-matchpanel__score">' . esc_html( gameindo_match_score( $m ) ) . '</span>';
 	$html .= '<span class="gi-matchpanel__team gi-matchpanel__team--right">' . esc_html( $m['team_b'] ) . '</span>';
-	$html .= '<span class="gi-matchpanel__status' . $live . '">' . esc_html( $m['status_label'] ) . '</span>';
-	$html .= '</div>';
+	$html .= '</span>';
+	$html .= '<span class="gi-matchpanel__sub">';
+	$html .= '<span class="gi-matchpanel__comp">' . esc_html( $comp ) . '</span>';
+	$html .= '<span class="gi-matchpanel__status' . $live . '">'
+		. ( $stream ? gameindo_stream_button( $m, true ) : '' )
+		. esc_html( gameindo_match_time_label( $m ) ) . '</span>';
+	$html .= '</span>';
+	$html .= $stream ? '</a>' : '</div>';
 	return $html;
 }
 
 /**
- * Mobile match card. Mirrors templates.js `mobileMatchCard()`.
+ * Mobile match card (the strip below the hero).
  */
-function gameindo_mobile_match_card( $m, $competition ) {
-	$score = ( null === $m['score_a'] || '' === $m['score_a'] ) ? 'vs' : $m['score_a'] . ' — ' . $m['score_b'];
-	$teams = $m['team_a'] . ' ' . $score . ' ' . $m['team_b'];
-	$live  = ( isset( $m['status'] ) && 'live' === $m['status'] );
-	$html  = '<div class="gi-mobile-matchcard' . ( $live ? ' gi-mobile-matchcard--live' : '' ) . '">';
-	$html .= '<span class="gi-mobile-matchcard__status' . ( $live ? ' gi-mobile-matchcard__status--live' : '' ) . '">' . esc_html( $m['status_label'] ) . '</span>';
+function gameindo_mobile_match_card( $m ) {
+	$live   = ( isset( $m['status'] ) && 'running' === $m['status'] );
+	$teams  = $m['team_a'] . ' ' . gameindo_match_score( $m ) . ' ' . $m['team_b'];
+	$stream = ! empty( $m['stream_url'] );
+	$cls    = 'gi-mobile-matchcard' . ( $live ? ' gi-mobile-matchcard--live' : '' ) . ( $stream ? ' gi-mobile-matchcard--link' : '' );
+
+	$html  = $stream
+		? '<a class="' . esc_attr( $cls ) . '" href="' . esc_url( $m['stream_url'] ) . '" target="_blank" rel="noopener noreferrer" aria-label="' . esc_attr( gameindo_stream_aria( $m ) ) . '">'
+		: '<div class="' . esc_attr( $cls ) . '">';
+	$html .= '<span class="gi-mobile-matchcard__status' . ( $live ? ' gi-mobile-matchcard__status--live' : '' ) . '">'
+		. ( $stream ? gameindo_stream_button( $m, true ) : '' )
+		. esc_html( gameindo_match_time_label( $m ) ) . '</span>';
 	$html .= '<span class="gi-mobile-matchcard__teams">' . esc_html( $teams ) . '</span>';
-	$html .= '<span class="gi-mobile-matchcard__comp">' . esc_html( $competition ) . '</span>';
-	$html .= '</div>';
+	$html .= '<span class="gi-mobile-matchcard__comp">' . esc_html( gameindo_match_competition( $m ) ) . '</span>';
+	$html .= $stream ? '</a>' : '</div>';
+	return $html;
+}
+
+/**
+ * Schedule row for the esports page panel — roomier than the homepage row, so
+ * it names the tournament stage and links to the official stream when there is
+ * one. $with_game hides the redundant game chip on a filtered panel.
+ */
+function gameindo_schedule_row( $m, $with_game = true ) {
+	$live = ( isset( $m['status'] ) && 'running' === $m['status'] );
+	$comp = gameindo_match_competition( $m, $with_game );
+	if ( ! empty( $m['serie'] ) ) {
+		$comp .= ' ' . $m['serie'];
+	}
+	if ( ! empty( $m['stage'] ) ) {
+		$comp .= ' · ' . $m['stage'];
+	}
+
+	$bo     = ! empty( $m['best_of'] ) ? 'BO' . (int) $m['best_of'] : '';
+	$stream = ! empty( $m['stream_url'] );
+	$watch  = $stream ? gameindo_stream_button( $m ) : '';
+
+	$open = $stream
+		? '<a class="gi-schedule__row gi-schedule__row--link' . ( $live ? ' gi-schedule__row--live' : '' ) . '"'
+			. ' href="' . esc_url( $m['stream_url'] ) . '" target="_blank" rel="noopener noreferrer"'
+			. ' aria-label="' . esc_attr( gameindo_stream_aria( $m ) ) . '">'
+		: '<div class="gi-schedule__row' . ( $live ? ' gi-schedule__row--live' : '' ) . '">';
+
+	$html  = $open;
+	$html .= '<span class="gi-schedule__time">' . esc_html( gameindo_match_time_label( $m ) ) . '</span>';
+	$html .= '<span class="gi-schedule__body">';
+	$html .= '<span class="gi-schedule__teams">' . esc_html( $m['team_a'] ) . ' <b>' . esc_html( gameindo_match_score( $m ) ) . '</b> ' . esc_html( $m['team_b'] ) . '</span>';
+	$html .= '<span class="gi-schedule__comp">' . esc_html( $comp ) . '</span>';
+	$html .= '</span>';
+	$html .= '<span class="gi-schedule__meta">';
+	$html .= $watch;
+	$html .= $bo ? '<span class="gi-schedule__bo">' . esc_html( $bo ) . '</span>' : '';
+	$html .= '</span>';
+	$html .= $stream ? '</a>' : '</div>';
 	return $html;
 }
 

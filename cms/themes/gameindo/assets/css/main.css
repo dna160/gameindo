@@ -375,6 +375,19 @@ body { background: var(--surface); overflow-x: hidden; }
 }
 
 /* ============================================================
+   WATCH CHIP — "▶ Twitch" / "▶ Tonton" on schedule rows that link
+   out to the official broadcast. Outlined in currentColor so the one
+   rule reads correctly on the night panels and the light schedule alike.
+   ============================================================ */
+.gi-watch {
+  display: inline-flex; align-items: center; gap: 4px; flex: none;
+  font-family: var(--font-mono); font-size: 9.5px; line-height: 1; white-space: nowrap;
+  padding: 3px 6px; border: 1px solid currentColor; border-radius: var(--radius-xs); opacity: .8;
+}
+.gi-watch__glyph { font-size: 8px; }
+.gi-watch--live { color: var(--live); font-weight: 700; opacity: 1; }
+
+/* ============================================================
    RESPONSIVE — collapse to the 390px mobile spec below 720px
    ============================================================ */
 @media (max-width: 720px) {

@@ -91,7 +91,23 @@ foreach ( $gi_all as $gi_p ) {
 	}
 }
 
-$gi_matches = gameindo_get_matches();
+// Match panel, four slots. Marquee tournaments come first — being live is not
+// on its own a reason to occupy the homepage, or a closed qualifier nobody
+// follows would outrank MPL and the LEC. Within the marquee set: live matches,
+// then the nearest matchday, with ML:BB floated up so MPL leads whenever it
+// plays. Lower-tier fixtures still fill any slot left over.
+$gi_matches = gameindo_get_schedule( 'all', array(
+	'limit'        => 4,
+	'priority'     => 'mlbb',
+	'rank_by_tier' => true,
+	'tier_floor'   => gameindo_prestige_floor(),
+	'max_per_game' => 2,
+) );
+
+// Panel meta reads as the competition when the rows all come from one, which
+// is the common case (an MPL matchday), and stays generic when they don't.
+$gi_match_comps = gameindo_schedule_competitions( $gi_matches, 2 );
+$gi_match_meta  = ( 1 === count( $gi_match_comps ) ) ? $gi_match_comps[0] : 'Jadwal Terdekat';
 ?>
 
 <main>
@@ -115,47 +131,42 @@ $gi_matches = gameindo_get_matches();
 	          echo gameindo_card( $gi_p, array( 'variant' => 'h' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
           }
         ?></div>
-        <?php if ( ! empty( $gi_matches['matches'] ) ) : ?>
+        <?php if ( ! empty( $gi_matches ) ) : ?>
         <div class="gi-matchpanel" data-pillar="esports">
           <div class="gi-matchpanel__head">
             <span class="gi-matchpanel__title">Jadwal Match</span>
-            <span class="gi-matchpanel__meta" id="gi-matchpanel-meta"><?php echo esc_html( $gi_matches['competition'] ); ?></span>
+            <span class="gi-matchpanel__meta" id="gi-matchpanel-meta"><?php echo esc_html( $gi_match_meta ); ?></span>
           </div>
           <div class="gi-matchpanel__rows" id="gi-matchpanel-rows"><?php
-            foreach ( $gi_matches['matches'] as $gi_m ) {
+            foreach ( $gi_matches as $gi_m ) {
 	            echo gameindo_match_panel_row( $gi_m ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
             }
           ?></div>
-          <a class="gi-matchpanel__cta" href="<?php echo esc_url( gameindo_pillar_url( 'esports' ) ); ?>">Lihat Klasemen →</a>
+          <a class="gi-matchpanel__cta" href="<?php echo esc_url( gameindo_pillar_url( 'esports' ) ); ?>">Lebih Detail →</a>
         </div>
         <?php endif; ?>
       </div>
     </div>
   </section>
 
-  <?php if ( ! empty( $gi_matches['matches'] ) ) :
-	// Mobile match strip: first two non-scheduled, else first two.
-	$gi_mobile = array();
-	foreach ( $gi_matches['matches'] as $gi_m ) {
-		if ( isset( $gi_m['status'] ) && 'scheduled' !== $gi_m['status'] ) {
-			$gi_mobile[] = $gi_m;
-		}
-		if ( count( $gi_mobile ) >= 2 ) {
-			break;
-		}
-	}
-	if ( empty( $gi_mobile ) ) {
-		$gi_mobile = array_slice( $gi_matches['matches'], 0, 2 );
-	} ?>
+  <?php if ( ! empty( $gi_matches ) ) :
+	// Mobile match strip: the same two leading rows the side panel opens with.
+	$gi_mobile = array_slice( $gi_matches, 0, 2 );
+
+	// Only claim "hari ini" when the lead match really is today.
+	$gi_lead_ts    = (int) $gi_mobile[0]['begin_ts'];
+	$gi_mobile_ttl = ( $gi_lead_ts && wp_date( 'Ymd', $gi_lead_ts ) === wp_date( 'Ymd' ) ) || 'running' === $gi_mobile[0]['status']
+		? 'Match Hari Ini'
+		: 'Match Terdekat'; ?>
   <div class="gi-mobile-matches" data-pillar="esports">
     <div class="gi-mobile-matches__inner">
       <div class="gi-mobile-matches__head">
         <span class="gi-mobile-matches__tick" aria-hidden="true"></span>
-        <span class="gi-mobile-matches__title">Match Hari Ini</span>
+        <span class="gi-mobile-matches__title"><?php echo esc_html( $gi_mobile_ttl ); ?></span>
       </div>
       <div class="gi-mobile-matches__row" id="gi-mobile-matches-row"><?php
         foreach ( $gi_mobile as $gi_m ) {
-	        echo gameindo_mobile_match_card( $gi_m, $gi_matches['competition'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+	        echo gameindo_mobile_match_card( $gi_m ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
         }
       ?></div>
     </div>

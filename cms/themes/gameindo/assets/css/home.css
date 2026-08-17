@@ -122,11 +122,24 @@
 .gi-matchpanel__title { font-family: var(--font-display); font-weight: 900; font-style: italic; text-transform: uppercase; font-size: 16px; letter-spacing: -.01em; }
 .gi-matchpanel__meta { font-family: var(--font-mono); font-size: 10.5px; color: var(--on-night-muted); }
 .gi-matchpanel__rows { display: flex; flex-direction: column; gap: 8px; position: relative; flex: 1; justify-content: center; }
-.gi-matchpanel__row { display: flex; align-items: center; gap: 10px; background: var(--night-3); border-radius: var(--radius-sm); padding: 9px 12px; }
-.gi-matchpanel__team { font-family: var(--font-condensed); font-weight: 700; font-size: 13px; flex: 1; }
+/* Two stacked lines: the fixture, then competition + kickoff. The status used
+   to sit in the same non-wrapping flex row at width:100%, which pushed it
+   clean out of the (overflow:hidden) panel — the kickoff time was never
+   actually visible. It is the point of the panel, so it gets its own line. */
+.gi-matchpanel__row {
+  display: flex; flex-direction: column; align-items: stretch; gap: 6px;
+  background: var(--night-3); border-radius: var(--radius-sm); padding: 9px 12px;
+}
+.gi-matchpanel__row--link { text-decoration: none; color: inherit; transition: background var(--dur-fast) var(--ease-out); }
+.gi-matchpanel__row--link:hover { background: rgba(255,255,255,.14); }
+.gi-matchpanel__row--live { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--live) 45%, transparent); }
+.gi-matchpanel__main { display: flex; align-items: center; gap: 10px; }
+.gi-matchpanel__sub { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.gi-matchpanel__team { font-family: var(--font-condensed); font-weight: 700; font-size: 13px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .gi-matchpanel__team--right { text-align: right; }
 .gi-matchpanel__score { font-family: var(--font-mono); font-weight: 700; font-size: 13px; flex: none; }
-.gi-matchpanel__status { font-family: var(--font-mono); font-size: 9.5px; color: var(--on-night-muted); flex: none; width: 100%; text-align: right; }
+.gi-matchpanel__comp { font-family: var(--font-mono); font-size: 9.5px; color: var(--on-night-muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gi-matchpanel__status { font-family: var(--font-mono); font-size: 9.5px; color: var(--on-night-muted); flex: none; display: inline-flex; align-items: center; gap: 6px; }
 .gi-matchpanel__status--live { color: var(--live); font-weight: 700; }
 .gi-matchpanel__cta {
   display: block; text-align: center; padding: 8px; border-radius: var(--radius-sm); position: relative;
@@ -202,7 +215,8 @@
   color: var(--on-night); display: flex; flex-direction: column; gap: 8px;
 }
 .gi-mobile-matchcard--live { border: 1px solid color-mix(in srgb, var(--live) 50%, transparent); }
-.gi-mobile-matchcard__status { font-family: var(--font-mono); font-size: 9.5px; color: var(--on-night-muted); }
+.gi-mobile-matchcard--link { text-decoration: none; }
+.gi-mobile-matchcard__status { font-family: var(--font-mono); font-size: 9.5px; color: var(--on-night-muted); display: flex; align-items: center; gap: 6px; }
 .gi-mobile-matchcard__status--live { color: var(--live); font-weight: 700; }
 .gi-mobile-matchcard__teams { font-family: var(--font-condensed); font-weight: 700; font-size: 15px; }
 .gi-mobile-matchcard__comp { font-family: var(--font-mono); font-size: 9.5px; color: var(--on-night-muted); }
