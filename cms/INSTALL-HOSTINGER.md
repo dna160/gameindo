@@ -108,6 +108,15 @@ sekaligus, dan bersifat aman diulang (idempoten).
   artikel terbaru** Anda, jadi menu ini **tidak lagi memengaruhi tampilan situs**
   dan tidak perlu diisi. Item demo bawaan boleh dihapus atau dibiarkan — sama
   saja, tidak akan muncul.
+  Kecepatan jalannya dipatok **45 piksel/detik** dan dihitung dari panjang isi,
+  jadi tetap enak dibaca berapa pun jumlah dan panjang judulnya. Ticker
+  **berhenti saat kursor diarahkan ke sana** (atau ditekan-tahan di HP) supaya
+  judulnya bisa diklik. Mau lebih pelan/cepat? Tambahkan di `functions.php`
+  (angka lebih kecil = lebih pelan):
+
+  ```php
+  add_filter( 'gameindo_ticker_speed', function () { return 35; } );
+  ```
 - **Topik Hangat** — chip di bawah header beranda. Judul = label, isi kata kunci.
 - **Match Center** — jadwal/skor manual. Sekarang hanya dipakai **sebagai
   cadangan**: isinya baru tampil kalau token PandaScore kosong atau API-nya
