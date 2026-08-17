@@ -85,6 +85,16 @@ cms/
   memeringkat ulang seluruh arsip (itulah dulu penyebab artikel lawas ber-reads
   besar menempel di puncak). Jendela bisa diubah lewat filter
   `gameindo_popular_window_days`.
+- **Responsif bertingkat** (di `assets/css/main.css`): `<=1100` rail menyempit,
+  `<=900` rail menumpuk (tablet potret & layar dalam Galaxy Fold ~673px masuk
+  sini), `<=720` spesifikasi ponsel asli, `<=380` satu kolom untuk layar luar
+  Fold (280–344px). **Jangan menaruh `grid-template-columns` sebagai inline
+  style di template** — inline style tidak bisa ditimpa media query, dan itulah
+  yang dulu membuat halaman pilar/cari/penulis tetap dua kolom di ponsel sampai
+  isinya tergencet hilang. Pakai kelas `.gi-rail-layout` (konten + rail 340px)
+  atau `.gi-pillar-layout` (2fr/1fr). Catatan: override untuk `.gi-latest-layout`
+  harus ditulis di `home.css`, bukan `main.css` — spesifisitasnya sama dan
+  `home.css` dimuat belakangan.
 - **Menu** header/footer/drawer memakai WP Menu (Tampilan → Menu) dengan walker
   khusus yang mempertahankan atribut `data-pillar`; bila menu belum diatur,
   nav otomatis dibangun dari kategori pilar.
