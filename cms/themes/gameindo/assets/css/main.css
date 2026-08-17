@@ -59,10 +59,25 @@ body { background: var(--surface); overflow-x: hidden; }
   gap: 18px;
   padding-left: 18px;
   white-space: nowrap;
-  animation: gi-ticker 32s linear infinite;
+  /* theme.js overrides this with a duration derived from the track width, so
+     the marquee holds one reading speed whatever the headlines are. The value
+     here is only the no-JS fallback — a fixed duration makes a busy feed
+     scroll far too fast to read. */
+  animation: gi-ticker 90s linear infinite;
   will-change: transform;
 }
 @keyframes gi-ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+/* Hold still while the reader is on the bar, so a headline can actually be
+   clicked. focus-within covers keyboard users tabbing through, and :active
+   gives touch devices — which have no hover at all — a press-and-hold read. */
+.gi-ticker:hover .gi-ticker__track,
+.gi-ticker:focus-within .gi-ticker__track,
+.gi-ticker:active .gi-ticker__track { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  .gi-ticker__track { animation: none; }
+  .gi-ticker__viewport { overflow-x: auto; scrollbar-width: none; }
+  .gi-ticker__viewport::-webkit-scrollbar { display: none; }
+}
 .gi-ticker__item {
   color: rgba(255,255,255,.82);
   text-decoration: none;

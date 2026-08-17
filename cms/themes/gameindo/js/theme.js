@@ -105,6 +105,39 @@
     play();
   })();
 
+  /* ---- Live ticker: constant reading speed ------------------ */
+  (function () {
+    var ticker = document.querySelector(".gi-ticker");
+    var track = document.getElementById("gi-ticker-track");
+    if (!ticker || !track) return;
+
+    // The item list is rendered twice for a seamless loop, so one cycle travels
+    // half the track. Timing that distance at a fixed px/second keeps the feed
+    // readable whether it holds four short headlines or twelve long ones — a
+    // fixed duration silently speeds up as the site publishes more.
+    var speed = parseFloat(ticker.getAttribute("data-speed")) || 45;
+
+    function sync() {
+      var distance = track.scrollWidth / 2;
+      if (!distance) return;
+      track.style.animationDuration = (distance / speed).toFixed(2) + "s";
+    }
+
+    sync();
+
+    // Web fonts land after first paint and change every headline's width, so
+    // measure again once they're in.
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(sync).catch(function () {});
+    }
+
+    var resizeTimer = null;
+    window.addEventListener("resize", function () {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(sync, 150);
+    });
+  })();
+
   /* ---- Mega menu -------------------------------------------- */
   (function () {
     var toggle = document.getElementById("gi-megamenu-toggle");

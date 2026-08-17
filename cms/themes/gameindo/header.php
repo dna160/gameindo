@@ -33,7 +33,7 @@ if ( has_custom_logo() ) {
 <?php if ( $gi_show_ticker ) :
 	$gi_ticker = gameindo_get_ticker();
 	if ( ! empty( $gi_ticker ) ) : ?>
-<div class="gi-ticker" role="region" aria-label="Live feed">
+<div class="gi-ticker" role="region" aria-label="Live feed" data-speed="<?php echo esc_attr( apply_filters( 'gameindo_ticker_speed', 45 ) ); ?>">
   <div class="gi-ticker__label"><span class="gi-ticker__dot" aria-hidden="true"></span>Live Feed</div>
   <div class="gi-ticker__viewport">
     <div class="gi-ticker__track" id="gi-ticker-track">
