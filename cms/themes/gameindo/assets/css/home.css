@@ -221,6 +221,12 @@
 .gi-mobile-matchcard__teams { font-family: var(--font-condensed); font-weight: 700; font-size: 15px; }
 .gi-mobile-matchcard__comp { font-family: var(--font-mono); font-size: 9.5px; color: var(--on-night-muted); }
 
+/* Tablet portrait + foldables opened. This override has to live here, not in
+   main.css: same specificity, and home.css is enqueued after it. */
+@media (max-width: 900px) {
+  .gi-latest-layout { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+}
+
 @media (max-width: 720px) {
   .gi-hottopics { display: none; }
   .gi-megamenu__grid { grid-template-columns: 1fr 1fr; }

@@ -22,5 +22,13 @@
 @media (max-width: 720px) {
   .gi-searchbar-inner { padding: 20px 14px 18px; }
   .gi-search-count { margin-left: 0; width: 100%; }
-  .gi-result-list .gi-card--h { grid-template-columns: 88px 1fr; }
+  .gi-result-list .gi-card--h { grid-template-columns: 104px 1fr; }
+}
+
+@media (max-width: 380px) {
+  .gi-searchbar-inner { padding: 16px 12px 14px; gap: 12px; }
+  .gi-searchbar { height: 48px; padding: 0 12px; gap: 8px; }
+  .gi-searchbar input { font-size: 15px; }
+  .gi-searchbar__esc { display: none; } /* no physical Esc key on a phone */
+  .gi-result-list .gi-card--h { grid-template-columns: 80px 1fr; }
 }

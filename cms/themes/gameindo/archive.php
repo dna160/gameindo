@@ -57,7 +57,7 @@ $gi_base_url = gameindo_pillar_url( 'esports' );
   </section>
 
   <div class="gi-container" style="padding-top:28px">
-    <div class="gi-grid-2" style="grid-template-columns:2fr 1fr;align-items:start">
+    <div class="gi-pillar-layout">
       <div id="gi-esports-feature"><?php
         if ( $gi_feature ) {
 	        $gi_fsub = gameindo_meta( $gi_feature->ID, 'subcategory' );

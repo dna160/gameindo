@@ -49,7 +49,7 @@ $gi_initial = 5;
   </div>
 
   <div class="gi-container" style="padding-top:30px;padding-bottom:40px">
-    <div style="display:grid;grid-template-columns:1fr 340px;gap:36px;align-items:start">
+    <div class="gi-rail-layout">
       <div>
         <div class="gi-result-list" id="gi-search-results">
           <?php

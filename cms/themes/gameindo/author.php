@@ -68,7 +68,7 @@ $gi_author_posts = get_posts( array(
   </nav>
 
   <div class="gi-container" style="padding-top:26px;padding-bottom:40px">
-    <div style="display:grid;grid-template-columns:1fr 340px;gap:36px;align-items:start">
+    <div class="gi-rail-layout">
       <div class="gi-grid-2" id="gi-author-grid">
         <?php
         if ( $gi_author_posts ) {
