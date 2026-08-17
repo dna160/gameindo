@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GAMEINDO_VERSION', '1.2.0' );
+define( 'GAMEINDO_VERSION', '1.3.0' );
 define( 'GAMEINDO_DIR', get_template_directory() );
 define( 'GAMEINDO_URI', get_template_directory_uri() );
 
@@ -127,6 +127,17 @@ function gameindo_body_pillar_attr() {
 
 	return $pillar ? ' data-pillar="' . esc_attr( $pillar ) . '"' : '';
 }
+
+/**
+ * The hot-topics row is assembled and cached for 15 minutes. An editor pinning
+ * a topic expects to see it immediately, so drop the cache on save rather than
+ * making them wait out the TTL.
+ */
+function gameindo_flush_hot_topics() {
+	delete_transient( 'gi_hot_topics' );
+}
+add_action( 'save_post_gi_topic', 'gameindo_flush_hot_topics' );
+add_action( 'trashed_post', 'gameindo_flush_hot_topics' );
 
 /**
  * Trim auto excerpts to a card-friendly length and drop the […] marker.

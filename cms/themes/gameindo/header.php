@@ -74,16 +74,17 @@ if ( has_custom_logo() ) {
   </div>
 
   <?php if ( $gi_is_front ) :
-	$gi_topics = gameindo_get_topics(); ?>
+	$gi_topics = gameindo_hot_topics( 8 );
+	if ( ! empty( $gi_topics ) ) : ?>
   <div class="gi-hottopics">
     <div class="gi-hottopics__row" id="gi-hottopics-row">
       <span class="gi-hottopics__label">Topik Hangat</span>
-      <?php foreach ( $gi_topics as $gi_topic ) :
-		$gi_q = ! empty( $gi_topic['query'] ) ? $gi_topic['query'] : $gi_topic['label']; ?>
-        <a class="gi-hottopics__item" href="<?php echo esc_url( home_url( '/?s=' . rawurlencode( $gi_q ) ) ); ?>"><?php echo esc_html( $gi_topic['label'] ); ?></a>
+      <?php foreach ( $gi_topics as $gi_topic ) : ?>
+        <a class="gi-hottopics__item<?php echo $gi_topic['live'] ? ' gi-hottopics__item--live' : ''; ?>" href="<?php echo esc_url( $gi_topic['url'] ); ?>"><?php echo esc_html( $gi_topic['label'] ); ?></a>
       <?php endforeach; ?>
     </div>
   </div>
+  <?php endif; ?>
   <div class="gi-mobile-pillars">
     <?php gameindo_pillar_nav_fallback(); // mobile row: same links, class differs via CSS scope ?>
   </div>

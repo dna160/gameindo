@@ -23,6 +23,14 @@
   text-transform: uppercase; color: var(--ink-2); text-decoration: none; flex: none; white-space: nowrap;
 }
 .gi-hottopics__item:hover { color: var(--pillar); }
+/* A competition with a match on air right now. Static dot on purpose — the
+   ticker directly above already has a pulsing one, and two competing for
+   attention in the same header reads as noise. */
+.gi-hottopics__item--live { color: var(--ink); font-weight: 700; }
+.gi-hottopics__item--live::before {
+  content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 999px;
+  background: var(--live); margin-right: 6px; vertical-align: middle;
+}
 
 /* ============================================================
    MEGA-MENU — toggled open/closed via the header "Menu" button
@@ -228,7 +236,11 @@
 }
 
 @media (max-width: 720px) {
-  .gi-hottopics { display: none; }
+  /* Was display:none, which made the whole bar invisible to most of the
+     audience. It scrolls horizontally instead — tighter, but present. */
+  .gi-hottopics__row { height: 36px; gap: 14px; padding-inline: 14px; }
+  .gi-hottopics__label { font-size: 10px; }
+  .gi-hottopics__item { font-size: 12px; }
   .gi-megamenu__grid { grid-template-columns: 1fr 1fr; }
   .gi-megamenu__grid > .gi-megamenu__trending { grid-column: 1 / -1; }
 
