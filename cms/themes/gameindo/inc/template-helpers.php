@@ -1166,11 +1166,6 @@ function gameindo_parse_reads( $str ) {
 }
 
 /**
- * Mega-menu columns. Column titles link to the pillar category; the sub-links
- * are the site's editorial IA (kept as fixed chrome, per the design), each
- * pointing at its pillar archive.
- */
-/**
  * Shorten a headline to fit a menu column without breaking a word in half.
  */
 function gameindo_shorten( $text, $max = 42 ) {
