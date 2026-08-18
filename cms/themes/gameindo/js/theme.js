@@ -143,10 +143,33 @@
     var toggle = document.getElementById("gi-megamenu-toggle");
     var panel = document.getElementById("gi-megamenu");
     if (!toggle || !panel) return;
+
+    // Cap the panel at whatever room is left below its own top edge. That
+    // distance isn't knowable in CSS: the header is sticky, so the panel sits
+    // lower before the page has scrolled past the ticker, and on mobile the
+    // header also carries the hot-topics and pillar rows. Sizing it off a
+    // fixed header height left the last entries stranded below the fold.
+    function fit() {
+      if (!panel.classList.contains("is-open")) return;
+      var top = panel.getBoundingClientRect().top;
+      panel.style.maxHeight = Math.max(180, window.innerHeight - top) + "px";
+    }
+
     toggle.addEventListener("click", function () {
       var open = panel.classList.toggle("is-open");
       toggle.setAttribute("aria-expanded", open ? "true" : "false");
+      if (open) fit();
+      else panel.style.maxHeight = "";
     });
+
+    var pending = false;
+    function schedule() {
+      if (pending || !panel.classList.contains("is-open")) return;
+      pending = true;
+      requestAnimationFrame(function () { pending = false; fit(); });
+    }
+    window.addEventListener("resize", schedule);
+    window.addEventListener("scroll", schedule, { passive: true });
   })();
 
   /* ---- Newsletter opt-in (AJAX) ----------------------------- */

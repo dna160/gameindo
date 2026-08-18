@@ -383,8 +383,13 @@ body { background: var(--surface); overflow-x: hidden; }
   position: relative; z-index: 3;
   background: var(--surface); border-bottom: 2px solid var(--ink);
   box-shadow: 0 12px 28px rgba(16,16,20,.14), 0 4px 10px rgba(16,16,20,.08);
-  /* Sits inside the sticky header, so it must never grow past the screen. */
-  max-height: calc(100vh - var(--header-h)); overflow-y: auto; overscroll-behavior: contain;
+  /* Conservative fallback; theme.js replaces it with the exact space left
+     below the panel's own top edge. It cannot be derived in CSS: the header is
+     sticky, so how far down the panel starts depends on whether the page has
+     scrolled past the ticker, and on mobile the header also carries the
+     hot-topics and pillar rows. Guessing from --header-h ran the panel about
+     70px below the fold, where its last entries could not be reached. */
+  max-height: 80vh; overflow-y: auto; overscroll-behavior: contain;
 }
 .gi-megamenu.is-open { display: block; }
 .gi-megamenu__grid {

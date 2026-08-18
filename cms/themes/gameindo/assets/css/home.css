@@ -171,8 +171,12 @@
 /* ============================================================
    MOBILE — pillar pill row + "Match Hari Ini" horizontal cards
    ============================================================ */
+/* Symmetric padding and a rule of its own. With no top padding the pill row
+   sat flush against the hot-topics bar above it while keeping a gap below,
+   which read as two rows crushed together. */
 .gi-mobile-pillars {
-  display: none; gap: 8px; padding: 0 14px 12px; overflow-x: auto; scrollbar-width: none;
+  display: none; gap: 8px; padding: 12px 14px; overflow-x: auto; scrollbar-width: none;
+  border-top: 1px solid var(--line);
 }
 .gi-mobile-pillars::-webkit-scrollbar { display: none; }
 .gi-mobile-pill {
@@ -206,10 +210,17 @@
   .gi-latest-layout { grid-template-columns: minmax(0, 1fr); gap: 28px; }
 }
 
+/* Give the topics bar the same vertical rhythm as the pillar row beneath it.
+   At 36px against the pillar row's 46px the two read as mismatched strips
+   crushed together. */
+@media (max-width: 1100px) {
+  .gi-hottopics__row { height: 46px; }
+}
+
 @media (max-width: 720px) {
   /* Was display:none, which made the whole bar invisible to most of the
      audience. It scrolls horizontally instead — tighter, but present. */
-  .gi-hottopics__row { height: 36px; gap: 14px; padding-inline: 14px; }
+  .gi-hottopics__row { height: 46px; gap: 14px; padding-inline: 14px; }
   .gi-hottopics__label { font-size: 10px; }
   .gi-hottopics__item { font-size: 12px; }
 
