@@ -735,20 +735,59 @@ function gameindo_league_chip_label( $m ) {
 }
 
 /**
+ * Chip label for a team. Full names read better as a topic than acronyms
+ * ("Team Liquid ID" over "TLID"), but not when they run long enough to shove
+ * every other chip off the row.
+ */
+function gameindo_team_chip_label( $m, $side ) {
+	$name  = isset( $m[ 'team_' . $side . '_name' ] ) ? trim( $m[ 'team_' . $side . '_name' ] ) : '';
+	$short = isset( $m[ 'team_' . $side ] ) ? trim( $m[ 'team_' . $side ] ) : '';
+	if ( '' === $name || 0 === strcasecmp( $name, 'TBD' ) ) {
+		return 0 === strcasecmp( $short, 'TBD' ) ? '' : $short;
+	}
+	$len = function_exists( 'mb_strlen' ) ? mb_strlen( $name ) : strlen( $name );
+	return ( $len <= 20 || '' === $short ) ? $name : $short;
+}
+
+/**
+ * Is this tag a subject people discuss, or just how the piece was written?
+ *
+ * "Review", "Guide" and "Tips" describe a format, not a topic — as a chip in a
+ * row headed "Topik Hangat" they promise a story and deliver a genre. A tag
+ * used only once is filtered out for a related reason: it links to an archive
+ * of a single article, which is a dead end rather than a topic. Both lists are
+ * filterable; the site's own vocabulary is the thing that will change.
+ */
+function gameindo_is_topic_tag( $term ) {
+	$min = (int) apply_filters( 'gameindo_hot_topics_tag_min_posts', 2 );
+	if ( isset( $term->count ) && (int) $term->count < $min ) {
+		return false;
+	}
+	$skip = (array) apply_filters( 'gameindo_hot_topics_tag_blocklist', array(
+		'review', 'guide', 'tips', 'panduan', 'berita', 'news', 'artikel', 'update', 'opini',
+	) );
+	$name = function_exists( 'mb_strtolower' ) ? mb_strtolower( $term->name ) : strtolower( $term->name );
+	return ! in_array( trim( $name ), $skip, true );
+}
+
+/**
  * "Topik Hangat" chips — what is actually current, assembled rather than typed.
  *
- * Three sources, in priority order:
- *   1. Editor picks (the gi_topic CPT) — always lead, so a big story can be
- *      pinned the moment it breaks, before any of this notices it.
- *   2. Esports in action — competitions with a match live or starting within
- *      two days, from the PandaScore feed the schedule panels already cache.
- *      This is the one source on the site that genuinely changes every day.
- *   3. Tags trending across the newest articles — recency-weighted, not
- *      all-time counts, so a tag has to be in current coverage to show up.
+ * Sources, most immediate first:
+ *   1. Editor picks (the gi_topic CPT), so a breaking story can be pinned
+ *      before any of this notices it.
+ *   2. Teams on air right now — the fastest-moving signal the site has, and
+ *      the one readers recognise instantly (RRQ, ONIC, T1).
+ *   3. Competitions live or starting within a few days.
+ *   4. Tags across recent articles, falling back to the site's most-used tags
+ *      when the newest posts carry none.
  *
- * Every chip points somewhere with content: esports chips open the schedule
- * filtered to that game, tag chips open the tag archive, editor chips run
- * their own search. Nothing links to an empty results page.
+ * Anything live is pinned; everything else goes into a pool that the row
+ * rotates through, so a reader coming back an hour later sees a different set
+ * rather than the same eight chips frozen in place.
+ *
+ * Every chip lands on real content: esports chips open the schedule filtered to
+ * that game, tag chips open the tag archive, editor chips run their own search.
  */
 function gameindo_hot_topics( $limit = 8 ) {
 	$cached = get_transient( 'gi_hot_topics' );
@@ -756,23 +795,27 @@ function gameindo_hot_topics( $limit = 8 ) {
 		return $cached;
 	}
 
-	$topics = array();
+	$pinned = array();
+	$pool   = array();
 	$seen   = array();
 
-	$add = function ( $label, $url, $live = false ) use ( &$topics, &$seen, $limit ) {
+	$push = function ( &$bucket, $label, $url, $live = false ) use ( &$seen ) {
 		$label = trim( wp_strip_all_tags( (string) $label ) );
-		$key   = function_exists( 'mb_strtolower' ) ? mb_strtolower( $label ) : strtolower( $label );
-		if ( '' === $label || isset( $seen[ $key ] ) || count( $topics ) >= $limit ) {
-			return;
+		if ( '' === $label ) {
+			return false;
+		}
+		$key = function_exists( 'mb_strtolower' ) ? mb_strtolower( $label ) : strtolower( $label );
+		if ( isset( $seen[ $key ] ) ) {
+			return false;
 		}
 		$seen[ $key ] = true;
-		$topics[]     = array( 'label' => $label, 'url' => $url, 'live' => (bool) $live );
+		$bucket[]     = array( 'label' => $label, 'url' => $url, 'live' => (bool) $live );
+		return true;
 	};
 
-	// 1. Editor picks. Capped rather than unlimited: a pinned topic is a
-	// deliberate choice, but nobody goes back to unpin them, and a full row of
-	// them turns this back into the hand-typed bar that went stale in the first
-	// place. Leaving room guarantees something current is always visible.
+	// 1. Editor picks. Capped rather than unlimited: nobody goes back to unpin
+	// a topic, and a full row of them is just the hand-typed bar that went
+	// stale in the first place. Leaving room keeps something current on screen.
 	$editor_max = (int) apply_filters( 'gameindo_hot_topics_editor_max', 3 );
 	$picked     = 0;
 	foreach ( (array) gameindo_get_topics() as $t ) {
@@ -783,140 +826,181 @@ function gameindo_hot_topics( $limit = 8 ) {
 			continue;
 		}
 		$q = ! empty( $t['query'] ) ? $t['query'] : $t['label'];
-		$add( $t['label'], home_url( '/?s=' . rawurlencode( $q ) ) );
-		$picked++;
+		if ( $push( $pinned, $t['label'], home_url( '/?s=' . rawurlencode( $q ) ) ) ) {
+			$picked++;
+		}
 	}
 
-	// 2. Competitions with something happening. Capped so a busy esports day
-	// can't crowd out every other kind of topic.
-	$esports_max = (int) apply_filters( 'gameindo_hot_topics_esports_max', 4 );
-	$before      = count( $topics );
+	// 2. Esports worth naming. Tier is a filter here, not merely a ranking as
+	// it is on the schedule panel: that panel must list every fixture, while
+	// this row is a curation surface, and a chip reading "Exort Fiesta" claims
+	// people are talking about something they are not. Fewer chips on a quiet
+	// day is the honest outcome — tags fill the gap.
 	$esports_url = gameindo_pillar_url( 'esports' );
+	$deadline    = time() + (int) apply_filters( 'gameindo_hot_topics_days', 5 ) * DAY_IN_SECONDS;
+	$floor       = gameindo_tier_rank( gameindo_prestige_floor() );
 
-	// A wider horizon than the schedule panel uses. People talk about The
-	// International and an MPL matchday days ahead — that anticipation is the
-	// topic. Five days also means the row survives a quiet Monday.
-	$deadline = time() + (int) apply_filters( 'gameindo_hot_topics_days', 5 ) * DAY_IN_SECONDS;
+	$relevant = array();
+	foreach ( gameindo_get_schedule( 'all', array( 'rank_by_tier' => true, 'tier_floor' => gameindo_prestige_floor() ) ) as $m ) {
+		if ( empty( $m['league'] ) ) {
+			continue;
+		}
+		if ( gameindo_tier_rank( isset( $m['tier'] ) ? $m['tier'] : '' ) > $floor ) {
+			continue;
+		}
+		$live = ( isset( $m['status'] ) && 'running' === $m['status'] );
+		if ( ! $live && ( ! $m['begin_ts'] || $m['begin_ts'] > $deadline ) ) {
+			continue;
+		}
+		$m['is_live'] = $live;
+		$relevant[]   = $m;
+	}
 
-	// Here the tier is a filter, not just a ranking. The schedule panel must
-	// list every fixture; this row is a curation surface, and a chip reading
-	// "Exort Fiesta" claims people are talking about something they are not.
-	// Fewer esports chips is the right answer on a quiet day — tags fill in.
-	$floor = gameindo_tier_rank( gameindo_prestige_floor() );
+	$game_url = function ( $game ) use ( $esports_url ) {
+		return $game ? add_query_arg( 'game', $game, $esports_url ) . '#jadwal' : $esports_url;
+	};
 
-	// Same prestige ranking the homepage panel uses. Without it the row fills
-	// with whatever open qualifier happens to be live — "Exort Fiesta" and
-	// "NODWIN Clutch Series" are not what anyone is talking about.
-	$schedule = gameindo_get_schedule( 'all', array(
-		'rank_by_tier' => true,
-		'tier_floor'   => gameindo_prestige_floor(),
-	) );
-
-	// Two passes: the first takes only each game's leading competition, so four
-	// chips mean four different titles rather than four LoL leagues on a busy
-	// LoL night. The second pass relaxes that to fill any slots left over.
-	$per_game = array();
-	foreach ( array( 1, $esports_max ) as $cap ) {
-		foreach ( $schedule as $m ) {
-			if ( count( $topics ) - $before >= $esports_max ) {
-				break 2;
+	// 2a. Teams currently playing.
+	$team_max = (int) apply_filters( 'gameindo_hot_topics_team_max', 2 );
+	$teams    = 0;
+	foreach ( $relevant as $m ) {
+		if ( $teams >= $team_max ) {
+			break;
+		}
+		if ( ! $m['is_live'] ) {
+			continue;
+		}
+		foreach ( array( 'a', 'b' ) as $side ) {
+			if ( $teams >= $team_max ) {
+				break;
 			}
-			if ( empty( $m['league'] ) ) {
-				continue;
+			if ( $push( $pinned, gameindo_team_chip_label( $m, $side ), $game_url( $m['game'] ), true ) ) {
+				$teams++;
+			}
+		}
+	}
+
+	// 2b. Competitions, one game at a time before repeating any, so four chips
+	// mean four titles rather than four LoL leagues on a busy LoL night.
+	$esports_max = (int) apply_filters( 'gameindo_hot_topics_esports_max', 4 );
+	$per_game    = array();
+	$added       = 0;
+	foreach ( array( 1, $esports_max ) as $cap ) {
+		foreach ( $relevant as $m ) {
+			if ( $added >= $esports_max ) {
+				break 2;
 			}
 			$game = isset( $m['game'] ) ? $m['game'] : '';
 			$used = isset( $per_game[ $game ] ) ? $per_game[ $game ] : 0;
 			if ( $used >= $cap ) {
 				continue;
 			}
-			if ( gameindo_tier_rank( isset( $m['tier'] ) ? $m['tier'] : '' ) > $floor ) {
-				continue;
-			}
-			$live = ( isset( $m['status'] ) && 'running' === $m['status'] );
-			if ( ! $live && ( ! $m['begin_ts'] || $m['begin_ts'] > $deadline ) ) {
-				continue;
-			}
-			$url = $game ? add_query_arg( 'game', $game, $esports_url ) . '#jadwal' : $esports_url;
-
-			$count_before = count( $topics );
-			$add( gameindo_league_chip_label( $m ), $url, $live );
-			if ( count( $topics ) > $count_before ) {
+			$ok = $m['is_live']
+				? $push( $pinned, gameindo_league_chip_label( $m ), $game_url( $game ), true )
+				: $push( $pool, gameindo_league_chip_label( $m ), $game_url( $game ) );
+			if ( $ok ) {
 				$per_game[ $game ] = $used + 1;
+				$added++;
 			}
 		}
 	}
 
-	// 3. Tags across recent coverage.
-	if ( count( $topics ) < $limit ) {
-		$recent = get_posts( array(
-			'post_type'           => 'post',
-			'post_status'         => 'publish',
-			'posts_per_page'      => (int) apply_filters( 'gameindo_hot_topics_pool', 40 ),
-			'orderby'             => 'date',
-			'order'               => 'DESC',
-			'fields'              => 'ids',
-			'no_found_rows'       => true,
-			'ignore_sticky_posts' => true,
-		) );
+	// 3. Tags across recent coverage — recency-weighted, so a tag has to be in
+	// current output to appear at all.
+	$recent = get_posts( array(
+		'post_type'           => 'post',
+		'post_status'         => 'publish',
+		'posts_per_page'      => (int) apply_filters( 'gameindo_hot_topics_pool', 40 ),
+		'orderby'             => 'date',
+		'order'               => 'DESC',
+		'fields'              => 'ids',
+		'no_found_rows'       => true,
+		'ignore_sticky_posts' => true,
+	) );
 
-		$tally = array();
-		foreach ( $recent as $pid ) {
-			$terms = get_the_terms( $pid, 'post_tag' );
-			if ( ! $terms || is_wp_error( $terms ) ) {
-				continue;
-			}
-			foreach ( $terms as $term ) {
-				if ( ! isset( $tally[ $term->term_id ] ) ) {
-					$tally[ $term->term_id ] = array( 'term' => $term, 'n' => 0 );
-				}
-				$tally[ $term->term_id ]['n']++;
-			}
+	$tally = array();
+	foreach ( $recent as $pid ) {
+		$terms = get_the_terms( $pid, 'post_tag' );
+		if ( ! $terms || is_wp_error( $terms ) ) {
+			continue;
 		}
-		uasort( $tally, function ( $a, $b ) {
-			return $b['n'] - $a['n'];
-		} );
-
-		foreach ( $tally as $row ) {
-			$link = get_term_link( $row['term'] );
-			if ( ! is_wp_error( $link ) ) {
-				$add( $row['term']->name, $link );
+		foreach ( $terms as $term ) {
+			if ( ! isset( $tally[ $term->term_id ] ) ) {
+				$tally[ $term->term_id ] = array( 'term' => $term, 'n' => 0 );
 			}
+			$tally[ $term->term_id ]['n']++;
+		}
+	}
+	uasort( $tally, function ( $a, $b ) {
+		return $b['n'] - $a['n'];
+	} );
+	foreach ( $tally as $row ) {
+		if ( ! gameindo_is_topic_tag( $row['term'] ) ) {
+			continue;
+		}
+		$link = get_term_link( $row['term'] );
+		if ( ! is_wp_error( $link ) ) {
+			$push( $pool, $row['term']->name, $link );
 		}
 	}
 
 	// Nothing tagged in the recent pool — an archive imported in bulk looks
-	// exactly like this — so fall back to the site's most-used tags rather
-	// than leaving gaps in the row.
-	if ( count( $topics ) < $limit ) {
-		$popular = get_terms( array(
-			'taxonomy'   => 'post_tag',
-			'orderby'    => 'count',
-			'order'      => 'DESC',
-			'number'     => 12,
-			'hide_empty' => true,
-		) );
-		if ( ! is_wp_error( $popular ) ) {
-			foreach ( $popular as $term ) {
-				$link = get_term_link( $term );
-				if ( ! is_wp_error( $link ) ) {
-					$add( $term->name, $link );
-				}
+	// exactly like this — so fall back to the site's most-used tags. Pulling a
+	// generous number keeps the rotation from cycling through the same few.
+	$popular = get_terms( array(
+		'taxonomy'   => 'post_tag',
+		'orderby'    => 'count',
+		'order'      => 'DESC',
+		'number'     => (int) apply_filters( 'gameindo_hot_topics_tag_pool', 20 ),
+		'hide_empty' => true,
+	) );
+	if ( ! is_wp_error( $popular ) ) {
+		foreach ( $popular as $term ) {
+			if ( ! gameindo_is_topic_tag( $term ) ) {
+				continue;
+			}
+			$link = get_term_link( $term );
+			if ( ! is_wp_error( $link ) ) {
+				$push( $pool, $term->name, $link );
 			}
 		}
 	}
 
-	set_transient( 'gi_hot_topics', $topics, 15 * MINUTE_IN_SECONDS );
-	return $topics;
-}
+	// Assemble: pinned first, then a window over the pool that advances with
+	// the clock. Without this the row freezes on the same chips between match
+	// days; with it, a reader coming back later sees a different slice.
+	$period = max( MINUTE_IN_SECONDS, (int) apply_filters( 'gameindo_hot_topics_rotate', 10 * MINUTE_IN_SECONDS ) );
+	$out    = array_slice( $pinned, 0, $limit );
+	$slots  = $limit - count( $out );
+	$total  = count( $pool );
 
-function gameindo_get_topics() {
-	if ( function_exists( 'gameindo_core_get_topics' ) ) {
-		$data = gameindo_core_get_topics();
-		if ( ! empty( $data ) ) {
-			return $data;
+	if ( $slots > 0 && $total > 0 ) {
+		$offset = (int) floor( time() / $period ) % $total;
+		for ( $i = 0; $i < min( $slots, $total ); $i++ ) {
+			$out[] = $pool[ ( $offset + $i ) % $total ];
 		}
 	}
-	return gameindo_fixture( 'topics.json', array() );
+
+	// Cache for exactly one rotation step, so the transient never outlives the
+	// window it was built for.
+	set_transient( 'gi_hot_topics', $out, $period );
+	return $out;
+}
+
+/**
+ * Editor-pinned topics, from the CPT only.
+ *
+ * The assets/data/topics.json fixture is deliberately no longer consulted. It
+ * ships demo chips (GTA 6, "MPL ID S16"), and with the row now assembled from
+ * live data an empty CPT must mean "nothing pinned" — otherwise clearing the
+ * topics in wp-admin silently resurrects the demo set from disk, and the row
+ * can never be emptied at all.
+ */
+function gameindo_get_topics() {
+	if ( function_exists( 'gameindo_core_get_topics' ) ) {
+		return (array) gameindo_core_get_topics();
+	}
+	return array();
 }
 
 /**
