@@ -117,7 +117,20 @@ sekaligus, dan bersifat aman diulang (idempoten).
   ```php
   add_filter( 'gameindo_ticker_speed', function () { return 35; } );
   ```
-- **Topik Hangat** — chip di bawah header beranda. Judul = label, isi kata kunci.
+- **Topik Hangat** — chip di bawah header beranda. **Sekarang terisi otomatis**,
+  jadi menu ini tidak perlu diisi kecuali Anda memang ingin menyematkan sesuatu.
+  Isinya dirakit dari: tim yang sedang bertanding, kompetisi yang live atau mulai
+  dalam 5 hari ke depan, lalu tag artikel. Yang sedang live dikunci di depan
+  (dengan titik merah); sisanya **berputar tiap 10 menit** supaya baris ini tidak
+  pernah terlihat sama saat pengunjung kembali.
+
+  Kalau Anda mengisi menu ini, topik itu tampil paling depan — **maksimal 3**,
+  supaya selalu tersisa ruang untuk yang sedang hangat. Kosongkan (ubah ke Draf
+  atau hapus) dan baris kembali 100% otomatis. Enam topik demo bawaan sudah
+  di-Draf pada 17 Agu 2026 karena sudah tidak relevan.
+
+  Tag yang berupa format (`Review`, `Guide`, `Tips`) dan tag yang cuma dipakai
+  1 artikel sengaja tidak ikut — itu jenis tulisan atau jalan buntu, bukan topik.
 - **Match Center** — jadwal/skor manual. Sekarang hanya dipakai **sebagai
   cadangan**: isinya baru tampil kalau token PandaScore kosong atau API-nya
   sedang bermasalah.
