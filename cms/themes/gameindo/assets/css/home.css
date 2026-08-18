@@ -32,37 +32,8 @@
   background: var(--live); margin-right: 6px; vertical-align: middle;
 }
 
-/* ============================================================
-   MEGA-MENU — toggled open/closed via the header "Menu" button
-   ============================================================ */
-.gi-megamenu {
-  display: none;
-  position: relative; z-index: 3;
-  background: var(--surface); border-bottom: 2px solid var(--ink);
-  box-shadow: 0 12px 28px rgba(16,16,20,.14), 0 4px 10px rgba(16,16,20,.08);
-}
-.gi-megamenu.is-open { display: block; }
-.gi-megamenu__grid {
-  max-width: var(--container); margin-inline: auto; padding: 26px var(--gutter) 24px;
-  display: grid; grid-template-columns: repeat(5, 1fr) 220px; gap: 28px;
-}
-.gi-megamenu__col { display: flex; flex-direction: column; gap: 10px; }
-.gi-megamenu__col-title {
-  font-family: var(--font-condensed); font-weight: 800; font-size: 13px; letter-spacing: var(--ls-wide);
-  text-transform: uppercase; color: var(--pillar); border-bottom: 2px solid var(--pillar); padding-bottom: 6px;
-}
-.gi-megamenu__col a { font-family: var(--font-body); font-size: 13px; color: var(--ink-2); text-decoration: none; }
-.gi-megamenu__col a:hover { color: var(--pillar); }
-.gi-megamenu__trending {
-  background: var(--surface-2); border-radius: var(--radius-md); padding: 14px;
-  display: flex; flex-direction: column; gap: 8px;
-}
-.gi-megamenu__trending-label {
-  font-family: var(--font-condensed); font-weight: 700; font-size: 11px; letter-spacing: var(--ls-wider);
-  text-transform: uppercase; color: var(--ink-4);
-}
-.gi-megamenu__trending a { font-family: var(--font-body); font-size: 12.5px; color: var(--ink-2); text-decoration: none; line-height: 1.4; }
-.gi-megamenu__trending a:hover { color: var(--pillar); }
+/* Mega-menu styles moved to main.css — the panel now renders on every page,
+   and home.css is only enqueued on the front page. */
 
 /* ============================================================
    HERO — feature + (trending cards + Jadwal Match) side column
@@ -241,8 +212,6 @@
   .gi-hottopics__row { height: 36px; gap: 14px; padding-inline: 14px; }
   .gi-hottopics__label { font-size: 10px; }
   .gi-hottopics__item { font-size: 12px; }
-  .gi-megamenu__grid { grid-template-columns: 1fr 1fr; }
-  .gi-megamenu__grid > .gi-megamenu__trending { grid-column: 1 / -1; }
 
   .gi-mobile-pillars { display: flex; }
   .gi-mobile-matches { display: block; }

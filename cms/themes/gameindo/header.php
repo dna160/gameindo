@@ -65,11 +65,9 @@ if ( has_custom_logo() ) {
       <a class="gi-icon-btn" href="<?php echo esc_url( home_url( '/?s=' ) ); ?>" aria-label="Cari"<?php echo is_search() ? ' aria-current="page"' : ''; ?>>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
       </a>
-      <?php if ( $gi_is_front ) : ?>
       <button class="gi-icon-btn" type="button" id="gi-megamenu-toggle" aria-label="Menu" aria-expanded="false" aria-controls="gi-megamenu">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="4" width="7" height="7" rx="1"/><rect x="14" y="4" width="7" height="7" rx="1"/><rect x="3" y="13" width="7" height="7" rx="1"/><rect x="14" y="13" width="7" height="7" rx="1"/></svg>
       </button>
-      <?php endif; ?>
     </div>
   </div>
 
@@ -89,23 +87,24 @@ if ( has_custom_logo() ) {
     <?php gameindo_pillar_nav_fallback(); // mobile row: same links, class differs via CSS scope ?>
   </div>
   <?php endif; ?>
-</header>
 
-<?php if ( $gi_is_front ) : ?>
-<div class="gi-megamenu" id="gi-megamenu">
-  <div class="gi-megamenu__grid">
-    <?php gameindo_render_megamenu_columns(); ?>
-    <div class="gi-megamenu__trending">
-      <span class="gi-megamenu__trending-label">Trending Sekarang</span>
-      <div id="gi-megamenu-trending">
-        <?php
-        $gi_trending = gameindo_trending_posts( 3 );
-        foreach ( $gi_trending as $gi_tp ) {
-	        echo '<a href="' . esc_url( get_permalink( $gi_tp ) ) . '">' . esc_html( get_the_title( $gi_tp ) ) . '</a>';
-        }
-        ?>
+  <?php // Inside <header> on purpose: the header is position:sticky, and while
+  // this panel sat outside it the menu stayed anchored to the top of the
+  // document — scroll down, press the button, and nothing appeared on screen. ?>
+  <div class="gi-megamenu" id="gi-megamenu">
+    <div class="gi-megamenu__grid">
+      <?php gameindo_render_megamenu_columns(); ?>
+      <div class="gi-megamenu__trending">
+        <span class="gi-megamenu__trending-label">Trending Sekarang</span>
+        <div class="gi-megamenu__trending-list" id="gi-megamenu-trending">
+          <?php foreach ( gameindo_trending_posts( 4 ) as $gi_tp ) : ?>
+            <a href="<?php echo esc_url( get_permalink( $gi_tp ) ); ?>">
+              <span class="gi-megamenu__trending-pillar"><?php echo esc_html( gameindo_pillar_name( gameindo_get_pillar( $gi_tp ) ) ); ?></span>
+              <span class="gi-megamenu__trending-title"><?php echo esc_html( get_the_title( $gi_tp ) ); ?></span>
+            </a>
+          <?php endforeach; ?>
+        </div>
       </div>
     </div>
   </div>
-</div>
-<?php endif; ?>
+</header>

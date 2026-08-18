@@ -1170,25 +1170,150 @@ function gameindo_parse_reads( $str ) {
  * are the site's editorial IA (kept as fixed chrome, per the design), each
  * pointing at its pillar archive.
  */
-function gameindo_render_megamenu_columns() {
-	$columns = array(
-		'home'          => array( 'Rilis Baru', 'Review', 'Guide & Tips', 'Gim Mobile' ),
-		'esports'       => array( 'MPL ID', 'Valorant', 'Free Fire', 'Jadwal & Klasemen' ),
-		'streamer'      => array( 'Kreator Lokal', 'VTuber', 'Drama & Isu', 'Tips Streaming' ),
-		'tech'          => array( 'PC & Komponen', 'Handheld', 'Smartphone', 'Rekomendasi' ),
-		'entertainment' => array( 'Anime', 'Film & Series', 'Pop Culture', 'Event' ),
-	);
-	$pillars = gameindo_pillars();
-	foreach ( $columns as $slug => $links ) {
-		$term = get_category_by_slug( $slug );
-		$url  = ( 'home' === $slug ) ? home_url( '/' ) : ( $term ? get_category_link( $term->term_id ) : home_url( '/category/' . $slug . '/' ) );
-		echo '<div class="gi-megamenu__col" data-pillar="' . esc_attr( $slug ) . '">';
-		echo '<span class="gi-megamenu__col-title">' . esc_html( $pillars[ $slug ] ) . '</span>';
-		foreach ( $links as $label ) {
-			echo '<a href="' . esc_url( $url ) . '">' . esc_html( $label ) . '</a>';
-		}
-		echo '</div>';
+/**
+ * Shorten a headline to fit a menu column without breaking a word in half.
+ */
+function gameindo_shorten( $text, $max = 42 ) {
+	$text = trim( wp_strip_all_tags( (string) $text ) );
+	$len  = function_exists( 'mb_strlen' ) ? mb_strlen( $text ) : strlen( $text );
+	if ( $len <= $max ) {
+		return $text;
 	}
+	$cut = function_exists( 'mb_substr' ) ? mb_substr( $text, 0, $max ) : substr( $text, 0, $max );
+	$sp  = strrpos( $cut, ' ' );
+	if ( $sp && $sp > $max * 0.6 ) {
+		$cut = substr( $cut, 0, $sp );
+	}
+	return rtrim( $cut, " ,.;:-" ) . '…';
+}
+
+/**
+ * Mega-menu entries for one pillar — what that section is actually covering,
+ * rather than a fixed list of labels.
+ *
+ * The old column was four hard-coded strings ("Rilis Baru", "Review", …) that
+ * every one of them linked to the same pillar archive, so four different links
+ * went to one destination. Now, per pillar:
+ *   1. Esports leads with competitions that are live or imminent.
+ *   2. Then tags actually used by that pillar's recent articles.
+ *   3. Then recent headlines, which is what fills the column in practice —
+ *      three of the five pillars currently have no tagged posts at all, so a
+ *      purely tag-driven menu would render empty columns.
+ *
+ * Every entry is a distinct destination: a schedule view, a tag archive, or
+ * the article itself.
+ */
+function gameindo_megamenu_column( $slug, $max = 4 ) {
+	$out  = array();
+	$seen = array();
+
+	$push = function ( $label, $url ) use ( &$out, &$seen, $max ) {
+		$label = trim( wp_strip_all_tags( (string) $label ) );
+		$key   = function_exists( 'mb_strtolower' ) ? mb_strtolower( $label ) : strtolower( $label );
+		if ( '' === $label || isset( $seen[ $key ] ) || count( $out ) >= $max ) {
+			return false;
+		}
+		$seen[ $key ] = true;
+		$out[]        = array( 'label' => $label, 'url' => $url );
+		return true;
+	};
+
+	if ( 'esports' === $slug ) {
+		$esports_url = gameindo_pillar_url( 'esports' );
+		$floor       = gameindo_tier_rank( gameindo_prestige_floor() );
+		$deadline    = time() + 5 * DAY_IN_SECONDS;
+		$taken       = 0;
+		foreach ( gameindo_get_schedule( 'all', array( 'rank_by_tier' => true, 'tier_floor' => gameindo_prestige_floor() ) ) as $m ) {
+			if ( $taken >= 2 ) {
+				break;
+			}
+			if ( empty( $m['league'] ) || gameindo_tier_rank( isset( $m['tier'] ) ? $m['tier'] : '' ) > $floor ) {
+				continue;
+			}
+			$live = ( isset( $m['status'] ) && 'running' === $m['status'] );
+			if ( ! $live && ( ! $m['begin_ts'] || $m['begin_ts'] > $deadline ) ) {
+				continue;
+			}
+			$url = ! empty( $m['game'] ) ? add_query_arg( 'game', $m['game'], $esports_url ) . '#jadwal' : $esports_url;
+			if ( $push( gameindo_league_chip_label( $m ), $url ) ) {
+				$taken++;
+			}
+		}
+	}
+
+	$posts = get_posts( array(
+		'post_type'           => 'post',
+		'post_status'         => 'publish',
+		'posts_per_page'      => 60,
+		'category_name'       => $slug,
+		'orderby'             => 'date',
+		'order'               => 'DESC',
+		'fields'              => 'ids',
+		'no_found_rows'       => true,
+		'ignore_sticky_posts' => true,
+	) );
+
+	$tally = array();
+	foreach ( $posts as $pid ) {
+		$terms = get_the_terms( $pid, 'post_tag' );
+		if ( ! $terms || is_wp_error( $terms ) ) {
+			continue;
+		}
+		foreach ( $terms as $term ) {
+			if ( ! gameindo_is_topic_tag( $term ) ) {
+				continue;
+			}
+			if ( ! isset( $tally[ $term->term_id ] ) ) {
+				$tally[ $term->term_id ] = array( 'term' => $term, 'n' => 0 );
+			}
+			$tally[ $term->term_id ]['n']++;
+		}
+	}
+	uasort( $tally, function ( $a, $b ) {
+		return $b['n'] - $a['n'];
+	} );
+	foreach ( $tally as $row ) {
+		$link = get_term_link( $row['term'] );
+		if ( ! is_wp_error( $link ) ) {
+			$push( $row['term']->name, $link );
+		}
+	}
+
+	foreach ( $posts as $pid ) {
+		if ( count( $out ) >= $max ) {
+			break;
+		}
+		$push( gameindo_shorten( get_the_title( $pid ) ), get_permalink( $pid ) );
+	}
+
+	return $out;
+}
+
+/**
+ * Render the five pillar columns. Cached as markup: this now runs on every
+ * page rather than only the homepage, and rebuilding it costs a query per
+ * pillar.
+ */
+function gameindo_render_megamenu_columns() {
+	$html = get_transient( 'gi_megamenu_cols' );
+
+	if ( false === $html ) {
+		ob_start();
+		foreach ( gameindo_pillars() as $slug => $name ) {
+			$url = gameindo_pillar_url( $slug );
+			echo '<div class="gi-megamenu__col" data-pillar="' . esc_attr( $slug ) . '">';
+			echo '<a class="gi-megamenu__col-title" href="' . esc_url( $url ) . '">' . esc_html( $name ) . '</a>';
+			foreach ( gameindo_megamenu_column( $slug ) as $item ) {
+				echo '<a href="' . esc_url( $item['url'] ) . '" title="' . esc_attr( $item['label'] ) . '">' . esc_html( $item['label'] ) . '</a>';
+			}
+			echo '<a class="gi-megamenu__col-all" href="' . esc_url( $url ) . '">Semua ' . esc_html( $name ) . ' →</a>';
+			echo '</div>';
+		}
+		$html = ob_get_clean();
+		set_transient( 'gi_megamenu_cols', $html, 10 * MINUTE_IN_SECONDS );
+	}
+
+	echo $html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 }
 
 /**

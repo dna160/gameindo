@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GAMEINDO_VERSION', '1.4.0' );
+define( 'GAMEINDO_VERSION', '1.5.0' );
 define( 'GAMEINDO_DIR', get_template_directory() );
 define( 'GAMEINDO_URI', get_template_directory_uri() );
 
@@ -135,8 +135,10 @@ function gameindo_body_pillar_attr() {
  */
 function gameindo_flush_hot_topics() {
 	delete_transient( 'gi_hot_topics' );
+	delete_transient( 'gi_megamenu_cols' );
 }
 add_action( 'save_post_gi_topic', 'gameindo_flush_hot_topics' );
+add_action( 'save_post_post', 'gameindo_flush_hot_topics' );
 add_action( 'trashed_post', 'gameindo_flush_hot_topics' );
 
 /**

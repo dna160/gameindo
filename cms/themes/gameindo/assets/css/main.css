@@ -374,6 +374,59 @@ body { background: var(--surface); overflow-x: hidden; }
 .gi-stack { display: flex; flex-direction: column; gap: 14px; }
 
 /* ============================================================
+   MEGA-MENU — toggled from the header "Menu" button. Lives in main.css
+   because the panel renders on every page; while it sat in home.css it
+   was unstyled everywhere except the front page.
+   ============================================================ */
+.gi-megamenu {
+  display: none;
+  position: relative; z-index: 3;
+  background: var(--surface); border-bottom: 2px solid var(--ink);
+  box-shadow: 0 12px 28px rgba(16,16,20,.14), 0 4px 10px rgba(16,16,20,.08);
+  /* Sits inside the sticky header, so it must never grow past the screen. */
+  max-height: calc(100vh - var(--header-h)); overflow-y: auto; overscroll-behavior: contain;
+}
+.gi-megamenu.is-open { display: block; }
+.gi-megamenu__grid {
+  max-width: var(--container); margin-inline: auto; padding: 26px var(--gutter) 24px;
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)) 220px; gap: 28px;
+}
+.gi-megamenu__col { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.gi-megamenu__col-title {
+  font-family: var(--font-condensed); font-weight: 800; font-size: 13px; letter-spacing: var(--ls-wide);
+  text-transform: uppercase; color: var(--pillar); border-bottom: 2px solid var(--pillar);
+  padding-bottom: 6px; text-decoration: none;
+}
+.gi-megamenu__col a { font-family: var(--font-body); font-size: 13px; color: var(--ink-2); text-decoration: none; line-height: 1.4; }
+.gi-megamenu__col a:hover { color: var(--pillar); }
+.gi-megamenu__col-all {
+  margin-top: auto; padding-top: 4px;
+  font-family: var(--font-condensed) !important; font-weight: 700; font-size: 11.5px !important;
+  letter-spacing: var(--ls-wide); text-transform: uppercase; color: var(--pillar) !important;
+}
+.gi-megamenu__trending {
+  background: var(--surface-2); border-radius: var(--radius-md); padding: 14px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.gi-megamenu__trending-label {
+  font-family: var(--font-condensed); font-weight: 700; font-size: 11px; letter-spacing: var(--ls-wider);
+  text-transform: uppercase; color: var(--ink-4);
+}
+/* The links used to sit in a plain block, so they ran together inline as one
+   unbroken paragraph of concatenated headlines. */
+.gi-megamenu__trending-list { display: flex; flex-direction: column; gap: 10px; }
+.gi-megamenu__trending-list a {
+  display: flex; flex-direction: column; gap: 2px; text-decoration: none;
+  font-family: var(--font-body); font-size: 12.5px; color: var(--ink-2); line-height: 1.35;
+}
+.gi-megamenu__trending-list a:hover .gi-megamenu__trending-title { color: var(--pillar); }
+.gi-megamenu__trending-pillar {
+  font-family: var(--font-condensed); font-weight: 700; font-size: 9.5px; letter-spacing: var(--ls-wider);
+  text-transform: uppercase; color: var(--ink-4);
+}
+.gi-megamenu__trending-title { color: var(--ink); font-weight: 500; }
+
+/* ============================================================
    PAGE LAYOUTS — content + rail. These were inline styles on the
    templates, which no media query could override, so every one of
    them stayed two-column on a phone and crushed the rail into an
@@ -439,12 +492,18 @@ body { background: var(--surface); overflow-x: hidden; }
              (Galaxy Fold 280px, Z Fold cover ~344px)
    ============================================================ */
 @media (max-width: 1100px) {
+  /* Six columns across a tablet gives each about 90px — unreadable. */
+  .gi-megamenu__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
+  .gi-megamenu__trending { grid-column: 1 / -1; }
+
   .gi-rail-layout { grid-template-columns: minmax(0, 1fr) 300px; gap: 24px; }
   .gi-pillar-layout { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); }
   .gi-grid-4 { grid-template-columns: repeat(3, 1fr); }
 }
 
 @media (max-width: 900px) {
+  .gi-megamenu__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
   .gi-rail-layout,
   .gi-pillar-layout { grid-template-columns: minmax(0, 1fr); gap: 24px; }
   .gi-grid-4 { grid-template-columns: repeat(2, 1fr); }
@@ -469,9 +528,17 @@ body { background: var(--surface); overflow-x: hidden; }
   .gi-card--h { grid-template-columns: 96px 1fr; gap: 12px; }
   .gi-card--h .gi-card__title { font-size: 14.5px; }
 
-  .gi-footer__bar { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .gi-megamenu__grid { padding: 18px 14px 20px; gap: 18px; }
+  .gi-megamenu__col-title { font-size: 12px; }
+  .gi-megamenu__col a { font-size: 12.5px; }
+
+  /* The footer used to drop its nav entirely on phones, leaving a logo, a
+     tagline and a copyright line floating in the dark. The links are the
+     useful part — they stay, wrapped. */
+  .gi-footer__bar { flex-direction: column; align-items: flex-start; gap: 14px; padding: 24px 14px; }
   .gi-footer__copy { margin-left: 0; }
-  .gi-footer__pillars { display: none; }
+  .gi-footer__pillars { display: flex; flex-wrap: wrap; gap: 10px 18px; width: 100%; }
+  .gi-footer__tag { font-size: 11px; }
 }
 
 /* Very small phones and folded cover screens. Two cards side by side leaves
@@ -494,4 +561,7 @@ body { background: var(--surface); overflow-x: hidden; }
 
   .gi-night-panel__head { padding: 12px; }
   .gi-night-panel__head-title { font-size: 14px; }
+
+  .gi-megamenu__grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .gi-footer__pillars { gap: 8px 14px; font-size: 11.5px; }
 }
