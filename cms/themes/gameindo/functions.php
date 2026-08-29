@@ -80,6 +80,146 @@ function gameindo_ensure_pillar_terms() {
 }
 add_action( 'init', 'gameindo_ensure_pillar_terms' );
 
+/**
+ * Put the Video Games entry into the site's own menus, once.
+ *
+ * The nav renders it either way — gameindo_menu_with_pillars() folds a missing
+ * pillar into an assigned menu at render time — but that entry is generated,
+ * so it cannot be reordered, renamed or unpublished from Tampilan → Menu. This
+ * turns it into a real menu item the editor owns. It runs a single time, so
+ * removing the item afterwards makes it stay removed.
+ */
+function gameindo_seed_pillar_menu_items() {
+	if ( GAMEINDO_VERSION === get_option( 'gameindo_menu_seed' ) ) {
+		return;
+	}
+	// Runs after gameindo_ensure_pillar_terms() on the same hook; if the term
+	// still isn't there, leave the flag unset and try again next request.
+	if ( ! get_category_by_slug( 'video-games' ) ) {
+		return;
+	}
+	foreach ( array( 'primary', 'footer', 'drawer' ) as $location ) {
+		gameindo_seed_menu_pillar( $location, 'video-games' );
+	}
+	update_option( 'gameindo_menu_seed', GAMEINDO_VERSION );
+}
+add_action( 'init', 'gameindo_seed_pillar_menu_items', 11 );
+
+/**
+ * Which pillar a menu item stands for, or '' for anything else. Same reading
+ * as Gameindo_Flat_Nav_Walker, including why a custom link titled "Home" is
+ * not the game pillar: it is the front page.
+ */
+function gameindo_menu_item_pillar( $item ) {
+	if ( 'taxonomy' === $item->type && 'category' === $item->object ) {
+		$term = get_term( (int) $item->object_id );
+		if ( $term && ! is_wp_error( $term ) && array_key_exists( $term->slug, gameindo_pillars() ) ) {
+			return $term->slug;
+		}
+	}
+	if ( 'custom' === $item->type ) {
+		$slug = sanitize_title( $item->title );
+		if ( 'home' !== $slug && array_key_exists( $slug, gameindo_pillars() ) ) {
+			return $slug;
+		}
+	}
+	return '';
+}
+
+/**
+ * Add one pillar to one menu location, in the right place and only if it isn't
+ * already there.
+ */
+function gameindo_seed_menu_pillar( $location, $slug ) {
+	$locations = get_nav_menu_locations();
+	if ( empty( $locations[ $location ] ) ) {
+		return; // nothing assigned here — the auto-built nav already lists the pillar
+	}
+	$menu_id = (int) $locations[ $location ];
+	$items   = wp_get_nav_menu_items( $menu_id );
+	$term    = get_category_by_slug( $slug );
+	if ( ! is_array( $items ) || ! $term ) {
+		return;
+	}
+
+	$legacy   = null;
+	$position = null;
+	foreach ( $items as $item ) {
+		$pillar = gameindo_menu_item_pillar( $item );
+		if ( $slug === $pillar ) {
+			return; // already in this menu
+		}
+		if ( 'home' === $pillar && null === $legacy ) {
+			$legacy = $item;
+		}
+		if ( $pillar && null === $position ) {
+			$position = (int) $item->menu_order;
+		}
+	}
+
+	// A menu carrying the legacy "Video Game" category points at this same
+	// section under the old slug. Repoint that item instead of adding a second
+	// entry, which would file one beat under two names.
+	if ( $legacy ) {
+		gameindo_retarget_menu_item( $menu_id, $legacy, $term );
+		return;
+	}
+
+	// Otherwise slot it in front of the first pillar entry — with the sections,
+	// rather than after trailing items like the drawer's "Cari".
+	if ( null === $position ) {
+		$position = count( $items ) + 1;
+	}
+	foreach ( $items as $item ) {
+		if ( (int) $item->menu_order >= $position ) {
+			wp_update_post( array(
+				'ID'         => (int) $item->db_id,
+				'menu_order' => (int) $item->menu_order + 1,
+			) );
+		}
+	}
+
+	wp_update_nav_menu_item( $menu_id, 0, array(
+		'menu-item-object-id' => (int) $term->term_id,
+		'menu-item-object'    => 'category',
+		'menu-item-type'      => 'taxonomy',
+		'menu-item-title'     => $term->name,
+		'menu-item-status'    => 'publish',
+		'menu-item-position'  => $position,
+	) );
+}
+
+/**
+ * Point an existing menu item at a different category, keeping everything else
+ * about it. Every field has to be passed back: wp_update_nav_menu_item()
+ * rewrites the item from the arguments given, so anything omitted — the
+ * item's parent, its CSS classes, its link target — would be cleared.
+ *
+ * The label is only replaced when it is still the old category's name; an
+ * editor who typed their own wording keeps it.
+ */
+function gameindo_retarget_menu_item( $menu_id, $item, $term ) {
+	$old   = get_term( (int) $item->object_id );
+	$title = ( $old && ! is_wp_error( $old ) && trim( $item->title ) === $old->name ) ? $term->name : $item->title;
+
+	wp_update_nav_menu_item( $menu_id, (int) $item->db_id, array(
+		'menu-item-db-id'       => (int) $item->db_id,
+		'menu-item-object-id'   => (int) $term->term_id,
+		'menu-item-object'      => 'category',
+		'menu-item-type'        => 'taxonomy',
+		'menu-item-parent-id'   => (int) $item->menu_item_parent,
+		'menu-item-position'    => (int) $item->menu_order,
+		'menu-item-title'       => $title,
+		'menu-item-url'         => '',
+		'menu-item-description' => $item->description,
+		'menu-item-attr-title'  => $item->attr_title,
+		'menu-item-target'      => $item->target,
+		'menu-item-classes'     => implode( ' ', (array) $item->classes ),
+		'menu-item-xfn'         => $item->xfn,
+		'menu-item-status'      => 'publish',
+	) );
+}
+
 require_once GAMEINDO_DIR . '/inc/template-helpers.php';
 require_once GAMEINDO_DIR . '/inc/nav-walker.php';
 

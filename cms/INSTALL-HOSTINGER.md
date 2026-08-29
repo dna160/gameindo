@@ -245,6 +245,25 @@ merah — di situs, keduanya tampil sebagai satu pilar **Video Games**. Kalau
 mau merapikan, cukup pindahkan artikelnya ke kategori Video Games; tampilannya
 tidak berubah.
 
+#### Apa yang terjadi pada menu Anda saat pembaruan
+Menu yang sudah Anda atur di **Tampilan → Menu** menang atas nav otomatis, jadi
+tema merapikannya sendiri **satu kali** saat pertama dimuat setelah pembaruan:
+
+| Menu | Yang terjadi |
+|---|---|
+| **Pilar Utama** (header) | Item **Video Games** ditambahkan tepat setelah "Home" |
+| **Menu Mobile** (drawer) | Ditambahkan di antara pilar — item ekor seperti "Cari" tetap paling bawah |
+| **Footer** | Item lama **Video Game** *diarahkan ulang* ke kategori Video Games, bukan ditambahi entri kedua |
+
+Ini **item menu sungguhan**: bisa Anda urutkan ulang, ganti namanya, atau hapus
+dari wp-admin seperti item lain. Karena hanya berjalan sekali, kalau Anda
+menghapusnya ia tidak akan muncul lagi. Label yang sudah Anda tulis sendiri di
+item footer tidak diubah — yang diganti hanya kalau labelnya masih "Video Game"
+bawaan.
+
+Kalau lokasi menunya belum diatur sama sekali, tidak ada yang ditulis: nav
+otomatis memang sudah memuat Video Games.
+
 ### Cara kerja rail "Terpopuler"
 Aturannya sederhana dan bisa diprediksi:
 

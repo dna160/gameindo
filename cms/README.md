@@ -52,6 +52,21 @@ cms/
   `gameindo_game_platforms`, kedalaman pool lewat `gameindo_video_games_pool`.
   Chip `?platform=` (Konsol/Handheld/PC/Mobile) menyaring halamannya, dan
   headline halaman memakai artikel konsol terbaru — itu fokus pilarnya.
+- **Pilar baru masuk ke menu lewat dua jalur.** Menu yang diatur di Tampilan →
+  Menu menang atas nav otomatis, jadi pilar yang lahir dari pembaruan tema tidak
+  akan terlihat justru di situs yang mengikuti panduan pasang. (1)
+  `gameindo_menu_with_pillars()` menyisipkannya saat render, tanpa menulis
+  apa pun, untuk `gameindo_required_nav_pillars()` yang belum ada di menu; ini
+  berhenti sendiri begitu itemnya ada. (2) `gameindo_seed_pillar_menu_items()`
+  menjadikannya **item menu sungguhan** di `primary`, `footer`, dan `drawer` —
+  sekali jalan (opsi `gameindo_menu_seed`), supaya bisa diurutkan, diganti nama,
+  atau dihapus dari wp-admin dan tetap hilang. Penempatannya di depan entri
+  pilar pertama, jadi item ekor seperti "Cari" di drawer tetap paling akhir, dan
+  menu yang sudah memuat kategori lama `home` **diarahkan ulang**, bukan
+  ditambahi entri kedua untuk beat yang sama. `gameindo_retarget_menu_item()`
+  mengirim balik seluruh field item (induk, kelas, target, deskripsi):
+  `wp_update_nav_menu_item()` menulis ulang item dari argumen yang diberikan,
+  jadi field yang tidak disertakan akan terhapus.
 - **Meta artikel** (subkategori, waktu baca, jumlah dibaca, featured, spotlight)
   disimpan sebagai post meta `_gi_*`, diisi lewat meta box (plugin).
 - **Widget esports** (ticker, topik, match, klasemen) = custom post type,
