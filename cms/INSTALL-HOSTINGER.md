@@ -31,10 +31,14 @@ Jika WordPress sudah terpasang, lanjut ke langkah 2.
 1. wp-admin → **Plugin → Tambah Plugin Baru → Unggah Plugin**.
 2. Pilih `gameindo-core-plugin.zip` → **Pasang Sekarang** → **Aktifkan**.
 
-Saat aktif, plugin otomatis membuat 5 kategori pilar dengan slug tetap:
-`home` (Video Game), `esports`, `streamer`, `tech`, `entertainment`.
-**Nama boleh diubah; slug jangan diubah** — slug inilah yang mengendalikan
-warna tiap pilar.
+Saat aktif, plugin otomatis membuat kategori pilar dengan slug tetap:
+`video-games` (Video Games), `esports`, `streamer`, `tech`, `entertainment`,
+ditambah `home` (Video Game) — slug lama yang dipakai artikel-artikel sebelum
+pilar Video Games ada. **Nama boleh diubah; slug jangan diubah** — slug inilah
+yang mengendalikan warna tiap pilar.
+
+Kalau plugin sudah aktif sejak sebelum ada pilar Video Games, tema membuat
+kategori yang kurang saat pertama kali dimuat — tidak ada langkah manual.
 
 ## 3. Pasang & aktifkan tema GameIndo
 
@@ -204,6 +208,42 @@ LoL, DotA 2, Overwatch**.
   Overwatch**) menyaring **panel Jadwal saja**; daftar artikel di bawahnya tetap
   seluruh artikel pilar Esports. Filter tersimpan di URL (`?game=csgo`) jadi bisa
   dibagikan.
+- **Panel Jadwal bisa digulir.** Isinya sampai 20 pertandingan, tapi tingginya
+  dibatasi agar sejajar dengan artikel utama di sebelahnya — jadi halaman tidak
+  memanjang ke bawah dan tidak menyisakan area kosong. Judul hari ikut menempel
+  di atas saat digulir, jadi Anda selalu tahu baris itu hari apa. Di ponsel
+  batasnya mengecil mengikuti tinggi layar.
+
+### Pilar Video Games
+Menu header kini punya entri **Video Games** dengan halamannya sendiri di
+`/category/video-games/`. Halaman itu tidak menunggu Anda memindahkan artikel:
+isinya dirakit dari tiga sumber sekaligus —
+
+1. kategori **Video Games** (apa pun yang Anda taruh di sana selalu masuk),
+2. kategori lama **Video Game** (`home`), yaitu liputan game yang sudah ada, dan
+3. **artikel konsol/handheld dari pilar lain** — misalnya ulasan ROG Ally yang
+   terlanjur masuk Tech.
+
+Yang jadi *headline* halaman adalah artikel konsol terbaru, sesuai fokus pilar
+ini. Chip **Semua / Konsol / Handheld / PC / Mobile** menyaring halaman lewat
+URL (`?platform=konsol`) jadi bisa dibagikan.
+
+Penentuan konsol/handheld dibaca dari **judul, ringkasan, subkategori, tag, dan
+kategori** — bukan isi artikel, supaya satu penyebutan di tengah tulisan tidak
+memindahkan artikel ke pilar lain. Mau menambah kata kunci (konsol baru, merek
+handheld baru)? Filter di `functions.php`:
+
+```php
+add_filter( 'gameindo_game_platforms', function ( $groups ) {
+    $groups['konsol']['keywords'][] = 'steam machine';
+    return $groups;
+} );
+```
+
+Artikel lama berkategori **Video Game** tetap di tempatnya dan tetap berwarna
+merah — di situs, keduanya tampil sebagai satu pilar **Video Games**. Kalau
+mau merapikan, cukup pindahkan artikelnya ke kategori Video Games; tampilannya
+tidak berubah.
 
 ### Cara kerja rail "Terpopuler"
 Aturannya sederhana dan bisa diprediksi:

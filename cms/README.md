@@ -32,8 +32,26 @@ cms/
 
 ## Arsitektur singkat
 
-- **Pilar = Kategori.** Slug tetap: `home` (Video Game), `esports`, `streamer`,
+- **Pilar = Kategori.** Slug tetap: `video-games`, `esports`, `streamer`,
   `tech`, `entertainment`. Slug mengendalikan warna via `[data-pillar]` di CSS.
+  Slug lama `home` (Video Game) tetap ada untuk artikel yang sudah terlanjur di
+  sana, tapi bukan seksi tersendiri: `gameindo_canonical_pillar()` memetakannya
+  ke `video-games`, dan `gameindo_nav_pillars()` — yang dipakai nav, footer,
+  mega menu, tile, dan band beranda — mengeluarkannya dari daftar. Keduanya
+  memakai merah induk yang sama, jadi satu beat tidak pernah tampil sebagai dua
+  seksi berwarna beda. Tema membuat kategori pilar yang belum ada saat `init`
+  (sekali, dijaga opsi `gameindo_pillar_terms`), supaya pilar yang lahir dari
+  pembaruan tema tidak 404 di situs yang plugin-nya sudah lama aktif.
+- **Pilar Video Games dirakit lintas kategori.** `gameindo_video_games_pool()`
+  menggabungkan kategori `video-games`, kategori lama `home`, dan artikel
+  konsol/handheld dari pilar lain, lalu diurutkan terbaru dulu — jadi halamannya
+  berisi sejak hari pertama tanpa editor memindahkan apa pun. Klasifikasi
+  konsol memakai pencocokan **kata utuh** (`gameindo_text_mentions()`) atas
+  judul/ringkasan/subkategori/tag/kategori saja — bukan isi artikel, supaya satu
+  penyebutan lewat tidak memindahkan artikel. Kata kuncinya lewat filter
+  `gameindo_game_platforms`, kedalaman pool lewat `gameindo_video_games_pool`.
+  Chip `?platform=` (Konsol/Handheld/PC/Mobile) menyaring halamannya, dan
+  headline halaman memakai artikel konsol terbaru — itu fokus pilarnya.
 - **Meta artikel** (subkategori, waktu baca, jumlah dibaca, featured, spotlight)
   disimpan sebagai post meta `_gi_*`, diisi lewat meta box (plugin).
 - **Widget esports** (ticker, topik, match, klasemen) = custom post type,
@@ -65,6 +83,14 @@ cms/
   diturunkan lalu dipakai menambal, dan cap dilonggarkan bila variasi tidak
   cukup — jadi panel tidak pernah kosong atau bolong. Halaman Esports sengaja
   **tidak** memakai keduanya: di sana jadwal harus lengkap dan urut jam.
+- **Panel Jadwal digulir di dalam panelnya** (`.gi-night-panel--schedule`, tinggi
+  `clamp(300px, 58vh, 460px)` — 460px itu tinggi `.gi-feature` di sebelahnya).
+  Dicetak utuh, satu matchday penuh membuat panel 2–3× lebih tinggi dari artikel
+  utama: kolom kiri jadi lorong putih di desktop, dan di ponsel daftar artikel
+  terkubur di bawah dinding baris. Judul hari `position:sticky` di dalam
+  scroller, dan scroller-nya `tabindex="0"` + `role="region"` supaya bisa
+  digulir dari keyboard. Karena tidak lagi dibatasi tinggi halaman, jumlah baris
+  yang diambil dinaikkan 12 → 20.
 - **Chip game di halaman Esports** menyaring panel Jadwal saja, lewat `?game=`
   (`gameindo_current_game()`), bukan daftar artikel. Panel Klasemen lama sudah
   digantikan; CPT `gi_standing` beserta `gameindo_get_standings()` dan
@@ -85,10 +111,16 @@ cms/
   memeringkat ulang seluruh arsip (itulah dulu penyebab artikel lawas ber-reads
   besar menempel di puncak). Jendela bisa diubah lewat filter
   `gameindo_popular_window_days`.
-- **Responsif bertingkat** (di `assets/css/main.css`): `<=1100` rail menyempit,
-  `<=900` rail menumpuk (tablet potret & layar dalam Galaxy Fold ~673px masuk
-  sini), `<=720` spesifikasi ponsel asli, `<=380` satu kolom untuk layar luar
-  Fold (280–344px). **Jangan menaruh `grid-template-columns` sebagai inline
+- **Responsif bertingkat** (di `assets/css/main.css`): `<=1100` rail menyempit
+  + nav pilar dirapatkan, `<=900` rail menumpuk (tablet potret & layar dalam
+  Galaxy Fold ~673px masuk sini) + nav dirapatkan lagi, `<=780` khusus nav
+  (lebar terakhir di mana enam pilar masih muat), `<=720` spesifikasi
+  ponsel asli (nav berganti drawer), `<=380` satu kolom untuk layar luar
+  Fold (280–344px). Sejak pilar keenam masuk, `.gi-header__nav-wrap` juga
+  `overflow-x:auto` dan `.gi-pillarnav` memakai `margin-inline:auto` alih-alih
+  `justify-content:center` — baris flex yang di-*center* dan meluap memotong
+  item pertamanya sendiri, yaitu pilar yang paling mungkin dicari pembaca.
+  **Jangan menaruh `grid-template-columns` sebagai inline
   style di template** — inline style tidak bisa ditimpa media query, dan itulah
   yang dulu membuat halaman pilar/cari/penulis tetap dua kolom di ponsel sampai
   isinya tergencet hilang. Pakai kelas `.gi-rail-layout` (konten + rail 340px)

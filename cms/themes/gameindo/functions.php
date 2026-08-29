@@ -9,24 +9,76 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GAMEINDO_VERSION', '1.5.1' );
+define( 'GAMEINDO_VERSION', '1.6.0' );
 define( 'GAMEINDO_DIR', get_template_directory() );
 define( 'GAMEINDO_URI', get_template_directory_uri() );
 
 /**
- * The five content pillars. The slugs MUST match the WordPress category
- * slugs and the [data-pillar] scopes in assets/css/tokens/colors.css.
+ * Every pillar slug the site knows about. The slugs MUST match the WordPress
+ * category slugs and the [data-pillar] scopes in assets/css/tokens/colors.css.
  * Renaming a pillar is done in wp-admin (category name); slugs stay fixed.
+ *
+ * 'home' is kept for the archive of posts filed before the Video Games pillar
+ * existed. It is not a section of its own any more — everything user-facing
+ * resolves it to 'video-games' (see gameindo_canonical_pillar()), so the site's
+ * game coverage reads as one pillar however an old post happens to be filed.
  */
 function gameindo_pillars() {
 	return array(
 		'home'          => 'Video Game',
+		'video-games'   => 'Video Games',
 		'esports'       => 'Esports',
 		'streamer'      => 'Streamer',
 		'tech'          => 'Tech',
 		'entertainment' => 'Entertainment',
 	);
 }
+
+/**
+ * The pillars that are sections in their own right: what the header nav, the
+ * footer, the mega menu, the homepage tiles and the pillar bands list.
+ *
+ * Excludes the legacy 'home' slug, which never had a nav entry of its own (the
+ * header's "Home" link goes to the front page) and whose articles now appear
+ * under Video Games — listing both would file one beat under two headings.
+ */
+function gameindo_nav_pillars() {
+	$pillars = gameindo_pillars();
+	unset( $pillars['home'] );
+	return $pillars;
+}
+
+/**
+ * Resolve a pillar slug to the one the reader sees. Only 'home' moves.
+ */
+function gameindo_canonical_pillar( $slug ) {
+	return ( 'home' === $slug ) ? 'video-games' : $slug;
+}
+
+/**
+ * Make sure every pillar has its category, so a pillar's nav entry always
+ * lands on a real archive.
+ *
+ * The Core plugin does this too, but only on activation — a pillar introduced
+ * in a theme update arrives on sites where the plugin was activated long ago,
+ * and there its link would 404. Guarded by an option so it costs one autoloaded
+ * read per request rather than a term lookup.
+ */
+function gameindo_ensure_pillar_terms() {
+	if ( GAMEINDO_VERSION === get_option( 'gameindo_pillar_terms' ) ) {
+		return;
+	}
+	foreach ( gameindo_pillars() as $slug => $name ) {
+		if ( ! term_exists( $slug, 'category' ) ) {
+			wp_insert_term( $name, 'category', array( 'slug' => $slug ) );
+		}
+	}
+	// The mega menu caches its columns as markup, so without this a new pillar
+	// would be missing from it for up to the cache's ten minutes after an update.
+	gameindo_flush_hot_topics();
+	update_option( 'gameindo_pillar_terms', GAMEINDO_VERSION );
+}
+add_action( 'init', 'gameindo_ensure_pillar_terms' );
 
 require_once GAMEINDO_DIR . '/inc/template-helpers.php';
 require_once GAMEINDO_DIR . '/inc/nav-walker.php';
@@ -119,7 +171,7 @@ function gameindo_body_pillar_attr() {
 	} elseif ( is_category() ) {
 		$cat = get_queried_object();
 		if ( $cat && isset( $cat->slug ) && array_key_exists( $cat->slug, gameindo_pillars() ) ) {
-			$pillar = $cat->slug;
+			$pillar = gameindo_canonical_pillar( $cat->slug );
 		}
 	} elseif ( is_author() ) {
 		$pillar = 'esports'; // author masthead uses the night/violet treatment

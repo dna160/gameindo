@@ -39,6 +39,7 @@
 
   /* ---- Pillar signature colors ---- */
   --pillar-home:          #EC1B2E;   /* red — the master brand   */
+  --pillar-video-games:   #EC1B2E;   /* red — same beat as 'home' */
   --pillar-esports:       #6D28D9;   /* violet — competitive      */
   --pillar-streamer:      #FF2D78;   /* magenta — creators        */
   --pillar-tech:          #08B7D4;   /* cyan — hardware / tech    */
@@ -74,8 +75,13 @@
    PILLAR SCOPES — set [data-pillar="…"] on any element/section
    to re-theme every accent within it.
    ============================================================ */
-[data-pillar="home"] {
-  --pillar: var(--pillar-home); --pillar-strong: var(--gi-red-600);
+/* Video Games and the legacy 'home' slug share the master red on purpose: they
+   are the same beat — 'home' is the slug the site shipped with, Video Games is
+   that coverage given a name, a menu entry and a page of its own. Splitting the
+   colour would make one section look like two. */
+[data-pillar="home"],
+[data-pillar="video-games"] {
+  --pillar: var(--pillar-video-games); --pillar-strong: var(--gi-red-600);
   --pillar-contrast:#fff; --pillar-tint:#FDE9EB; --pillar-tint-2:#FBD5D9;
 }
 [data-pillar="esports"] {

@@ -116,10 +116,16 @@ body { background: var(--surface); overflow-x: hidden; }
 }
 .gi-header__logo { display: flex; align-items: center; flex: none; }
 .gi-header__logo img { height: 24px; width: auto; display: block; }
-.gi-header__nav-wrap { flex: 1; display: flex; justify-content: center; min-width: 0; }
+/* The nav scrolls rather than overflowing once the pillars outgrow the space
+   between the logo and the actions. `margin-inline:auto` on the row does the
+   centring instead of `justify-content`, because a centred flex row that
+   overflows a scroll container clips its own first item — the pillar a reader
+   is most likely to want. */
+.gi-header__nav-wrap { flex: 1; display: flex; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.gi-header__nav-wrap::-webkit-scrollbar { display: none; }
 .gi-header__actions { display: flex; align-items: center; gap: 4px; flex: none; }
 
-.gi-pillarnav { display: flex; align-items: stretch; gap: 2px; height: var(--header-h); }
+.gi-pillarnav { display: flex; align-items: stretch; gap: 2px; height: var(--header-h); flex: none; margin-inline: auto; }
 .gi-pillarnav__item {
   position: relative; display: inline-flex; align-items: center; padding: 0 16px; height: 100%;
   font-family: var(--font-condensed); font-weight: var(--fw-extra); text-transform: uppercase;
@@ -131,6 +137,9 @@ body { background: var(--surface); overflow-x: hidden; }
   background: var(--pillar); transform: scaleX(0); transform-origin: left;
   transition: transform var(--dur-base) var(--ease-out);
 }
+/* Drawn inside the item: the nav row is a scroll container (see
+   .gi-header__nav-wrap), and an outline offset outwards is clipped by it. */
+.gi-pillarnav__item:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -3px; }
 .gi-pillarnav__item:hover { color: var(--pillar); }
 .gi-pillarnav__item:hover::after,
 .gi-pillarnav__item[aria-current="page"]::after { transform: scaleX(1); }
@@ -492,6 +501,8 @@ body { background: var(--surface); overflow-x: hidden; }
      <=900   tablet portrait + foldables opened (Fold inner ~673px)
              — stack; a 300px rail next to a 400px column reads worse
              than one full-width column
+     <=780   nav-only tier: the last width where six pillar entries still
+             fit beside the wordmark and the action buttons
      <=720   phones (the original 390px mobile spec)
      <=380   very small phones and folded cover screens
              (Galaxy Fold 280px, Z Fold cover ~344px)
@@ -501,6 +512,12 @@ body { background: var(--surface); overflow-x: hidden; }
   .gi-megamenu__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
   .gi-megamenu__trending { grid-column: 1 / -1; }
 
+  /* Six pillar entries no longer fit at full size between the logo and the
+     search/menu buttons; tightening them keeps the whole row on screen down to
+     the 720px breakpoint where the nav gives way to the drawer. */
+  .gi-pillarnav__item { padding: 0 11px; font-size: 13px; }
+  .gi-pillarnav__item::after { left: 11px; right: 11px; }
+
   .gi-rail-layout { grid-template-columns: minmax(0, 1fr) 300px; gap: 24px; }
   .gi-pillar-layout { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); }
   .gi-grid-4 { grid-template-columns: repeat(3, 1fr); }
@@ -509,10 +526,21 @@ body { background: var(--surface); overflow-x: hidden; }
 @media (max-width: 900px) {
   .gi-megamenu__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
+  .gi-pillarnav__item { padding: 0 8px; font-size: 12.5px; letter-spacing: .01em; }
+  .gi-pillarnav__item::after { left: 8px; right: 8px; }
+
   .gi-rail-layout,
   .gi-pillar-layout { grid-template-columns: minmax(0, 1fr); gap: 24px; }
   .gi-grid-4 { grid-template-columns: repeat(2, 1fr); }
   .gi-grid-5 { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* The last stretch before the drawer takes over. Six entries plus the wordmark
+   and the two action buttons come to roughly the full width here, so the type
+   tightens once more rather than letting the row start scrolling. */
+@media (max-width: 780px) {
+  .gi-pillarnav__item { padding: 0 6px; font-size: 11.5px; }
+  .gi-pillarnav__item::after { left: 6px; right: 6px; }
 }
 
 @media (max-width: 720px) {

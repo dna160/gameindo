@@ -3,7 +3,7 @@
  * Plugin Name:       GameIndo Core
  * Plugin URI:        https://gameindo.com
  * Description:        Content model for the GameIndo theme — article meta (pillar, subcategory, read time, featured/spotlight, reads), author profile fields, and the editable esports widgets (live ticker, hot topics, match center, standings), plus the live PandaScore match schedule for six games. All manageable from wp-admin.
- * Version:           1.1.0
+ * Version:           1.2.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            GameIndo
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GAMEINDO_CORE_VERSION', '1.1.0' );
+define( 'GAMEINDO_CORE_VERSION', '1.2.0' );
 define( 'GAMEINDO_CORE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'GAMEINDO_CORE_URL', plugin_dir_url( __FILE__ ) );
 
@@ -35,7 +35,7 @@ if ( is_admin() ) {
 
 /**
  * On activation: register CPTs then flush rewrite rules, and make sure the
- * five pillar categories exist with the exact slugs the theme/CSS expect.
+ * pillar categories exist with the exact slugs the theme/CSS expect.
  */
 function gameindo_core_activate() {
 	gameindo_core_register_cpts();
@@ -52,12 +52,19 @@ function gameindo_core_deactivate() {
 register_deactivation_hook( __FILE__, 'gameindo_core_deactivate' );
 
 /**
- * Ensure the five pillar categories exist (idempotent). Slugs are fixed;
- * names can be edited freely in wp-admin afterwards.
+ * Ensure the pillar categories exist (idempotent). Slugs are fixed; names can
+ * be edited freely in wp-admin afterwards.
+ *
+ * 'home' is the legacy slug for the site's game coverage and stays put so old
+ * posts keep their category; 'video-games' is the pillar that now presents it,
+ * with its own menu entry and archive. The theme creates any missing pillar
+ * term on init too, for sites where this plugin was activated before a pillar
+ * was added.
  */
 function gameindo_core_ensure_pillars() {
 	$pillars = array(
 		'home'          => 'Video Game',
+		'video-games'   => 'Video Games',
 		'esports'       => 'Esports',
 		'streamer'      => 'Streamer',
 		'tech'          => 'Tech',
