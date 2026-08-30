@@ -50,8 +50,23 @@ cms/
   judul/ringkasan/subkategori/tag/kategori saja — bukan isi artikel, supaya satu
   penyebutan lewat tidak memindahkan artikel. Kata kuncinya lewat filter
   `gameindo_game_platforms`, kedalaman pool lewat `gameindo_video_games_pool`.
-  Chip `?platform=` (Konsol/Handheld/PC/Mobile) menyaring halamannya, dan
-  headline halaman memakai artikel konsol terbaru — itu fokus pilarnya.
+  Chip `?platform=` (PS5/PC/Xbox/Switch) menyaring halamannya, dan headline
+  halaman memakai artikel **konsol** terbaru — itu slant pilarnya, bukan
+  batasnya. Dua set kolektif di `gameindo_platform_keywords()` menjaga bedanya:
+  `'any'` (semua platform) menentukan **apa yang masuk pool** dari pilar lain,
+  `'console'` (grup ber-flag `console`) menentukan **apa yang jadi headline**.
+  Dulu pool memakai set console, dan akibatnya chip PC menyaring daftar yang
+  tidak mungkin memuat artikel PC. Kata generik "konsol"/"console" ikut di kedua
+  set kolektif tapi tidak di chip mana pun — artikel yang cuma menyebut "konsol"
+  itu liputan konsol, tapi bukan artikel PS5 atau Xbox.
+- **Panel Rilis Mendatang (RAWG)** menggantikan Terpopuler di halaman Video
+  Games: `gameindo_upcoming_games()` → `gameindo_core_get_upcoming_games()` di
+  plugin, yang menembak `GET /api/games?dates=<hari ini>,<+N hari>&ordering=released`.
+  Key disimpan di opsi `gameindo_rawg_key` atau konstanta `GAMEINDO_RAWG_KEY`,
+  selalu server-side, cache *stale-while-revalidate* (TTL 6 jam, transient 24
+  jam). **Opt-in:** tanpa key hasilnya array kosong dan `archive.php` jatuh ke
+  rail Terpopuler — jadi memasang versi ini tidak mengubah apa pun sampai key
+  diisi, dan API mati berarti daftar lawas, bukan panel kosong.
 - **Pilar baru masuk ke menu lewat dua jalur.** Menu yang diatur di Tampilan →
   Menu menang atas nav otomatis, jadi pilar yang lahir dari pembaruan tema tidak
   akan terlihat justru di situs yang mengikuti panduan pasang. (1)

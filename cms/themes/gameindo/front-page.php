@@ -236,7 +236,9 @@ $gi_match_meta  = ( 1 === count( $gi_match_comps ) ) ? $gi_match_comps[0] : 'Jad
   </div>
 
   <div id="gi-pillar-bands"><?php
-    $gi_band_order = array( 'esports', 'video-games', 'streamer', 'tech', 'entertainment' );
+    // Video Games leads: it is the site's core beat, and the band order is what
+    // a reader scrolling past the hero meets first.
+    $gi_band_order = array( 'video-games', 'esports', 'streamer', 'tech', 'entertainment' );
     $gi_bi = 0;
     foreach ( $gi_band_order as $gi_slug ) {
 	    $gi_band_posts = ( 'video-games' === $gi_slug )

@@ -105,6 +105,50 @@
   background: var(--surface-2); font-family: var(--font-body); font-size: 14px; color: var(--ink-3);
 }
 
+/* ============================================================
+   RILIS MENDATANG (Video Games) — upcoming releases from RAWG,
+   in the slot the esports schedule occupies. Same night-panel
+   shell, and it scrolls the same way once the list outgrows the
+   feature beside it.
+   ============================================================ */
+.gi-night-panel--release { display: flex; flex-direction: column; max-height: clamp(300px, 58vh, 460px); }
+.gi-release-list {
+  flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+  scrollbar-width: thin; scrollbar-color: var(--line-2) transparent;
+}
+.gi-release-list::-webkit-scrollbar { width: 7px; }
+.gi-release-list::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 999px; }
+.gi-release {
+  display: grid; grid-template-columns: 46px minmax(0, 1fr) auto; gap: 12px; align-items: center;
+  padding: 10px 16px; border-bottom: 1px solid var(--line);
+}
+.gi-release:last-child { border-bottom: none; }
+.gi-release__art {
+  width: 46px; height: 46px; border-radius: var(--radius-sm); overflow: hidden;
+  background: var(--surface-3); display: block; flex: none;
+}
+.gi-release__art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.gi-release__art--none { background: var(--pillar-tint); }
+.gi-release__body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.gi-release__name {
+  font-family: var(--font-condensed); font-weight: 700; font-size: 14.5px; line-height: 1.2; color: var(--ink);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.gi-release__platforms {
+  font-family: var(--font-mono); font-size: 9.5px; color: var(--ink-4);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.gi-release__when { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex: none; }
+.gi-release__date {
+  font-family: var(--font-condensed); font-weight: 700; font-size: 12px; letter-spacing: var(--ls-wide);
+  text-transform: uppercase; color: var(--pillar-strong); white-space: nowrap;
+}
+.gi-release__countdown { font-family: var(--font-mono); font-size: 9.5px; color: var(--ink-4); white-space: nowrap; }
+.gi-release__source {
+  flex: none; display: block; padding: 8px 16px; background: var(--surface-2); border-top: 1px solid var(--line);
+  font-family: var(--font-mono); font-size: 9.5px; color: var(--ink-4);
+}
+
 /* Non-esports pillar "Terpopuler" panel: rank rows inside the night-panel shell. */
 .gi-night-panel__list { padding: 2px 16px; }
 .gi-night-panel__list .gi-rank { grid-template-columns: auto 48px 1fr; gap: 12px; padding: 11px 0; }
@@ -115,7 +159,8 @@
 /* Stacked from here down, so the panel is full width and its height is the
    whole cost of getting past it to the articles. Keep it well under a screen. */
 @media (max-width: 900px) {
-  .gi-night-panel--schedule { max-height: min(420px, 62vh); }
+  .gi-night-panel--schedule,
+  .gi-night-panel--release { max-height: min(420px, 62vh); }
 }
 
 @media (max-width: 720px) {
@@ -123,7 +168,8 @@
   /* Full width now that the layout stacks — give the fixture room. */
   .gi-schedule__row { grid-template-columns: 60px minmax(0, 1fr) auto; padding-block: 10px; }
   .gi-schedule__teams { font-size: 15px; }
-  .gi-night-panel--schedule { max-height: min(360px, 58vh); }
+  .gi-night-panel--schedule,
+  .gi-night-panel--release { max-height: min(360px, 58vh); }
 }
 
 @media (max-width: 380px) {
@@ -132,7 +178,11 @@
   .gi-schedule__teams { font-size: 14px; }
   .gi-schedule__note, .gi-schedule__day { padding-inline: 12px; }
   .gi-schedule__bo { display: none; } /* the watch button is the useful one here */
-  .gi-night-panel--schedule { max-height: min(320px, 56vh); }
+  .gi-night-panel--schedule,
+  .gi-night-panel--release { max-height: min(320px, 56vh); }
+  .gi-release { grid-template-columns: 38px minmax(0, 1fr) auto; gap: 9px; padding: 9px 12px; }
+  .gi-release__art { width: 38px; height: 38px; }
+  .gi-release__source { padding-inline: 12px; }
   .gi-empty { padding: 22px 16px; font-size: 13px; }
 }
 

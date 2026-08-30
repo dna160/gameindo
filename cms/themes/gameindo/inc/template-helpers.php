@@ -70,7 +70,7 @@ function gameindo_pillar_name( $slug ) {
  */
 function gameindo_pillar_description( $slug ) {
 	$defaults = apply_filters( 'gameindo_pillar_descriptions', array(
-		'video-games' => 'Rilis, review, dan kabar game — dengan sorotan ekstra untuk konsol dan handheld: PlayStation, Xbox, Nintendo, Steam Deck, dan ROG Ally.',
+		'video-games' => 'Rilis, review, dan kabar game lintas platform — PS5, PC, Xbox, dan Nintendo Switch.',
 	) );
 	$slug = gameindo_canonical_pillar( $slug );
 	return isset( $defaults[ $slug ] ) ? $defaults[ $slug ] : '';
@@ -81,7 +81,9 @@ function gameindo_pillar_description( $slug ) {
    ============================================================ */
 
 /**
- * The platform groups the Video Games page filters by, in chip order.
+ * The platforms the Video Games page filters by, in chip order. 'console'
+ * marks the ones that count as console coverage — see
+ * gameindo_platform_keywords(), which the pillar uses to pick its lead story.
  *
  * Keywords are matched against a post's headline, excerpt, subcategory, tags
  * and categories — never its body text, so a passing mention halfway down an
@@ -90,27 +92,38 @@ function gameindo_pillar_description( $slug ) {
  */
 function gameindo_game_platforms() {
 	return apply_filters( 'gameindo_game_platforms', array(
-		'konsol'   => array(
-			'label'    => 'Konsol',
-			// "switch" on its own also catches "Switch 2" and "Switch Lite".
+		'ps5'    => array(
+			'label'    => 'PS5',
+			'console'  => true,
+			// PS4 counts too: on this beat a PlayStation story is a PlayStation
+			// story, and filing last-gen coverage nowhere would hide it.
 			'keywords' => array(
-				'konsol', 'console', 'playstation', 'ps5', 'ps4', 'psn', 'ps plus', 'dualsense',
-				'xbox', 'series x', 'series s', 'game pass', 'nintendo', 'switch',
+				'ps5', 'ps4', 'playstation', 'playstation 5', 'playstation 4',
+				'psn', 'ps plus', 'dualsense', 'dualshock',
 			),
 		),
-		'handheld' => array(
-			'label'    => 'Handheld',
-			'keywords' => array(
-				'handheld', 'steam deck', 'rog ally', 'legion go', 'msi claw', 'switch lite', 'playdate',
-			),
-		),
-		'pc'       => array(
+		'pc'     => array(
 			'label'    => 'PC',
-			'keywords' => array( 'pc', 'steam', 'epic games', 'gog', 'battle.net', 'rtx', 'radeon', 'gpu' ),
+			'console'  => false,
+			// Games on PC, not PC hardware: a GPU review is Tech's beat, and
+			// pulling RTX/Radeon in here would fill the pillar with parts.
+			'keywords' => array(
+				'pc', 'steam', 'steam deck', 'epic games', 'gog', 'battle.net',
+				'rog ally', 'legion go', 'msi claw',
+			),
 		),
-		'mobile'   => array(
-			'label'    => 'Mobile',
-			'keywords' => array( 'mobile', 'android', 'ios', 'gim mobile', 'game mobile', 'hp gaming' ),
+		'xbox'   => array(
+			'label'    => 'Xbox',
+			'console'  => true,
+			'keywords' => array(
+				'xbox', 'series x', 'series s', 'xbox one', 'game pass', 'xbox live',
+			),
+		),
+		'switch' => array(
+			'label'    => 'Switch',
+			'console'  => true,
+			// "switch" on its own also catches "Switch 2" and "Switch Lite".
+			'keywords' => array( 'switch', 'nintendo', 'joy-con', 'joycon', 'amiibo' ),
 		),
 	) );
 }
@@ -179,29 +192,50 @@ function gameindo_text_mentions( $text, $keywords ) {
 }
 
 /**
- * Keywords for one platform group. Anything that isn't a group key — the
- * callers pass 'console' — means console coverage as a whole: consoles plus
- * handhelds, since a Steam Deck piece is for the same reader.
+ * Keywords for one platform, or for console coverage as a whole.
  */
 function gameindo_platform_keywords( $platform ) {
 	$groups = gameindo_game_platforms();
 	if ( isset( $groups[ $platform ] ) ) {
 		return $groups[ $platform ]['keywords'];
 	}
+	// Two collective sets. 'any' is every platform — what decides whether an
+	// article filed in another pillar belongs to this one at all. Anything else
+	// ('console') is the platforms flagged as consoles, which is what "leaning
+	// console" means when picking the page's lead story. Reading the flag rather
+	// than naming groups keeps the gameindo_game_platforms filter able to add a
+	// platform without editing this.
 	$keywords = array();
-	foreach ( array( 'konsol', 'handheld' ) as $key ) {
-		if ( isset( $groups[ $key ] ) ) {
-			$keywords = array_merge( $keywords, $groups[ $key ]['keywords'] );
+	foreach ( $groups as $group ) {
+		if ( 'any' === $platform || ! empty( $group['console'] ) ) {
+			$keywords = array_merge( $keywords, $group['keywords'] );
 		}
 	}
-	return $keywords;
+
+	// Both collective sets also take the generic words. An article that just
+	// says "konsol" is console coverage even when it names no machine — but the
+	// word belongs to no single chip, so it is never a PS5 or an Xbox article.
+	return array_merge( $keywords, (array) apply_filters( 'gameindo_generic_console_words', array( 'konsol', 'console' ) ) );
 }
 
 /**
- * Is this article console (or handheld) coverage?
+ * Is this article console coverage — PS5, Xbox or Switch?
  */
 function gameindo_is_console_post( $post_id ) {
 	return gameindo_text_mentions( gameindo_post_signal_text( $post_id ), gameindo_platform_keywords( 'console' ) );
+}
+
+/**
+ * Is this article about a game on any platform this pillar covers?
+ *
+ * Wider than gameindo_is_console_post() on purpose: it decides what the pool
+ * pulls in from the other pillars, and a pool that only admitted console
+ * coverage left the PC chip filtering over articles that could never contain a
+ * PC one. The lead-story pick still prefers console — that is the pillar's
+ * slant, not its boundary.
+ */
+function gameindo_is_platform_post( $post_id ) {
+	return gameindo_text_mentions( gameindo_post_signal_text( $post_id ), gameindo_platform_keywords( 'any' ) );
 }
 
 /**
@@ -214,8 +248,8 @@ function gameindo_is_console_post( $post_id ) {
  *   1. the video-games category — what an editor files there always counts;
  *   2. the legacy "Video Game" (home) category, which is the same beat under
  *      the slug the site shipped with;
- *   3. console and handheld coverage sitting in the other pillars — a Switch 2
- *      hands-on filed under Tech belongs to this reader too.
+ *   3. platform coverage sitting in the other pillars — a Switch 2 hands-on or
+ *      a Steam Deck piece filed under Tech belongs to this reader too.
  */
 function gameindo_video_games_pool() {
 	static $pool = null;
@@ -244,7 +278,7 @@ function gameindo_video_games_pool() {
 		$pool[]            = $post;
 	}
 	foreach ( get_posts( $query ) as $post ) {
-		if ( isset( $seen[ $post->ID ] ) || ! gameindo_is_console_post( $post->ID ) ) {
+		if ( isset( $seen[ $post->ID ] ) || ! gameindo_is_platform_post( $post->ID ) ) {
 			continue;
 		}
 		$seen[ $post->ID ] = true;
@@ -280,9 +314,87 @@ function gameindo_video_games_posts( $args = array() ) {
 	return $out;
 }
 
+/* ---- Rilis Mendatang (RAWG) ---- */
+
+/**
+ * Upcoming game releases for the Video Games panel, soonest first.
+ *
+ * Comes from the Core plugin, which holds the API key and the cache. Without a
+ * key — or with the plugin inactive — this is empty, and the page falls back to
+ * the Terpopuler rail it showed before. That is deliberate: the panel is opt-in,
+ * so shipping it changes nothing until an editor pastes a key in.
+ */
+function gameindo_upcoming_games( $args = array() ) {
+	if ( ! function_exists( 'gameindo_core_get_upcoming_games' ) ) {
+		return array();
+	}
+	return (array) gameindo_core_get_upcoming_games( $args );
+}
+
+/**
+ * Release date as a reader reads it: "Hari ini", "Besok", "12 Sep" this year,
+ * "12 Sep 2027" beyond it, "TBA" when the studio hasn't said.
+ */
+function gameindo_release_label( $game ) {
+	if ( ! empty( $game['tba'] ) || empty( $game['ts'] ) ) {
+		return 'TBA';
+	}
+	$ts  = (int) $game['ts'];
+	$day = wp_date( 'Ymd', $ts );
+	if ( wp_date( 'Ymd' ) === $day ) {
+		return 'Hari ini';
+	}
+	if ( wp_date( 'Ymd', time() + DAY_IN_SECONDS ) === $day ) {
+		return 'Besok';
+	}
+	return wp_date( 'Y', $ts ) === wp_date( 'Y' ) ? wp_date( 'j M', $ts ) : wp_date( 'j M Y', $ts );
+}
+
+/**
+ * How far off a release is, in whole days, or '' once it is here. Gives the
+ * row a second, softer signal than the date alone.
+ */
+function gameindo_release_countdown( $game ) {
+	if ( empty( $game['ts'] ) ) {
+		return '';
+	}
+	$days = (int) floor( ( (int) $game['ts'] - (int) current_time( 'timestamp' ) ) / DAY_IN_SECONDS );
+	if ( $days < 1 ) {
+		return '';
+	}
+	return $days < 30 ? $days . ' hari lagi' : ( (int) round( $days / 30 ) ) . ' bulan lagi';
+}
+
+/**
+ * One row of the Rilis Mendatang panel. Not a link: RAWG entries are database
+ * records, not articles, and sending a reader off-site from a panel that looks
+ * like the rest of the site would be a bait-and-switch.
+ */
+function gameindo_release_row( $game ) {
+	$cover = ! empty( $game['image'] )
+		? '<span class="gi-release__art"><img src="' . esc_url( $game['image'] ) . '" alt="" loading="lazy"></span>'
+		: '<span class="gi-release__art gi-release__art--none" aria-hidden="true"></span>';
+
+	$count = gameindo_release_countdown( $game );
+	$plats = ! empty( $game['platforms'] ) ? implode( ' · ', (array) $game['platforms'] ) : '';
+
+	$html  = '<div class="gi-release">';
+	$html .= $cover;
+	$html .= '<span class="gi-release__body">';
+	$html .= '<span class="gi-release__name">' . esc_html( $game['name'] ) . '</span>';
+	$html .= $plats ? '<span class="gi-release__platforms">' . esc_html( $plats ) . '</span>' : '';
+	$html .= '</span>';
+	$html .= '<span class="gi-release__when">';
+	$html .= '<span class="gi-release__date">' . esc_html( gameindo_release_label( $game ) ) . '</span>';
+	$html .= $count ? '<span class="gi-release__countdown">' . esc_html( $count ) . '</span>' : '';
+	$html .= '</span>';
+	$html .= '</div>';
+	return $html;
+}
+
 /**
  * Which article should lead the Video Games page: the newest one with a
- * console or handheld angle, since that is the pillar's brief. Falls back to
+ * console angle, since that is the pillar's brief. Falls back to
  * the newest article when nothing in the list is console-led. Returns an index
  * into $posts, or null when there is nothing to lead with.
  */
@@ -1520,11 +1632,14 @@ function gameindo_megamenu_column( $slug, $max = 4 ) {
 		// Platform views first: they are the pillar's own navigation, and unlike
 		// a category slug they are the thing a reader is choosing between.
 		$vg_url = gameindo_pillar_url( 'video-games' );
+		$taken  = 0;
 		foreach ( gameindo_game_platforms() as $key => $group ) {
-			if ( 'konsol' !== $key && 'handheld' !== $key ) {
-				continue;
+			if ( $taken >= 2 ) {
+				break; // the column holds four entries; leave room for headlines
 			}
-			$push( $group['label'], add_query_arg( 'platform', $key, $vg_url ) );
+			if ( $push( $group['label'], add_query_arg( 'platform', $key, $vg_url ) ) ) {
+				$taken++;
+			}
 		}
 
 		// …then the pillar's own pool, which spans more than one category.

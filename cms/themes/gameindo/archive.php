@@ -63,6 +63,13 @@ if ( $gi_is_video_games ) {
 $gi_initial   = 6; // grid items visible before "Muat Lebih Banyak"
 $gi_card_args = $gi_is_video_games ? array( 'pillar' => 'video-games' ) : array();
 
+// Upcoming releases replace the Terpopuler panel on Video Games — but only when
+// RAWG actually returns something, so an unconfigured key degrades to the rail
+// rather than to an empty box. The platform chip narrows this too.
+$gi_releases = $gi_is_video_games
+	? gameindo_upcoming_games( array( 'limit' => 6, 'platform' => $gi_platform ) )
+	: array();
+
 // Esports schedule panel. The ?game= chip filters the panel only — the article
 // feed below stays the full Esports pillar. The panel scrolls internally, so a
 // busy matchday can carry more fixtures than would ever fit on screen.
@@ -155,12 +162,28 @@ $gi_base_url = gameindo_pillar_url( 'esports' );
         <a class="gi-night-panel__cta" href="<?php echo esc_url( $gi_base_url . '#jadwal' ); ?>">Semua Jadwal →</a>
         <?php endif; ?>
       </div>
+      <?php elseif ( $gi_is_video_games && ! empty( $gi_releases ) ) : ?>
+      <div class="gi-night-panel gi-night-panel--release">
+        <div class="gi-night-panel__head">
+          <span class="gi-night-panel__head-title">Rilis Mendatang</span>
+          <span class="gi-night-panel__head-meta"><?php
+            echo esc_html( 'all' === $gi_platform ? 'Semua Platform' : $gi_platforms[ $gi_platform ]['label'] );
+          ?></span>
+        </div>
+        <div class="gi-release-list"><?php
+          foreach ( $gi_releases as $gi_rg ) {
+	          echo gameindo_release_row( $gi_rg ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+          }
+        ?></div>
+        <span class="gi-release__source">Data rilis: RAWG</span>
+      </div>
       <?php else :
-	      // Non-esports pillars: a "Terpopuler" leaderboard panel to fill the
-	      // same slot the esports schedule occupies. Same reads + recency blend
-	      // as the homepage rail, scoped to this pillar; the [data-pillar]
-	      // scope colours it per pillar. Video Games ranks its own cross-category
-	      // pool, since its articles are not all in one term.
+	      // Every other pillar keeps the "Terpopuler" leaderboard in the slot the
+	      // esports schedule occupies. Same reads + recency blend as the homepage
+	      // rail, scoped to this pillar; the [data-pillar] scope colours it.
+	      // Video Games only lands here when RAWG has nothing to show — no API
+	      // key, plugin inactive, or the fetch failed — so the panel is never
+	      // empty just because an integration is switched off.
 	      $gi_pop = $gi_is_video_games
 		      ? gameindo_rank_recent_popular( gameindo_video_games_posts( array( 'platform' => $gi_platform, 'limit' => 40 ) ), 5 )
 		      : gameindo_trending_posts( 5, array( 'category' => $gi_slug ) );

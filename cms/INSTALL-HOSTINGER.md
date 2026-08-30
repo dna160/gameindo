@@ -225,8 +225,23 @@ isinya dirakit dari tiga sumber sekaligus —
    terlanjur masuk Tech.
 
 Yang jadi *headline* halaman adalah artikel konsol terbaru, sesuai fokus pilar
-ini. Chip **Semua / Konsol / Handheld / PC / Mobile** menyaring halaman lewat
-URL (`?platform=konsol`) jadi bisa dibagikan.
+ini. Chip **Semua / PS5 / PC / Xbox / Switch** menyaring halaman lewat URL
+(`?platform=ps5`) jadi bisa dibagikan. Kalau sebuah chip masih kosong, itu
+berarti belum ada artikel yang menyebut platform itu — halamannya menampilkan
+pesan dan tautan kembali ke Semua, bukan halaman kosong.
+
+### Panel "Rilis Mendatang" (RAWG)
+Di halaman Video Games, panel kanan menampilkan game yang akan rilis beberapa
+bulan ke depan, diurutkan dari yang paling dekat, lengkap dengan hitungan
+mundur. Datanya dari **RAWG**.
+
+1. Ambil API key gratis di [rawg.io/apidocs](https://rawg.io/apidocs).
+2. wp-admin → **GameIndo → RAWG** → tempel key → Simpan.
+
+**Kalau key dikosongkan, panelnya tidak muncul** dan halaman kembali memakai
+panel *Terpopuler* seperti sebelumnya — jadi ini aman dipasang lebih dulu dan
+diisi belakangan. Chip platform ikut menyaring panelnya. Kalau RAWG sedang mati,
+yang tampil daftar terakhir yang tersimpan, bukan panel kosong.
 
 Penentuan konsol/handheld dibaca dari **judul, ringkasan, subkategori, tag, dan
 kategori** — bukan isi artikel, supaya satu penyebutan di tengah tulisan tidak
