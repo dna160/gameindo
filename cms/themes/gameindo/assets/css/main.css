@@ -500,9 +500,9 @@ body { background: var(--surface); overflow-x: hidden; }
      <=1100  small laptop / tablet landscape — narrow the rail
      <=900   tablet portrait + foldables opened (Fold inner ~673px)
              — stack; a 300px rail next to a 400px column reads worse
-             than one full-width column
-     <=780   nav-only tier: the last width where six pillar entries still
-             fit beside the wordmark and the action buttons
+             than one full-width column. Also where the pillar nav hands
+             over to the drawer: six entries below this either crowd or
+             get clipped away by their own scroll container
      <=720   phones (the original 390px mobile spec)
      <=380   very small phones and folded cover screens
              (Galaxy Fold 280px, Z Fold cover ~344px)
@@ -526,8 +526,15 @@ body { background: var(--surface); overflow-x: hidden; }
 @media (max-width: 900px) {
   .gi-megamenu__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
-  .gi-pillarnav__item { padding: 0 8px; font-size: 12.5px; letter-spacing: .01em; }
-  .gi-pillarnav__item::after { left: 8px; right: 8px; }
+  /* The pillar row gives way to the drawer here, not at 720px. Six entries
+     only fit below this by shrinking the type until it reads as cramped —
+     and on the width where they stop fitting at all, the scroll container
+     hides the last ones with no scrollbar to hint at them, so Tech and
+     Entertainment simply vanish from the header. The drawer lists all six,
+     and on the front page so does the pillar row beneath the header. */
+  .gi-header__nav-wrap { display: none; }
+  .gi-nav-toggle { display: inline-flex; }
+  .gi-header__logo { margin-right: auto; }
 
   .gi-rail-layout,
   .gi-pillar-layout { grid-template-columns: minmax(0, 1fr); gap: 24px; }
@@ -535,17 +542,7 @@ body { background: var(--surface); overflow-x: hidden; }
   .gi-grid-5 { grid-template-columns: repeat(3, 1fr); }
 }
 
-/* The last stretch before the drawer takes over. Six entries plus the wordmark
-   and the two action buttons come to roughly the full width here, so the type
-   tightens once more rather than letting the row start scrolling. */
-@media (max-width: 780px) {
-  .gi-pillarnav__item { padding: 0 6px; font-size: 11.5px; }
-  .gi-pillarnav__item::after { left: 6px; right: 6px; }
-}
-
 @media (max-width: 720px) {
-  .gi-header__nav-wrap { display: none; }
-  .gi-nav-toggle { display: inline-flex; }
   .gi-header__bar { height: 56px; padding-inline: 14px; gap: 8px; }
   .gi-header__logo { flex: 1; justify-content: center; }
   .gi-header__logo img { height: 20px; }
