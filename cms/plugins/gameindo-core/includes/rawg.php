@@ -115,16 +115,101 @@ function gameindo_core_rawg_row( $game ) {
 	$released = isset( $game['released'] ) ? (string) $game['released'] : '';
 	$ts       = $released ? strtotime( $released . ' 00:00:00' ) : 0;
 
+	$slug = isset( $game['slug'] ) ? (string) $game['slug'] : '';
+
 	return array(
 		'id'        => isset( $game['id'] ) ? (int) $game['id'] : 0,
 		'name'      => (string) $game['name'],
-		'slug'      => isset( $game['slug'] ) ? (string) $game['slug'] : '',
+		'slug'      => $slug,
+		// Every row gets a destination straight away: the game's page on RAWG is
+		// derivable from the slug at no request cost. The official site replaces
+		// it once the detail lookup below has been through this title.
+		'link'      => $slug ? 'https://rawg.io/games/' . rawurlencode( $slug ) : '',
+		'link_host' => $slug ? 'RAWG' : '',
 		'released'  => $released,
 		'ts'        => $ts ? (int) $ts : 0,
 		'tba'       => ! empty( $game['tba'] ) || ! $ts,
 		'image'     => isset( $game['background_image'] ) ? (string) $game['background_image'] : '',
 		'platforms' => array_slice( array_unique( $platforms ), 0, 4 ),
 	);
+}
+
+/**
+ * The official website for one game, or '' when RAWG doesn't know one.
+ *
+ * The list endpoint doesn't carry `website` — only /games/{id} does — so this
+ * is a second request per title. Each answer is cached for a week on its own
+ * key: a game's official site does not move, so after the first pass a rebuild
+ * costs nothing for titles it has already seen.
+ */
+function gameindo_core_rawg_website( $id ) {
+	$id = (int) $id;
+	if ( ! $id ) {
+		return '';
+	}
+
+	$key    = 'gi_rawg_web_' . $id;
+	$cached = get_transient( $key );
+	if ( false !== $cached ) {
+		return (string) $cached;
+	}
+
+	$body = gameindo_core_rawg_request( 'games/' . $id );
+	if ( is_wp_error( $body ) ) {
+		// Remember the miss briefly so one bad id can't be retried on every
+		// rebuild, but not for a week — the next refresh should try again.
+		set_transient( $key, '', HOUR_IN_SECONDS );
+		return '';
+	}
+
+	$site = isset( $body['website'] ) ? trim( (string) $body['website'] ) : '';
+	if ( $site && ! wp_http_validate_url( $site ) ) {
+		$site = '';
+	}
+
+	set_transient( $key, $site, WEEK_IN_SECONDS );
+	return $site;
+}
+
+/**
+ * Host of a link, as a reader would say it: "playstation.com", not the full URL.
+ * Tells them where the click lands before they take it.
+ */
+function gameindo_core_rawg_link_host( $url ) {
+	$host = strtolower( (string) wp_parse_url( $url, PHP_URL_HOST ) );
+	return $host ? preg_replace( '/^www\./', '', $host ) : '';
+}
+
+/**
+ * Upgrade rows from the RAWG page to the game's own site, for as many titles as
+ * the budget allows. Bounded on purpose: this runs inside the rebuild that
+ * already made one HTTP call, and a panel of six would otherwise turn one slow
+ * request into seven. Titles not reached keep their RAWG link and get picked up
+ * by a later rebuild, so the panel is never link-less while it fills in.
+ */
+function gameindo_core_rawg_add_websites( $rows ) {
+	$budget = (int) apply_filters( 'gameindo_rawg_detail_budget', 3 );
+
+	foreach ( $rows as $i => $row ) {
+		if ( empty( $row['id'] ) ) {
+			continue;
+		}
+		// A cached answer costs nothing, so it never spends budget.
+		$known = get_transient( 'gi_rawg_web_' . (int) $row['id'] );
+		if ( false === $known ) {
+			if ( $budget < 1 ) {
+				continue;
+			}
+			$budget--;
+		}
+
+		$site = gameindo_core_rawg_website( $row['id'] );
+		if ( $site ) {
+			$rows[ $i ]['link']      = $site;
+			$rows[ $i ]['link_host'] = gameindo_core_rawg_link_host( $site );
+		}
+	}
+	return $rows;
 }
 
 /**
@@ -191,6 +276,8 @@ function gameindo_core_get_upcoming_games( $args = array() ) {
 		}
 		return $a['ts'] - $b['ts'];
 	} );
+
+	$rows = gameindo_core_rawg_add_websites( $rows );
 
 	set_transient( $cache_id, $rows, DAY_IN_SECONDS );
 	update_option( $cache_id . '_at', time(), false );

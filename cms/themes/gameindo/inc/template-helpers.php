@@ -366,9 +366,13 @@ function gameindo_release_countdown( $game ) {
 }
 
 /**
- * One row of the Rilis Mendatang panel. Not a link: RAWG entries are database
- * records, not articles, and sending a reader off-site from a panel that looks
- * like the rest of the site would be a bait-and-switch.
+ * One row of the Rilis Mendatang panel.
+ *
+ * Rows link out: to the game's official site when RAWG knows one, otherwise to
+ * its page on RAWG. Both leave the site, so the row says where it goes — the
+ * host is printed next to the arrow, the same way a schedule row names the
+ * broadcaster before you click it. A row with no destination at all stays a
+ * plain block rather than a link that goes nowhere.
  */
 function gameindo_release_row( $game ) {
 	$cover = ! empty( $game['image'] )
@@ -377,18 +381,28 @@ function gameindo_release_row( $game ) {
 
 	$count = gameindo_release_countdown( $game );
 	$plats = ! empty( $game['platforms'] ) ? implode( ' · ', (array) $game['platforms'] ) : '';
+	$link  = ! empty( $game['link'] ) ? $game['link'] : '';
+	$host  = ! empty( $game['link_host'] ) ? $game['link_host'] : '';
 
-	$html  = '<div class="gi-release">';
+	$open = $link
+		? '<a class="gi-release gi-release--link" href="' . esc_url( $link ) . '" target="_blank" rel="noopener noreferrer"'
+			. ' aria-label="' . esc_attr( sprintf( 'Buka halaman %s di %s', $game['name'], $host ) ) . '">'
+		: '<div class="gi-release">';
+
+	$html  = $open;
 	$html .= $cover;
 	$html .= '<span class="gi-release__body">';
 	$html .= '<span class="gi-release__name">' . esc_html( $game['name'] ) . '</span>';
+	$html .= '<span class="gi-release__sub">';
 	$html .= $plats ? '<span class="gi-release__platforms">' . esc_html( $plats ) . '</span>' : '';
+	$html .= $host ? '<span class="gi-release__host"><span aria-hidden="true">↗</span>' . esc_html( $host ) . '</span>' : '';
+	$html .= '</span>';
 	$html .= '</span>';
 	$html .= '<span class="gi-release__when">';
 	$html .= '<span class="gi-release__date">' . esc_html( gameindo_release_label( $game ) ) . '</span>';
 	$html .= $count ? '<span class="gi-release__countdown">' . esc_html( $count ) . '</span>' : '';
 	$html .= '</span>';
-	$html .= '</div>';
+	$html .= $link ? '</a>' : '</div>';
 	return $html;
 }
 

@@ -3,7 +3,7 @@
  * Plugin Name:       GameIndo Core
  * Plugin URI:        https://gameindo.com
  * Description:        Content model for the GameIndo theme — article meta (pillar, subcategory, read time, featured/spotlight, reads), author profile fields, and the editable esports widgets (live ticker, hot topics, match center, standings), plus the live PandaScore match schedule for six games. All manageable from wp-admin.
- * Version:           1.3.0
+ * Version:           1.3.1
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            GameIndo
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GAMEINDO_CORE_VERSION', '1.3.0' );
+define( 'GAMEINDO_CORE_VERSION', '1.3.1' );
 define( 'GAMEINDO_CORE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'GAMEINDO_CORE_URL', plugin_dir_url( __FILE__ ) );
 

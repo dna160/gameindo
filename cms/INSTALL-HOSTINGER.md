@@ -238,6 +238,12 @@ mundur. Datanya dari **RAWG**.
 1. Ambil API key gratis di [rawg.io/apidocs](https://rawg.io/apidocs).
 2. wp-admin → **GameIndo → RAWG** → tempel key → Simpan.
 
+Tiap baris bisa diklik: ke **situs resmi game** kalau RAWG tahu alamatnya,
+kalau belum ke halaman game di RAWG. Nama tujuannya dicetak kecil di sebelah
+tanda ↗ supaya pembaca tahu ke mana perginya, dan semuanya terbuka di tab baru.
+Situs resmi terisi bertahap — tiap penyegaran menaikkan beberapa judul dan
+hasilnya disimpan seminggu, jadi tidak ada lonjakan permintaan ke RAWG.
+
 **Kalau key dikosongkan, panelnya tidak muncul** dan halaman kembali memakai
 panel *Terpopuler* seperti sebelumnya — jadi ini aman dipasang lebih dulu dan
 diisi belakangan. Chip platform ikut menyaring panelnya. Kalau RAWG sedang mati,

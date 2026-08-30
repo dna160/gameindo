@@ -67,6 +67,16 @@ cms/
   jam). **Opt-in:** tanpa key hasilnya array kosong dan `archive.php` jatuh ke
   rail Terpopuler — jadi memasang versi ini tidak mengubah apa pun sampai key
   diisi, dan API mati berarti daftar lawas, bukan panel kosong.
+- **Tautan baris rilis.** Endpoint daftar tidak membawa `website`; hanya
+  `/games/{id}` yang punya. Jadi setiap baris **selalu** dapat tujuan gratis
+  lebih dulu — halaman game di RAWG, diturunkan dari `slug` tanpa request — lalu
+  `gameindo_core_rawg_add_websites()` menaikkannya ke situs resmi untuk sebanyak
+  judul yang muat dalam anggaran (`gameindo_rawg_detail_budget`, default 3 per
+  rebuild). Jawaban per game di-cache **seminggu** pada kuncinya sendiri, jadi
+  setelah lintasan pertama rebuild tidak berbiaya untuk judul yang sudah dikenal,
+  dan judul yang belum terjangkau tetap punya tautan RAWG — panel tidak pernah
+  tanpa tautan sambil terisi. Barisnya menyebut host tujuan sebelum diklik, sama
+  seperti baris jadwal menyebut penyiarnya.
 - **Pilar baru masuk ke menu lewat dua jalur.** Menu yang diatur di Tampilan →
   Menu menang atas nav otomatis, jadi pilar yang lahir dari pembaruan tema tidak
   akan terlihat justru di situs yang mengikuti panduan pasang. (1)

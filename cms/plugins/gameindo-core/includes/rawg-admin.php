@@ -44,6 +44,7 @@ function gameindo_core_rawg_sanitize_key( $value ) {
 
 function gameindo_core_rawg_flush() {
 	global $wpdb;
+	// Covers the list windows and the per-game website lookups alike.
 	$wpdb->query( "DELETE FROM {$wpdb->options} WHERE option_name LIKE '_transient_gi_rawg_%' OR option_name LIKE '_transient_timeout_gi_rawg_%' OR option_name LIKE 'gi_rawg_%_at'" );
 	delete_option( 'gameindo_rawg_last_error' );
 }
