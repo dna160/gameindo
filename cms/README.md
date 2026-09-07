@@ -170,6 +170,11 @@ cms/
 - **Menu** header/footer/drawer memakai WP Menu (Tampilan → Menu) dengan walker
   khusus yang mempertahankan atribut `data-pillar`; bila menu belum diatur,
   nav otomatis dibangun dari kategori pilar.
+- **Baris afiliasi grup di footer** (`.gi-footer__group`, di bawah garis
+  pembatas tipis, rata kanan di desktop / rata kiri di ponsel): logo
+  `assets/logo/popshck-logo.png` + teks "Part of … Group", tertaut ke
+  `https://popshck.com`. Berkas logonya ditata di `footer.php`, bukan
+  dikodekan mati — ganti file itu untuk mengganti logonya.
 - Semua server-rendered (baik untuk SEO). Endpoint REST `gameindo/v1` tersedia
   bila kelak ingin dipakai headless.
 - **SEO native, otomatis mengalah ke plugin.** `inc/seo.php` mencetak meta

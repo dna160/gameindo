@@ -372,6 +372,15 @@ body { background: var(--surface); overflow-x: hidden; }
 .gi-footer__pillars a { color: var(--on-night-2); text-decoration: none; }
 .gi-footer__pillars a:hover { color: #fff; }
 .gi-footer__copy { font-family: var(--font-mono); font-size: 10.5px; color: var(--on-night-muted); margin-left: auto; }
+.gi-footer__group {
+  max-width: var(--container); margin-inline: auto; padding: 14px var(--gutter);
+  border-top: 1px solid rgba(255,255,255,.08);
+  display: flex; justify-content: flex-end;
+}
+.gi-footer__group-link { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; opacity: .85; transition: opacity .15s; }
+.gi-footer__group-link:hover { opacity: 1; }
+.gi-footer__group-text { font-family: var(--font-condensed); font-size: 11px; font-weight: 600; letter-spacing: var(--ls-wide); text-transform: uppercase; color: var(--on-night-muted); }
+.gi-footer__group-logo { height: 18px; width: auto; }
 
 /* ============================================================
    GRIDS
@@ -572,6 +581,7 @@ body { background: var(--surface); overflow-x: hidden; }
   .gi-footer__copy { margin-left: 0; }
   .gi-footer__pillars { display: flex; flex-wrap: wrap; gap: 10px 18px; width: 100%; }
   .gi-footer__tag { font-size: 11px; }
+  .gi-footer__group { justify-content: flex-start; padding: 12px 14px; }
 }
 
 /* Very small phones and folded cover screens. Two cards side by side leaves
