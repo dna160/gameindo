@@ -31,9 +31,8 @@ $gi_popshck_logo_url = GAMEINDO_URI . '/assets/logo/popshck-logo.png';
   </div>
   <div class="gi-footer__group">
     <a href="https://popshck.com" target="_blank" rel="noopener noreferrer" class="gi-footer__group-link">
-      <span class="gi-footer__group-text">Part of</span>
       <img src="<?php echo esc_url( $gi_popshck_logo_url ); ?>" alt="PopShck" class="gi-footer__group-logo">
-      <span class="gi-footer__group-text">Group</span>
+      <span class="gi-footer__group-text">Part of PopShck Group</span>
     </a>
   </div>
 </footer>

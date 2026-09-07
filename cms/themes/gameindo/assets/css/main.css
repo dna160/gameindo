@@ -377,10 +377,10 @@ body { background: var(--surface); overflow-x: hidden; }
   border-top: 1px solid rgba(255,255,255,.08);
   display: flex; justify-content: flex-end;
 }
-.gi-footer__group-link { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; opacity: .85; transition: opacity .15s; }
-.gi-footer__group-link:hover { opacity: 1; }
-.gi-footer__group-text { font-family: var(--font-condensed); font-size: 11px; font-weight: 600; letter-spacing: var(--ls-wide); text-transform: uppercase; color: var(--on-night-muted); }
-.gi-footer__group-logo { height: 18px; width: auto; }
+.gi-footer__group-link { display: inline-flex; align-items: center; gap: 14px; text-decoration: none; opacity: 1; transition: opacity .15s; }
+.gi-footer__group-link:hover { opacity: .8; }
+.gi-footer__group-text { font-family: var(--font-condensed); font-size: 13px; font-weight: 600; letter-spacing: var(--ls-wider); text-transform: uppercase; color: var(--on-night-muted); }
+.gi-footer__group-logo { height: 46px; width: auto; }
 
 /* ============================================================
    GRIDS
