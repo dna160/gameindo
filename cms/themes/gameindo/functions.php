@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GAMEINDO_VERSION', '1.8.0' );
+define( 'GAMEINDO_VERSION', '1.9.0' );
 define( 'GAMEINDO_DIR', get_template_directory() );
 define( 'GAMEINDO_URI', get_template_directory_uri() );
 
@@ -222,6 +222,7 @@ function gameindo_retarget_menu_item( $menu_id, $item, $term ) {
 
 require_once GAMEINDO_DIR . '/inc/template-helpers.php';
 require_once GAMEINDO_DIR . '/inc/nav-walker.php';
+require_once GAMEINDO_DIR . '/inc/seo.php';
 
 /**
  * Theme setup.

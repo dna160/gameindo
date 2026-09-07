@@ -312,12 +312,28 @@ peran/jabatan, jumlah artikel, sejak tahun, dibaca/bulan.
 - **Tampilan → Menu** untuk mengatur menu Header/Footer/Drawer. Tambahkan
   kategori, halaman, atau tautan khusus. Nav pilar tetap berwarna otomatis.
 
+### SEO (bawaan tema — tidak perlu plugin untuk mulai)
+Tema sudah mencetak sendiri, di setiap halaman, tanpa perlu diatur:
+meta description, `canonical`, `robots`, Open Graph + Twitter Card (jadi
+tautan yang dibagikan ke Facebook/Twitter/WhatsApp tampil dengan judul,
+ringkasan, dan gambar yang benar), serta data terstruktur JSON-LD
+(`Organization`, `WebSite`, dan `NewsArticle` di tiap artikel — ini yang
+dibaca Google untuk kartu artikel & breadcrumb di hasil pencarian).
+Kalau nanti **Yoast SEO / Rank Math / All in One SEO / SEOPress** dipasang
+dan diaktifkan, tema otomatis mendeteksinya dan **mematikan seluruh output
+SEO-nya sendiri** — tidak akan ada tag ganda atau bentrok, tinggal pasang
+plugin dan atur dari sana seperti biasa. Yang belum dicetak tema (dan baru
+datang dari plugin SEO bila dipasang): **sitemap XML** dan editor meta
+title/description manual per-artikel di luar ringkasan editor.
+
 ---
 
 ## Langkah berikutnya (go-live & Google)
 
-Setelah situs live di domain, tahap SEO berikutnya (akan kita kerjakan terpisah):
-- Pasang plugin SEO (mis. Yoast/Rank Math) untuk meta title/description & sitemap XML.
+Setelah situs live di domain:
+- (Opsional) Pasang plugin SEO (mis. Yoast/Rank Math) kalau butuh sitemap XML
+  atau ingin menulis meta title/description manual per-artikel — tema akan
+  otomatis mengalah begitu plugin itu aktif (lihat bagian SEO di atas).
 - Daftarkan situs ke **Google Search Console** dan kirim sitemap.
 - Siapkan otomasi produksi artikel (via REST API / wp-cli / plugin) dengan
   keyword sesuai pilar — model kontennya sudah siap untuk itu.

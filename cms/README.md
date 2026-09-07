@@ -172,6 +172,24 @@ cms/
   nav otomatis dibangun dari kategori pilar.
 - Semua server-rendered (baik untuk SEO). Endpoint REST `gameindo/v1` tersedia
   bila kelak ingin dipakai headless.
+- **SEO native, otomatis mengalah ke plugin.** `inc/seo.php` mencetak meta
+  description, `canonical`, `robots`, Open Graph + Twitter Card lengkap, dan
+  JSON-LD (`Organization`+`WebSite` di semua halaman, `NewsArticle` di
+  artikel) lewat `wp_head` (prioritas 1 dan 2). `gameindo_seo_active()`
+  mendeteksi Yoast/RankMath/AIOSEO/SEOPress (konstanta atau kelasnya) dan
+  **mematikan seluruh output tema** kalau salah satu aktif, supaya tidak ada
+  tag ganda — filter `gameindo_seo_disable` bisa memaksa nonaktif/aktif kalau
+  perlu. Deskripsi turun dari ringkasan editor (bukan potongan konten mentah)
+  lewat `gameindo_get_excerpt()`; gambar OG jatuh ke `gameindo-hero` artikel,
+  lalu ke logo situs. Canonical membuang query pemfilteran (`?platform=`,
+  `?game=`) supaya varian terfilter satu arsip tidak dianggap konten duplikat
+  — halamannya tetap `index,follow`, cuma dikanonikalkan; hanya hasil
+  pencarian yang `noindex,follow`. Font Google (`gameindo_fonts_url()`) dan
+  `preconnect` ke `fonts.googleapis.com`/`fonts.gstatic.com` (filter
+  `wp_resource_hints`) dipisah dari `main.css` supaya tidak ada rantai
+  `@import` berurutan yang menunda render — dan slide pertama hero beranda
+  dimuat *eager* + `fetchpriority="high"` (slide lain tetap `lazy`) supaya
+  gambar LCP tidak berebut bandwidth dengan slide yang belum terlihat.
 
 ## Menjalankan lingkungan uji lokal
 
