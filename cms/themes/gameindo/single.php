@@ -60,7 +60,7 @@ while ( have_posts() ) :
     <?php endif; ?>
 
     <div class="gi-article-body">
-      <div id="gi-article-body"><?php the_content(); ?></div>
+      <div id="gi-article-body" class="gi-prose"><?php the_content(); ?></div>
       <?php
       $gi_tags = get_the_tags();
       if ( $gi_tags ) : ?>

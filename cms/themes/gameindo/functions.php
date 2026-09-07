@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GAMEINDO_VERSION', '1.7.1' );
+define( 'GAMEINDO_VERSION', '1.8.0' );
 define( 'GAMEINDO_DIR', get_template_directory() );
 define( 'GAMEINDO_URI', get_template_directory_uri() );
 
@@ -256,12 +256,23 @@ function gameindo_setup() {
 add_action( 'after_setup_theme', 'gameindo_setup' );
 
 /**
- * Front-end assets. main.css pulls in the token sheets via @import, so the
- * whole design system loads from one handle; per-template sheets layer on top.
+ * The Google Fonts stylesheet URL, single source of truth for both the
+ * enqueue and the preconnect hints below.
+ */
+function gameindo_fonts_url() {
+	return 'https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,600;1,700;1,800;1,900&family=Saira+Condensed:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500;1,600&family=JetBrains+Mono:wght@400;500;700&display=swap';
+}
+
+/**
+ * Front-end assets. main.css pulls in the token sheets via @import (all
+ * local, so still fast to fetch as one round trip); per-template sheets
+ * layer on top. Fonts are their own enqueue rather than nested inside
+ * main.css's @import chain — see tokens/fonts.css for why that matters.
  */
 function gameindo_assets() {
 	$css = GAMEINDO_URI . '/assets/css';
 
+	wp_enqueue_style( 'gameindo-fonts', gameindo_fonts_url(), array(), null );
 	wp_enqueue_style( 'gameindo-main', $css . '/main.css', array(), GAMEINDO_VERSION );
 	wp_add_inline_style( 'gameindo-main', '.gi-is-hidden{display:none !important}' );
 
@@ -288,6 +299,25 @@ function gameindo_assets() {
 	) );
 }
 add_action( 'wp_enqueue_scripts', 'gameindo_assets' );
+
+/**
+ * Preconnect to the two Google Fonts hosts. Google's own stylesheet
+ * (fonts.googleapis.com) names the actual font files on fonts.gstatic.com,
+ * a second host the browser has no reason to expect until it parses that
+ * response — by which point the DNS lookup + TLS handshake for it starts
+ * from zero. Hinting both up front lets the browser open both connections
+ * while the stylesheet is still in flight, so the font files themselves
+ * start downloading the moment they're known rather than after a fresh
+ * handshake for a host it's never talked to.
+ */
+function gameindo_resource_hints( $hints, $relation_type ) {
+	if ( 'preconnect' === $relation_type ) {
+		$hints[] = 'https://fonts.googleapis.com';
+		$hints[] = array( 'href' => 'https://fonts.gstatic.com', 'crossorigin' => 'anonymous' );
+	}
+	return $hints;
+}
+add_filter( 'wp_resource_hints', 'gameindo_resource_hints', 10, 2 );
 
 /**
  * Body classes: add the active pillar so [data-pillar] theming and any

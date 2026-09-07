@@ -552,8 +552,18 @@ function gameindo_feature( $post, $args = array() ) {
 	$sm      = ! empty( $args['sm'] );
 	$author  = get_the_author_meta( 'display_name', get_post_field( 'post_author', $post_id ) );
 
+	// The only caller that ever renders more than one of these on a page is
+	// the homepage hero slider — up to 5 full-size images stacked in one
+	// horizontally-scrolling track. Loading all 5 eagerly forces the browser
+	// to fight the actual LCP candidate (slide 1) for bandwidth against four
+	// images nobody sees without scrolling the carousel. Every other caller
+	// renders exactly one gameindo_feature() and it always is the LCP
+	// candidate, so `eager` defaults true there.
+	$eager   = ! isset( $args['eager'] ) || $args['eager'];
+	$img_attrs = $eager ? ' fetchpriority="high"' : ' loading="lazy" decoding="async"';
+
 	$html  = '<a class="gi-feature' . ( $sm ? ' gi-feature--sm' : '' ) . '" data-pillar="' . esc_attr( $pillar ) . '" href="' . esc_url( get_permalink( $post_id ) ) . '">';
-	$html .= '<img src="' . esc_url( gameindo_image_url( $post_id, 'gameindo-hero' ) ) . '" alt="' . esc_attr( gameindo_image_alt( $post_id ) ) . '">';
+	$html .= '<img src="' . esc_url( gameindo_image_url( $post_id, 'gameindo-hero' ) ) . '" alt="' . esc_attr( gameindo_image_alt( $post_id ) ) . '"' . $img_attrs . '>';
 	$html .= '<span class="gi-feature__bar" aria-hidden="true"></span>';
 	$html .= '<div class="gi-feature__content">';
 	$html .= '<span class="gi-pill">' . esc_html( $pill ) . '</span>';

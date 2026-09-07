@@ -115,7 +115,7 @@ body { background: var(--surface); overflow-x: hidden; }
   padding-inline: var(--gutter); display: flex; align-items: center; gap: 16px;
 }
 .gi-header__logo { display: flex; align-items: center; flex: none; }
-.gi-header__logo img { height: 24px; width: auto; display: block; }
+.gi-header__logo img { height: 44px; width: auto; display: block; }
 /* The nav scrolls rather than overflowing once the pillars outgrow the space
    between the logo and the actions. `margin-inline:auto` on the row does the
    centring instead of `justify-content`, because a centred flex row that
@@ -177,7 +177,7 @@ body { background: var(--surface); overflow-x: hidden; }
 .gi-drawer.is-open .gi-drawer__scrim { opacity: 1; }
 .gi-drawer.is-open .gi-drawer__panel { transform: translateX(0); }
 .gi-drawer__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
-.gi-drawer__head img { height: 22px; }
+.gi-drawer__head img { height: 40px; }
 .gi-drawer__links { display: flex; flex-direction: column; }
 .gi-drawer__links a {
   padding: 14px 4px; border-bottom: 1px solid var(--line); text-decoration: none;
@@ -366,7 +366,7 @@ body { background: var(--surface); overflow-x: hidden; }
   max-width: var(--container); margin-inline: auto; padding: 28px var(--gutter);
   display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
 }
-.gi-footer__bar img { height: 20px; width: auto; }
+.gi-footer__bar img { height: 36px; width: auto; }
 .gi-footer__tag { font-family: var(--font-condensed); font-size: 12px; letter-spacing: var(--ls-wider); text-transform: uppercase; color: var(--on-night-muted); }
 .gi-footer__pillars { display: flex; gap: 18px; font-family: var(--font-condensed); font-weight: 600; font-size: 12px; letter-spacing: var(--ls-wide); text-transform: uppercase; }
 .gi-footer__pillars a { color: var(--on-night-2); text-decoration: none; }
@@ -514,9 +514,12 @@ body { background: var(--surface); overflow-x: hidden; }
 
   /* Six pillar entries no longer fit at full size between the logo and the
      search/menu buttons; tightening them keeps the whole row on screen down to
-     the 720px breakpoint where the nav gives way to the drawer. */
-  .gi-pillarnav__item { padding: 0 11px; font-size: 13px; }
-  .gi-pillarnav__item::after { left: 11px; right: 11px; }
+     the 900px breakpoint where the nav gives way to the drawer. The logo grew
+     to 44px (from 24px) for brand visibility, which eats further into this
+     same row — 8px/12.5px instead of the previous 11px/13px is what keeps
+     901px, the narrowest width the nav still shows at, clipping-free. */
+  .gi-pillarnav__item { padding: 0 8px; font-size: 12.5px; }
+  .gi-pillarnav__item::after { left: 8px; right: 8px; }
 
   .gi-rail-layout { grid-template-columns: minmax(0, 1fr) 300px; gap: 24px; }
   .gi-pillar-layout { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); }
@@ -545,7 +548,7 @@ body { background: var(--surface); overflow-x: hidden; }
 @media (max-width: 720px) {
   .gi-header__bar { height: 56px; padding-inline: 14px; gap: 8px; }
   .gi-header__logo { flex: 1; justify-content: center; }
-  .gi-header__logo img { height: 20px; }
+  .gi-header__logo img { height: 36px; }
 
   .gi-grid-2, .gi-grid-3, .gi-grid-4 { grid-template-columns: 1fr 1fr; gap: 14px; }
   .gi-grid-5 { grid-template-columns: repeat(2, 1fr); gap: 10px; }
@@ -579,7 +582,7 @@ body { background: var(--surface); overflow-x: hidden; }
   .gi-grid-5 { grid-template-columns: 1fr 1fr; }
 
   .gi-header__bar { height: 52px; padding-inline: 10px; }
-  .gi-header__logo img { height: 18px; }
+  .gi-header__logo img { height: 32px; }
 
   .gi-card--h { grid-template-columns: 78px 1fr; gap: 10px; }
   .gi-card--h .gi-card__title { font-size: 13.5px; }

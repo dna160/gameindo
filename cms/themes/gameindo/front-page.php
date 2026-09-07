@@ -115,8 +115,13 @@ $gi_match_meta  = ( 1 === count( $gi_match_comps ) ) ? $gi_match_comps[0] : 'Jad
     <div class="gi-hero__grid">
       <div class="gi-hero-slider" id="gi-hero-slider" data-autoplay="6000">
         <div class="gi-hero-slider__track" id="gi-hero-slider-track"><?php
+          // Only the first slide is the LCP image; the rest sit off-screen in
+          // the carousel until a reader clicks through, so they load lazily
+          // instead of competing with it for bandwidth.
+          $gi_slide_i = 0;
           foreach ( $gi_hero_slides as $gi_sp ) {
-	          echo gameindo_feature( $gi_sp ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+	          echo gameindo_feature( $gi_sp, array( 'eager' => 0 === $gi_slide_i ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+	          $gi_slide_i++;
           }
         ?></div>
         <?php if ( count( $gi_hero_slides ) > 1 ) : ?>
