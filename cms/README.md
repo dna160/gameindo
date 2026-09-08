@@ -182,10 +182,20 @@ cms/
   itu gagal untuk ukuran crop yang tidak terdaftar di tema atau URL yang
   ditulis ulang CDN/plugin optimasi gambar, dan filename-based matching tahan
   ke keduanya (host boleh beda, hanya nama file di ujung path yang dibaca).
-  Kalau cocok, elemen itu saja yang dibuang — kemunculan ulang foto yang sama
-  **di tengah artikel** dibiarkan, karena itu penulis sengaja merujuknya lagi,
-  bukan duplikat produksi. Dipanggil dari `single.php` sebagai pengganti
-  `the_content()` langsung.
+  **Kasus kedua** (ditemukan dari artikel Asian Games): artikel hasil tulis
+  ulang dari sumber luar bisa mengunggah foto sumbernya sebagai featured
+  image tapi meninggalkan `<img>` hotlink **asli** ke CDN situs sumber di
+  body — beda nama file dan beda domain sama sekali, jadi pencocokan nama
+  file tidak mungkin menangkapnya. Karena ARTICLE-CONTRACT.md §1 memang
+  mengharuskan semua gambar body diunggah ke media library situs sendiri,
+  gambar terdepan yang host-nya **bukan domain situs** dianggap pelanggaran
+  dengan sendirinya dan dibuang — tanpa perlu tahu itu foto yang sama persis
+  atau bukan (tidak ada cara membandingkan piksel tanpa mengambil berkas
+  eksternal itu). Kalau cocok (lewat salah satu jalur), elemen itu saja yang
+  dibuang — kemunculan ulang foto yang sama **di tengah artikel**, atau
+  gambar eksternal yang **bukan** elemen terdepan, dibiarkan, karena itu
+  penulis sengaja merujuknya, bukan duplikat produksi. Dipanggil dari
+  `single.php` sebagai pengganti `the_content()` langsung.
 - **Thumbnail yang gagal termuat otomatis diganti placeholder.**
   `gameindo_image_url()` sudah lama menyediakan placeholder pillar-netral
   (`assets/samples/ph-neutral-1.png`) untuk pos **tanpa** featured image —

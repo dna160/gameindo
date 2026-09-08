@@ -503,6 +503,19 @@ function gameindo_image_basename_key( $url ) {
  * ever touched: a later reuse of the same photo deeper in the body is left
  * alone, since that's the author actually referencing it again, not a
  * production duplicate.
+ *
+ * Two shapes of duplicate, caught two different ways:
+ * - Same WordPress attachment reused in the body (filename match, ignoring
+ *   WordPress's size suffix — see gameindo_image_basename_key()).
+ * - An article rewritten from an external source, where the copywriter
+ *   uploaded the source photo as the featured image but left the original
+ *   hotlinked <img> (a different host entirely, e.g. the source site's own
+ *   CDN, so it shares no filename with the upload) sitting as the leading
+ *   body element. ARTICLE-CONTRACT.md §1 says every body image should live
+ *   in the WP media library, so a leading image on any other host is a
+ *   contract violation on its own — stripped regardless of whether it
+ *   happens to be visually the same photo, since there's no way to compare
+ *   pixels without fetching the external file.
  */
 function gameindo_dedupe_featured_image_from_content( $content, $post_id ) {
 	$thumb_id = get_post_thumbnail_id( $post_id );
@@ -514,6 +527,7 @@ function gameindo_dedupe_featured_image_from_content( $content, $post_id ) {
 	if ( ! $key ) {
 		return $content;
 	}
+	$site_host = wp_parse_url( home_url(), PHP_URL_HOST );
 
 	$trimmed = ltrim( $content );
 	$pattern = '/^(<figure\b[^>]*>\s*<img\b[^>]*>.*?<\/figure>|<p>\s*<img\b[^>]*>\s*<\/p>|<img\b[^>]*>)/is';
@@ -524,7 +538,13 @@ function gameindo_dedupe_featured_image_from_content( $content, $post_id ) {
 
 	$is_dupe = (bool) preg_match( '/class=(["\'])[^"\']*\bwp-image-' . (int) $thumb_id . '\b/i', $leading );
 	if ( ! $is_dupe && preg_match( '/<img\b[^>]*\bsrc=(["\'])(.*?)\1/i', $leading, $src_m ) ) {
-		$is_dupe = ( gameindo_image_basename_key( $src_m[2] ) === $key );
+		$src = $src_m[2];
+		if ( gameindo_image_basename_key( $src ) === $key ) {
+			$is_dupe = true;
+		} elseif ( $site_host ) {
+			$src_host = wp_parse_url( $src, PHP_URL_HOST );
+			$is_dupe  = ( $src_host && strcasecmp( $src_host, $site_host ) !== 0 );
+		}
 	}
 	if ( ! $is_dupe ) {
 		return $content;
