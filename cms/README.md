@@ -175,11 +175,17 @@ cms/
   pertama di body — tapi tidak semua artikel lahir dari pipeline itu.
   `gameindo_dedupe_featured_image_from_content()` (`inc/template-helpers.php`)
   membandingkan elemen **paling depan** body (`<figure>`/`<p>`/`<img>` polos)
-  dengan URL featured image di semua ukuran terdaftar plus kelas
-  `wp-image-{ID}` bawaan block editor; kalau cocok, elemen itu saja yang
-  dibuang — kemunculan ulang foto yang sama **di tengah artikel** dibiarkan,
-  karena itu penulis sengaja merujuknya lagi, bukan duplikat produksi.
-  Dipanggil dari `single.php` sebagai pengganti `the_content()` langsung.
+  dengan featured image-nya lewat `gameindo_image_basename_key()` — nama
+  berkas setelah akhiran ukuran otomatis WordPress dibuang (`shot-1024x576.jpg`
+  dan `shot-300x169.jpg` sama-sama jadi kunci `shot.jpg`) — plus kelas
+  `wp-image-{ID}` bawaan block editor. Sengaja **bukan** mencocokkan URL utuh:
+  itu gagal untuk ukuran crop yang tidak terdaftar di tema atau URL yang
+  ditulis ulang CDN/plugin optimasi gambar, dan filename-based matching tahan
+  ke keduanya (host boleh beda, hanya nama file di ujung path yang dibaca).
+  Kalau cocok, elemen itu saja yang dibuang — kemunculan ulang foto yang sama
+  **di tengah artikel** dibiarkan, karena itu penulis sengaja merujuknya lagi,
+  bukan duplikat produksi. Dipanggil dari `single.php` sebagai pengganti
+  `the_content()` langsung.
 - **Thumbnail yang gagal termuat otomatis diganti placeholder.**
   `gameindo_image_url()` sudah lama menyediakan placeholder pillar-netral
   (`assets/samples/ph-neutral-1.png`) untuk pos **tanpa** featured image —

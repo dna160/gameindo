@@ -475,6 +475,26 @@ function gameindo_image_alt( $post_id ) {
 }
 
 /**
+ * The filename a URL resolves to once WordPress's automatic size suffix is
+ * stripped — "shot-1024x576.jpg" and "shot-300x169.jpg" both key to
+ * "shot.jpg", so any registered *or* ad-hoc crop of the same original upload
+ * compares equal without having to enumerate registered sizes. Comparing
+ * only the trailing filename (not the host/path) also survives a CDN or
+ * image-optimizer rewriting the URL (Photon-style proxies keep the real
+ * filename at the end of the rewritten path; a `?resize=` query string is
+ * dropped by wp_parse_url() before basename() ever sees it).
+ */
+function gameindo_image_basename_key( $url ) {
+	$path = wp_parse_url( (string) $url, PHP_URL_PATH );
+	if ( ! $path ) {
+		return '';
+	}
+	$base = basename( $path );
+	$base = preg_replace( '/-\d+x\d+(?=\.[A-Za-z0-9]+$)/', '', $base );
+	return strtolower( $base );
+}
+
+/**
  * Article body sometimes repeats the featured image as the very first
  * inline image (ARTICLE-CONTRACT.md §1 asks the copywriter not to, but not
  * every article was produced through that pipeline) — the single template
@@ -489,20 +509,9 @@ function gameindo_dedupe_featured_image_from_content( $content, $post_id ) {
 	if ( ! $thumb_id ) {
 		return $content;
 	}
-
-	$urls = array();
 	$full = wp_get_attachment_url( $thumb_id );
-	if ( $full ) {
-		$urls[] = $full;
-	}
-	foreach ( get_intermediate_image_sizes() as $size ) {
-		$src = wp_get_attachment_image_src( $thumb_id, $size );
-		if ( $src && ! empty( $src[0] ) ) {
-			$urls[] = $src[0];
-		}
-	}
-	$urls = array_unique( $urls );
-	if ( ! $urls ) {
+	$key  = $full ? gameindo_image_basename_key( $full ) : '';
+	if ( ! $key ) {
 		return $content;
 	}
 
@@ -514,13 +523,8 @@ function gameindo_dedupe_featured_image_from_content( $content, $post_id ) {
 	$leading = $m[1];
 
 	$is_dupe = (bool) preg_match( '/class=(["\'])[^"\']*\bwp-image-' . (int) $thumb_id . '\b/i', $leading );
-	if ( ! $is_dupe ) {
-		foreach ( $urls as $url ) {
-			if ( false !== strpos( $leading, $url ) ) {
-				$is_dupe = true;
-				break;
-			}
-		}
+	if ( ! $is_dupe && preg_match( '/<img\b[^>]*\bsrc=(["\'])(.*?)\1/i', $leading, $src_m ) ) {
+		$is_dupe = ( gameindo_image_basename_key( $src_m[2] ) === $key );
 	}
 	if ( ! $is_dupe ) {
 		return $content;
