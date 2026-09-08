@@ -191,11 +191,20 @@ cms/
   gambar terdepan yang host-nya **bukan domain situs** dianggap pelanggaran
   dengan sendirinya dan dibuang — tanpa perlu tahu itu foto yang sama persis
   atau bukan (tidak ada cara membandingkan piksel tanpa mengambil berkas
-  eksternal itu). Kalau cocok (lewat salah satu jalur), elemen itu saja yang
-  dibuang — kemunculan ulang foto yang sama **di tengah artikel**, atau
-  gambar eksternal yang **bukan** elemen terdepan, dibiarkan, karena itu
-  penulis sengaja merujuknya, bukan duplikat produksi. Dipanggil dari
-  `single.php` sebagai pengganti `the_content()` langsung.
+  eksternal itu). "Terdepan" mentolerir sedikit gangguan sebelum gambarnya —
+  ditemukan dari artikel Shueisha TGS 2026: baris judul yang bocor terulang
+  (`<p><strong>Judul:</strong> …</p>`) lalu `<h1>` nyasar di body (yang
+  itu sendiri sudah pelanggaran kontrak — `<h1>` cuma boleh jadi judul pos)
+  sebelum gambar dobelnya. Keduanya dilewati **apa adanya** (tidak ikut
+  dihapus) selagi mencari gambarnya; begitu ketemu elemen lain yang bukan
+  `<h1>`–`<h6>` atau paragraf berbentuk label singkat ("Kata:" di awal), 
+  pemindaian berhenti — jadi paragraf pembuka yang sungguh-sungguh isi
+  artikel tidak pernah salah dianggap "gangguan" dan melewati gambar yang
+  sengaja dipakai ulang di baliknya. Kalau cocok (lewat salah satu jalur),
+  elemen gambarnya saja yang dibuang — kemunculan ulang foto yang sama **di
+  tengah artikel**, atau gambar eksternal yang **bukan** elemen terdepan,
+  dibiarkan, karena itu penulis sengaja merujuknya, bukan duplikat produksi.
+  Dipanggil dari `single.php` sebagai pengganti `the_content()` langsung.
 - **Thumbnail yang gagal termuat otomatis diganti placeholder.**
   `gameindo_image_url()` sudah lama menyediakan placeholder pillar-netral
   (`assets/samples/ph-neutral-1.png`) untuk pos **tanpa** featured image —

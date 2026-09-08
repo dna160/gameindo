@@ -499,7 +499,7 @@ function gameindo_image_basename_key( $url ) {
  * inline image (ARTICLE-CONTRACT.md §1 asks the copywriter not to, but not
  * every article was produced through that pipeline) — the single template
  * already renders it once as the big hero, so single.php strips that one
- * leading duplicate rather than showing it twice. Only the leading element is
+ * leading duplicate rather than showing it twice. Only the leading image is
  * ever touched: a later reuse of the same photo deeper in the body is left
  * alone, since that's the author actually referencing it again, not a
  * production duplicate.
@@ -516,6 +516,15 @@ function gameindo_image_basename_key( $url ) {
  *   contract violation on its own — stripped regardless of whether it
  *   happens to be visually the same photo, since there's no way to compare
  *   pixels without fetching the external file.
+ *
+ * "Leading" tolerates a little noise ahead of the image, seen in practice
+ * on articles the copywriter mangled worse than usual: a restated-title
+ * line ("<p><strong>Judul:</strong> …</p>") and a body <h1> (itself already
+ * a contract violation — the post title is the only H1). Both are skipped,
+ * unmodified, while scanning for the image; anything else ahead of the
+ * image (an ordinary prose paragraph, a list, a quote) stops the scan
+ * rather than being skipped, so a genuine lead paragraph in front of a
+ * deliberately-reused photo is never misread as noise.
  */
 function gameindo_dedupe_featured_image_from_content( $content, $post_id ) {
 	$thumb_id = get_post_thumbnail_id( $post_id );
@@ -529,28 +538,37 @@ function gameindo_dedupe_featured_image_from_content( $content, $post_id ) {
 	}
 	$site_host = wp_parse_url( home_url(), PHP_URL_HOST );
 
-	$trimmed = ltrim( $content );
-	$pattern = '/^(<figure\b[^>]*>\s*<img\b[^>]*>.*?<\/figure>|<p>\s*<img\b[^>]*>\s*<\/p>|<img\b[^>]*>)/is';
-	if ( ! preg_match( $pattern, $trimmed, $m ) ) {
-		return $content;
-	}
-	$leading = $m[1];
+	$img_pattern  = '/^(<figure\b[^>]*>\s*<img\b[^>]*>.*?<\/figure>|<p>\s*<img\b[^>]*>\s*<\/p>|<img\b[^>]*>)/is';
+	$skip_pattern = '/^(<h[1-6]\b[^>]*>.*?<\/h[1-6]>|<p\b[^>]*>\s*(?:<strong>|<b>)?[^<:]{1,40}:(?:(?!<img\b)[\s\S])*?<\/p>)\s*/is';
 
-	$is_dupe = (bool) preg_match( '/class=(["\'])[^"\']*\bwp-image-' . (int) $thumb_id . '\b/i', $leading );
-	if ( ! $is_dupe && preg_match( '/<img\b[^>]*\bsrc=(["\'])(.*?)\1/i', $leading, $src_m ) ) {
-		$src = $src_m[2];
-		if ( gameindo_image_basename_key( $src ) === $key ) {
-			$is_dupe = true;
-		} elseif ( $site_host ) {
-			$src_host = wp_parse_url( $src, PHP_URL_HOST );
-			$is_dupe  = ( $src_host && strcasecmp( $src_host, $site_host ) !== 0 );
+	$remaining = ltrim( $content );
+	$skipped   = '';
+	for ( $i = 0; $i < 4; $i++ ) {
+		if ( preg_match( $img_pattern, $remaining, $m ) ) {
+			$leading = $m[1];
+			$is_dupe = (bool) preg_match( '/class=(["\'])[^"\']*\bwp-image-' . (int) $thumb_id . '\b/i', $leading );
+			if ( ! $is_dupe && preg_match( '/<img\b[^>]*\bsrc=(["\'])(.*?)\1/i', $leading, $src_m ) ) {
+				$src = $src_m[2];
+				if ( gameindo_image_basename_key( $src ) === $key ) {
+					$is_dupe = true;
+				} elseif ( $site_host ) {
+					$src_host = wp_parse_url( $src, PHP_URL_HOST );
+					$is_dupe  = ( $src_host && strcasecmp( $src_host, $site_host ) !== 0 );
+				}
+			}
+			if ( ! $is_dupe ) {
+				return $content;
+			}
+			return $skipped . ltrim( substr( $remaining, strlen( $leading ) ) );
 		}
-	}
-	if ( ! $is_dupe ) {
-		return $content;
-	}
 
-	return ltrim( substr( $trimmed, strlen( $leading ) ) );
+		if ( ! preg_match( $skip_pattern, $remaining, $sm ) ) {
+			return $content;
+		}
+		$skipped   .= $sm[0];
+		$remaining  = substr( $remaining, strlen( $sm[0] ) );
+	}
+	return $content;
 }
 
 /**
