@@ -170,6 +170,27 @@ cms/
 - **Menu** header/footer/drawer memakai WP Menu (Tampilan → Menu) dengan walker
   khusus yang mempertahankan atribut `data-pillar`; bila menu belum diatur,
   nav otomatis dibangun dari kategori pilar.
+- **Gambar unggulan tidak dobel di body artikel.** ARTICLE-CONTRACT.md §1
+  meminta copywriter tidak menaruh featured image sebagai gambar inline
+  pertama di body — tapi tidak semua artikel lahir dari pipeline itu.
+  `gameindo_dedupe_featured_image_from_content()` (`inc/template-helpers.php`)
+  membandingkan elemen **paling depan** body (`<figure>`/`<p>`/`<img>` polos)
+  dengan URL featured image di semua ukuran terdaftar plus kelas
+  `wp-image-{ID}` bawaan block editor; kalau cocok, elemen itu saja yang
+  dibuang — kemunculan ulang foto yang sama **di tengah artikel** dibiarkan,
+  karena itu penulis sengaja merujuknya lagi, bukan duplikat produksi.
+  Dipanggil dari `single.php` sebagai pengganti `the_content()` langsung.
+- **Thumbnail yang gagal termuat otomatis diganti placeholder.**
+  `gameindo_image_url()` sudah lama menyediakan placeholder pillar-netral
+  (`assets/samples/ph-neutral-1.png`) untuk pos **tanpa** featured image —
+  tapi pos yang **punya** featured image dengan berkas media rusak/hilang
+  (media terhapus, gagal upload, URL RAWG mati) tetap mencetak `<img>` yang
+  404 di browser. Setiap `<img>` gambar-post (card, feature, rank-row, art
+  RAWG, hero artikel) sekarang membawa `data-gi-fallback`; `theme.js`
+  memasang satu listener `error` di `document` (capture phase, karena event
+  itu tidak *bubble*) yang menukar `src`-nya ke placeholder begitu gambar
+  gagal dimuat — mencakup kartu yang datang belakangan lewat "Muat Lebih
+  Banyak" juga, tanpa perlu tahu pos mana saja yang datanya rusak.
 - **Baris afiliasi grup di footer** (`.gi-footer__group`, di bawah garis
   pembatas tipis, rata kanan di desktop / rata kiri di ponsel): logo
   `assets/logo/popshck-logo.png` + teks "Part of … Group", tertaut ke

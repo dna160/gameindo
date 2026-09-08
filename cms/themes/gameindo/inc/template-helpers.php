@@ -376,7 +376,7 @@ function gameindo_release_countdown( $game ) {
  */
 function gameindo_release_row( $game ) {
 	$cover = ! empty( $game['image'] )
-		? '<span class="gi-release__art"><img src="' . esc_url( $game['image'] ) . '" alt="" loading="lazy"></span>'
+		? '<span class="gi-release__art"><img src="' . esc_url( $game['image'] ) . '" alt="" loading="lazy" data-gi-fallback="' . esc_url( gameindo_placeholder_url() ) . '"></span>'
 		: '<span class="gi-release__art gi-release__art--none" aria-hidden="true"></span>';
 
 	$count = gameindo_release_countdown( $game );
@@ -448,6 +448,15 @@ function gameindo_read_time( $post_id ) {
 }
 
 /**
+ * Neutral placeholder image — the server-side fallback when no thumbnail is
+ * assigned, and the client-side fallback (via data-gi-fallback, see theme.js)
+ * when one is assigned but its file 404s.
+ */
+function gameindo_placeholder_url() {
+	return GAMEINDO_URI . '/assets/samples/ph-neutral-1.png';
+}
+
+/**
  * Featured-image <img> URL at a given size, with a pillar-colored placeholder
  * fallback so cards never render an empty media slot.
  */
@@ -456,13 +465,68 @@ function gameindo_image_url( $post_id, $size = 'gameindo-card' ) {
 	if ( $url ) {
 		return $url;
 	}
-	return GAMEINDO_URI . '/assets/samples/ph-neutral-1.png';
+	return gameindo_placeholder_url();
 }
 
 function gameindo_image_alt( $post_id ) {
 	$thumb_id = get_post_thumbnail_id( $post_id );
 	$alt      = $thumb_id ? get_post_meta( $thumb_id, '_wp_attachment_image_alt', true ) : '';
 	return $alt ? $alt : get_the_title( $post_id );
+}
+
+/**
+ * Article body sometimes repeats the featured image as the very first
+ * inline image (ARTICLE-CONTRACT.md §1 asks the copywriter not to, but not
+ * every article was produced through that pipeline) — the single template
+ * already renders it once as the big hero, so single.php strips that one
+ * leading duplicate rather than showing it twice. Only the leading element is
+ * ever touched: a later reuse of the same photo deeper in the body is left
+ * alone, since that's the author actually referencing it again, not a
+ * production duplicate.
+ */
+function gameindo_dedupe_featured_image_from_content( $content, $post_id ) {
+	$thumb_id = get_post_thumbnail_id( $post_id );
+	if ( ! $thumb_id ) {
+		return $content;
+	}
+
+	$urls = array();
+	$full = wp_get_attachment_url( $thumb_id );
+	if ( $full ) {
+		$urls[] = $full;
+	}
+	foreach ( get_intermediate_image_sizes() as $size ) {
+		$src = wp_get_attachment_image_src( $thumb_id, $size );
+		if ( $src && ! empty( $src[0] ) ) {
+			$urls[] = $src[0];
+		}
+	}
+	$urls = array_unique( $urls );
+	if ( ! $urls ) {
+		return $content;
+	}
+
+	$trimmed = ltrim( $content );
+	$pattern = '/^(<figure\b[^>]*>\s*<img\b[^>]*>.*?<\/figure>|<p>\s*<img\b[^>]*>\s*<\/p>|<img\b[^>]*>)/is';
+	if ( ! preg_match( $pattern, $trimmed, $m ) ) {
+		return $content;
+	}
+	$leading = $m[1];
+
+	$is_dupe = (bool) preg_match( '/class=(["\'])[^"\']*\bwp-image-' . (int) $thumb_id . '\b/i', $leading );
+	if ( ! $is_dupe ) {
+		foreach ( $urls as $url ) {
+			if ( false !== strpos( $leading, $url ) ) {
+				$is_dupe = true;
+				break;
+			}
+		}
+	}
+	if ( ! $is_dupe ) {
+		return $content;
+	}
+
+	return ltrim( substr( $trimmed, strlen( $leading ) ) );
 }
 
 /**
@@ -516,7 +580,7 @@ function gameindo_card( $post, $args = array() ) {
 	}
 
 	$html  = '<a class="' . esc_attr( $cls ) . '" data-pillar="' . esc_attr( $pillar ) . '"' . $data_attrs . ' href="' . esc_url( get_permalink( $post_id ) ) . '">';
-	$html .= '<div class="gi-card__media"><img src="' . esc_url( gameindo_image_url( $post_id ) ) . '" alt="' . esc_attr( gameindo_image_alt( $post_id ) ) . '" loading="lazy">';
+	$html .= '<div class="gi-card__media"><img src="' . esc_url( gameindo_image_url( $post_id ) ) . '" alt="' . esc_attr( gameindo_image_alt( $post_id ) ) . '" loading="lazy" data-gi-fallback="' . esc_url( gameindo_placeholder_url() ) . '">';
 	$html .= '<span class="' . esc_attr( $pill_cls ) . '">' . esc_html( $pill ) . '</span></div>';
 	$html .= '<div class="gi-card__body"><h3 class="gi-card__title">' . esc_html( get_the_title( $post_id ) ) . '</h3>';
 	if ( $show_ex ) {
@@ -563,7 +627,7 @@ function gameindo_feature( $post, $args = array() ) {
 	$img_attrs = $eager ? ' fetchpriority="high"' : ' loading="lazy" decoding="async"';
 
 	$html  = '<a class="gi-feature' . ( $sm ? ' gi-feature--sm' : '' ) . '" data-pillar="' . esc_attr( $pillar ) . '" href="' . esc_url( get_permalink( $post_id ) ) . '">';
-	$html .= '<img src="' . esc_url( gameindo_image_url( $post_id, 'gameindo-hero' ) ) . '" alt="' . esc_attr( gameindo_image_alt( $post_id ) ) . '"' . $img_attrs . '>';
+	$html .= '<img src="' . esc_url( gameindo_image_url( $post_id, 'gameindo-hero' ) ) . '" alt="' . esc_attr( gameindo_image_alt( $post_id ) ) . '"' . $img_attrs . ' data-gi-fallback="' . esc_url( gameindo_placeholder_url() ) . '">';
 	$html .= '<span class="gi-feature__bar" aria-hidden="true"></span>';
 	$html .= '<div class="gi-feature__content">';
 	$html .= '<span class="gi-pill">' . esc_html( $pill ) . '</span>';
@@ -588,7 +652,7 @@ function gameindo_rank_row( $post, $index, $args = array() ) {
 	$cat     = $sub ? $sub : gameindo_pillar_name( $pillar );
 
 	$thumb_html = $thumb
-		? '<span class="gi-rank__thumb"><img src="' . esc_url( gameindo_image_url( $post_id, 'gameindo-thumb' ) ) . '" alt="" loading="lazy"></span>'
+		? '<span class="gi-rank__thumb"><img src="' . esc_url( gameindo_image_url( $post_id, 'gameindo-thumb' ) ) . '" alt="" loading="lazy" data-gi-fallback="' . esc_url( gameindo_placeholder_url() ) . '"></span>'
 		: '';
 
 	// A just-published article has no reads figure yet — show when it landed
