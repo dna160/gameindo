@@ -326,18 +326,28 @@ plugin dan atur dari sana seperti biasa. Yang belum dicetak tema (dan baru
 datang dari plugin SEO bila dipasang): **sitemap XML** dan editor meta
 title/description manual per-artikel di luar ringkasan editor.
 
-### Analytics (Google Tag Manager — bawaan tema, tanpa plugin)
-**GameIndo → Analytics** di wp-admin: satu kolom, Container ID GTM
-(`GTM-XXXXXXX`). Begitu terisi, tema otomatis memasang snippet resminya di
-setiap halaman — tidak perlu plugin GTM/analytics terpisah. Belum punya akun
-GTM/GA4? Halaman itu sendiri berisi langkah-langkah lengkap bikin akun GTM,
-bikin properti GA4, dan menghubungkan keduanya (menambahkan tag GA4 di
-dashboard GTM). **GA4, Meta Pixel, dan tag lain semuanya diatur di dashboard
-GTM** (tagmanager.google.com) setelah Container ID terisi — bukan di
-wp-admin, dan tidak perlu upload tema ulang tiap kali menambah tag baru;
-tinggal **Submit → Publish** di GTM. Kalau plugin analytics lain (Site Kit,
-GTM4WP, MonsterInsights, dsb.) sedang aktif, tema otomatis mengalah dan
-tidak memasang snippetnya sendiri, supaya tidak ada tag dobel.
+### Analytics (Google Tag Manager + GA4 — bawaan tema, tanpa plugin)
+**GameIndo → Analytics** di wp-admin: dua kolom independen, isi salah satu
+atau keduanya.
+- **Container ID GTM** (`GTM-XXXXXXX`) — memasang Google Tag Manager. Tag
+  apa pun (GA4, Meta Pixel, dll.) lalu diatur di dashboard
+  tagmanager.google.com, tanpa upload tema ulang tiap kali menambah tag baru
+  (tinggal **Submit → Publish** di sana).
+- **Measurement ID GA4** (`G-XXXXXXXXXX`) — memasang GA4 langsung
+  (`gtag.js` resmi Google), tanpa perlu menyentuh dashboard GTM sama sekali.
+  Paling cepat kalau cuma butuh GA4.
+
+**Jangan isi keduanya untuk properti GA4 yang sama** — kalau Measurement ID
+GA4 di atas terisi, dan *nanti* sebuah tag GA4 Configuration untuk properti
+yang sama juga ditambahkan di dalam GTM, setiap pageview tercatat dua kali.
+Pilih satu jalur untuk satu properti GA4.
+
+Belum punya akun GTM/GA4? Halaman **GameIndo → Analytics** itu sendiri
+berisi langkah-langkah lengkap bikin akun GTM, bikin properti GA4, dan dua
+opsi menyambungkannya (langsung lewat kolom GA4, atau lewat tag di dalam
+GTM). Kalau plugin analytics lain (Site Kit, GTM4WP, MonsterInsights, dsb.)
+sedang aktif, tema otomatis mengalah dan tidak memasang snippetnya sendiri,
+supaya tidak ada tag dobel.
 
 ---
 

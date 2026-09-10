@@ -1,9 +1,8 @@
 <?php
 /**
- * Google Tag Manager settings — one field, under the GameIndo menu. GA4 (and
- * any other tag: Meta Pixel, Google Ads conversion, …) is configured inside
- * the GTM container itself once the snippet is live, not here — that's the
- * whole point of going through GTM instead of hard-coding GA4 directly.
+ * Analytics settings — Google Tag Manager Container ID, and an optional
+ * direct GA4 Measurement ID for sites that want GA4 live without first
+ * configuring a GA4 Configuration tag inside GTM's own dashboard.
  *
  * @package GameIndo_Core
  */
@@ -15,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 function gameindo_core_analytics_admin_menu() {
 	add_submenu_page(
 		'gameindo',
-		__( 'Google Tag Manager', 'gameindo-core' ),
+		__( 'Analytics', 'gameindo-core' ),
 		__( 'Analytics', 'gameindo-core' ),
 		'manage_options',
 		'gameindo-analytics',
@@ -30,14 +29,23 @@ function gameindo_core_analytics_register_settings() {
 		'gameindo_gtm_id',
 		array(
 			'type'              => 'string',
-			'sanitize_callback' => 'gameindo_core_analytics_sanitize_id',
+			'sanitize_callback' => 'gameindo_core_analytics_sanitize_gtm_id',
+			'default'           => '',
+		)
+	);
+	register_setting(
+		'gameindo_analytics',
+		'gameindo_ga4_id',
+		array(
+			'type'              => 'string',
+			'sanitize_callback' => 'gameindo_core_analytics_sanitize_ga4_id',
 			'default'           => '',
 		)
 	);
 }
 add_action( 'admin_init', 'gameindo_core_analytics_register_settings' );
 
-function gameindo_core_analytics_sanitize_id( $value ) {
+function gameindo_core_analytics_sanitize_gtm_id( $value ) {
 	$value = strtoupper( trim( sanitize_text_field( (string) $value ) ) );
 	if ( '' === $value ) {
 		return '';
@@ -53,50 +61,96 @@ function gameindo_core_analytics_sanitize_id( $value ) {
 	return $value;
 }
 
+function gameindo_core_analytics_sanitize_ga4_id( $value ) {
+	$value = strtoupper( trim( sanitize_text_field( (string) $value ) ) );
+	if ( '' === $value ) {
+		return '';
+	}
+	if ( ! preg_match( '/^G-[A-Z0-9]+$/', $value ) ) {
+		add_settings_error(
+			'gameindo_ga4_id',
+			'gameindo_ga4_id_invalid',
+			__( 'Format tidak dikenali — Measurement ID GA4 selalu diawali "G-", contoh: G-ABCDE12345. Perubahan tidak disimpan.', 'gameindo-core' )
+		);
+		return get_option( 'gameindo_ga4_id', '' );
+	}
+	return $value;
+}
+
 function gameindo_core_analytics_admin_page() {
 	if ( ! current_user_can( 'manage_options' ) ) {
 		return;
 	}
-	$id    = gameindo_core_gtm_id();
-	$const = defined( 'GAMEINDO_GTM_ID' ) && GAMEINDO_GTM_ID;
-	$live  = $id && function_exists( 'gameindo_analytics_active' ) && gameindo_analytics_active();
+	$gtm_id     = gameindo_core_gtm_id();
+	$gtm_const  = defined( 'GAMEINDO_GTM_ID' ) && GAMEINDO_GTM_ID;
+	$ga4_id     = gameindo_core_ga4_id();
+	$ga4_const  = defined( 'GAMEINDO_GA4_ID' ) && GAMEINDO_GA4_ID;
+	$gtm_live   = function_exists( 'gameindo_gtm_active' ) && gameindo_gtm_active();
+	$ga4_live   = function_exists( 'gameindo_ga4_active' ) && gameindo_ga4_active();
+	$deferring  = ( $gtm_id && ! $gtm_live ) || ( $ga4_id && ! $ga4_live );
 	?>
 	<div class="wrap">
-		<h1><?php esc_html_e( 'Google Tag Manager', 'gameindo-core' ); ?></h1>
-		<p>Container ID GTM dipasang otomatis di setiap halaman situs (di
-		<code>&lt;head&gt;</code>, dan langsung setelah <code>&lt;body&gt;</code>
-		untuk pengunjung yang mematikan JavaScript). <strong>GA4, Meta Pixel, dan
-		tag lain diatur di dalam dashboard GTM</strong> di
-		<a href="https://tagmanager.google.com" target="_blank" rel="noopener noreferrer">tagmanager.google.com</a>
-		— bukan di sini, dan tidak perlu kode tambahan atau upload tema ulang
-		setiap kali menambah tag baru.</p>
+		<h1><?php esc_html_e( 'Analytics', 'gameindo-core' ); ?></h1>
+		<p>Dua kolom independen — isi salah satu atau keduanya, tergantung cara
+		Anda ingin mengukur situs:</p>
+		<ul style="list-style:disc;margin-left:20px;max-width:760px">
+			<li><strong>Container ID GTM</strong> — memasang Google Tag Manager. Tag
+			apa pun (GA4, Meta Pixel, dll.) lalu diatur di dashboard
+			<a href="https://tagmanager.google.com" target="_blank" rel="noopener noreferrer">tagmanager.google.com</a>,
+			tanpa perlu upload tema ulang tiap kali menambah tag baru.</li>
+			<li><strong>Measurement ID GA4</strong> — memasang GA4 langsung
+			(<code>gtag.js</code> resmi Google), tanpa perlu menyentuh dashboard GTM
+			sama sekali. Paling cepat kalau Anda cuma butuh GA4 dan belum mau
+			repot mengatur tag di GTM.</li>
+		</ul>
+		<div class="notice notice-warning inline" style="max-width:760px">
+			<p><strong>Jangan isi keduanya untuk GA4 yang sama</strong> — kalau
+			Measurement ID GA4 di bawah sudah terisi, dan <em>nanti</em> Anda juga
+			menambahkan tag <strong>GA4 Configuration</strong> di dalam GTM untuk
+			properti GA4 yang sama, setiap pageview/event akan tercatat <strong>dua
+			kali</strong>. Pilih satu jalur untuk satu properti GA4: langsung lewat
+			kolom di bawah, atau lewat tag di dalam GTM — bukan keduanya.</p>
+		</div>
 
 		<h2>Belum punya akun GTM / GA4?</h2>
 		<ol style="max-width:760px">
-			<li>Buka <a href="https://tagmanager.google.com" target="_blank" rel="noopener noreferrer">tagmanager.google.com</a>, masuk dengan akun Google.</li>
-			<li><strong>Buat Akun</strong> → nama akun bebas (mis. "GameIndo") → Target platform <strong>Web</strong> → nama container <code>gameindo.com</code> → <strong>Create</strong>, setujui persyaratannya.</li>
-			<li>Muncul Container ID berformat <code>GTM-XXXXXXX</code> di pojok kanan atas — itu yang dimasukkan ke kolom di bawah.</li>
-			<li>Buka <a href="https://analytics.google.com" target="_blank" rel="noopener noreferrer">analytics.google.com</a> → <strong>Admin → Buat properti</strong> → buat properti GA4 untuk gameindo.com → di bagian <strong>Aliran data → Web</strong>, salin <strong>Measurement ID</strong>-nya (format <code>G-XXXXXXXXXX</code>).</li>
-			<li>Kembali ke dashboard GTM → <strong>Tag → Baru</strong> → tipe tag <strong>Google Analytics: Konfigurasi GA4</strong> → isi Measurement ID dari langkah sebelumnya → Pemicu: <strong>All Pages</strong> → beri nama tag → <strong>Simpan</strong>.</li>
-			<li>Klik <strong>Submit → Publish</strong> di kanan atas GTM supaya tag-nya aktif di situs. Setiap kali menambah atau mengubah tag di GTM, ulangi langkah <strong>Submit → Publish</strong> ini — mengedit di dashboard saja belum langsung tayang.</li>
+			<li>Buka <a href="https://tagmanager.google.com" target="_blank" rel="noopener noreferrer">tagmanager.google.com</a>, masuk dengan akun Google → <strong>Buat Akun</strong> → nama akun bebas (mis. "GameIndo") → Target platform <strong>Web</strong> → nama container <code>gameindo.com</code> → <strong>Create</strong>, setujui persyaratannya. Container ID (<code>GTM-XXXXXXX</code>) muncul di pojok kanan atas.</li>
+			<li>Buka <a href="https://analytics.google.com" target="_blank" rel="noopener noreferrer">analytics.google.com</a> → <strong>Admin → Buat properti</strong> → buat properti GA4 untuk gameindo.com → di bagian <strong>Aliran data → Web</strong>, salin <strong>Measurement ID</strong>-nya (<code>G-XXXXXXXXXX</code>).</li>
+			<li><strong>Jalur cepat (langsung, tanpa GTM dashboard):</strong> tempel Measurement ID itu ke kolom GA4 di bawah — selesai, GA4 langsung aktif begitu tema/plugin diunggah.</li>
+			<li><strong>Jalur lewat GTM (kalau berencana menambah tag lain juga):</strong> tempel Container ID ke kolom GTM di bawah, lalu di dashboard GTM: <strong>Tag → Baru</strong> → tipe <strong>Google Analytics: Konfigurasi GA4</strong> → isi Measurement ID dari langkah 2 → Pemicu <strong>All Pages</strong> → <strong>Simpan</strong> → <strong>Submit → Publish</strong> di kanan atas (wajib, tanpa ini tag belum tayang). Kalau memilih jalur ini, biarkan kolom GA4 di bawah kosong.</li>
 		</ol>
 
-		<?php if ( $const ) : ?>
-		<div class="notice notice-info inline"><p>Container ID sedang diambil dari konstanta <code>GAMEINDO_GTM_ID</code> di <code>wp-config.php</code>; kolom di bawah diabaikan.</p></div>
+		<?php if ( $gtm_const || $ga4_const ) : ?>
+		<div class="notice notice-info inline">
+			<p>
+			<?php if ( $gtm_const ) : ?>Container ID GTM sedang diambil dari konstanta <code>GAMEINDO_GTM_ID</code> di <code>wp-config.php</code>; kolomnya di bawah diabaikan.<br><?php endif; ?>
+			<?php if ( $ga4_const ) : ?>Measurement ID GA4 sedang diambil dari konstanta <code>GAMEINDO_GA4_ID</code> di <code>wp-config.php</code>; kolomnya di bawah diabaikan.<?php endif; ?>
+			</p>
+		</div>
 		<?php endif; ?>
 
 		<?php settings_errors( 'gameindo_gtm_id' ); ?>
+		<?php settings_errors( 'gameindo_ga4_id' ); ?>
 
 		<form method="post" action="options.php">
 			<?php settings_fields( 'gameindo_analytics' ); ?>
 			<table class="form-table" role="presentation">
 				<tr>
-					<th scope="row"><label for="gameindo_gtm_id">Container ID</label></th>
+					<th scope="row"><label for="gameindo_gtm_id">Container ID (GTM)</label></th>
 					<td>
 						<input type="text" class="regular-text" id="gameindo_gtm_id" name="gameindo_gtm_id"
 							placeholder="GTM-XXXXXXX" autocomplete="off"
 							value="<?php echo esc_attr( get_option( 'gameindo_gtm_id', '' ) ); ?>">
 						<p class="description">Kosongkan untuk mematikan GTM di situs.</p>
+					</td>
+				</tr>
+				<tr>
+					<th scope="row"><label for="gameindo_ga4_id">Measurement ID (GA4)</label></th>
+					<td>
+						<input type="text" class="regular-text" id="gameindo_ga4_id" name="gameindo_ga4_id"
+							placeholder="G-XXXXXXXXXX" autocomplete="off"
+							value="<?php echo esc_attr( get_option( 'gameindo_ga4_id', '' ) ); ?>">
+						<p class="description">Kosongkan kalau GA4 sudah/akan diatur sebagai tag di dalam GTM sebagai gantinya.</p>
 					</td>
 				</tr>
 			</table>
@@ -106,10 +160,12 @@ function gameindo_core_analytics_admin_page() {
 		<h2><?php esc_html_e( 'Status', 'gameindo-core' ); ?></h2>
 		<table class="widefat striped" style="max-width:640px">
 			<tbody>
-				<tr><td>Container ID terisi</td><td><?php echo $id ? '<span style="color:#0f7a50">ya — ' . esc_html( $id ) . '</span>' : '<span style="color:#b32d2e">belum</span>'; ?></td></tr>
-				<tr><td>Terpasang di situs</td><td><?php echo $live ? '<span style="color:#0f7a50">ya</span>' : '<span style="color:#b32d2e">tidak</span>'; ?></td></tr>
-				<?php if ( $id && ! $live ) : ?>
-				<tr><td colspan="2">Container ID sudah terisi tapi belum tayang — biasanya karena plugin analytics lain (Site Kit, GTM4WP, MonsterInsights, dsb.) sedang aktif dan tema sengaja mengalah supaya tidak ada tag GTM dobel. Nonaktifkan salah satunya kalau memang cuma mau satu jalur.</td></tr>
+				<tr><td>Container ID GTM terisi</td><td><?php echo $gtm_id ? '<span style="color:#0f7a50">ya — ' . esc_html( $gtm_id ) . '</span>' : '<span style="color:#b32d2e">belum</span>'; ?></td></tr>
+				<tr><td>GTM terpasang di situs</td><td><?php echo $gtm_live ? '<span style="color:#0f7a50">ya</span>' : '<span style="color:#b32d2e">tidak</span>'; ?></td></tr>
+				<tr><td>Measurement ID GA4 terisi</td><td><?php echo $ga4_id ? '<span style="color:#0f7a50">ya — ' . esc_html( $ga4_id ) . '</span>' : '<span style="color:#b32d2e">belum</span>'; ?></td></tr>
+				<tr><td>GA4 langsung terpasang di situs</td><td><?php echo $ga4_live ? '<span style="color:#0f7a50">ya</span>' : '<span style="color:#b32d2e">tidak</span>'; ?></td></tr>
+				<?php if ( $deferring ) : ?>
+				<tr><td colspan="2">ID sudah terisi tapi belum tayang — biasanya karena plugin analytics lain (Site Kit, GTM4WP, MonsterInsights, dsb.) sedang aktif dan tema sengaja mengalah supaya tidak ada tag dobel. Nonaktifkan salah satunya kalau memang cuma mau satu jalur.</td></tr>
 				<?php endif; ?>
 			</tbody>
 		</table>

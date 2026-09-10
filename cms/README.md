@@ -223,18 +223,22 @@ cms/
   dikodekan mati — ganti file itu untuk mengganti logonya.
 - Semua server-rendered (baik untuk SEO). Endpoint REST `gameindo/v1` tersedia
   bila kelak ingin dipakai headless.
-- **Google Tag Manager** — satu Container ID (wp-admin → GameIndo → Analytics,
-  atau konstanta `GAMEINDO_GTM_ID`) dipasang lewat GTM langsung, bukan plugin
-  analytics terpisah: `gameindo_core_gtm_id()` (plugin, `includes/analytics.php`)
-  menyimpan/mengambilnya, `inc/analytics.php` (tema) mencetak snippet resminya
-  apa adanya di `wp_head` (prioritas 0, sepagi mungkin) dan `wp_body_open`
-  (hook inti WP, sudah dipanggil di `header.php` persis untuk kasus ini).
-  GA4/Meta Pixel/tag lain diatur di dashboard GTM sendiri, bukan di kode —
-  itulah intinya lewat GTM alih-alih menempel GA4 langsung. Sama seperti
-  `gameindo_seo_active()`, `gameindo_analytics_active()` **otomatis mati**
-  kalau plugin analytics lain (Site Kit, GTM4WP, MonsterInsights/ExactMetrics,
-  Analytify) terdeteksi aktif, supaya tag yang sama tidak terpasang dobel dan
-  menggandakan hitungan pageview.
+- **Google Tag Manager + GA4 langsung** — dua kolom independen di wp-admin →
+  GameIndo → Analytics (atau konstanta `GAMEINDO_GTM_ID`/`GAMEINDO_GA4_ID`):
+  Container ID GTM dan/atau Measurement ID GA4. `gameindo_core_gtm_id()` /
+  `gameindo_core_ga4_id()` (plugin, `includes/analytics.php`) menyimpan/
+  mengambilnya; `inc/analytics.php` (tema) mencetak snippet resmi masing-masing
+  apa adanya di `wp_head` (prioritas 0, sepagi mungkin) — GTM juga di
+  `wp_body_open` (hook inti WP, sudah dipanggil di `header.php` persis untuk
+  kasus ini) untuk fallback `<noscript>`. Keduanya independen dan boleh aktif
+  bersamaan (mis. GA4 langsung + GTM kosong tag untuk nanti dipakai tag lain);
+  yang **tidak boleh** adalah mengisi GA4 langsung DAN menambahkan tag GA4
+  Configuration untuk properti yang sama di dalam GTM — itu bikin setiap
+  pageview kehitung dua kali, sudah diperingatkan di halaman pengaturannya.
+  Sama seperti `gameindo_seo_active()`, `gameindo_gtm_active()`/
+  `gameindo_ga4_active()` **otomatis mati** kalau plugin analytics lain (Site
+  Kit, GTM4WP, MonsterInsights/ExactMetrics, Analytify) terdeteksi aktif,
+  supaya tag yang sama tidak terpasang dobel dan menggandakan hitungan.
 - **SEO native, otomatis mengalah ke plugin.** `inc/seo.php` mencetak meta
   description, `canonical`, `robots`, Open Graph + Twitter Card lengkap, dan
   JSON-LD (`Organization`+`WebSite` di semua halaman, `NewsArticle` di
