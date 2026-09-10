@@ -342,9 +342,9 @@ editor meta title/description manual per-artikel di luar ringkasan editor.
 Search Console — itu lokasi sitemap yang sebenarnya; `/sitemap.xml` cuma
 alias yang mengarah ke sana.
 
-### Analytics (Google Tag Manager + GA4 — bawaan tema, tanpa plugin)
-**GameIndo → Analytics** di wp-admin: dua kolom independen, isi salah satu
-atau keduanya.
+### Analytics & Search Console (bawaan tema, tanpa plugin)
+**GameIndo → Analytics** di wp-admin: tiga kolom independen, isi yang
+relevan saja.
 - **Container ID GTM** (`GTM-XXXXXXX`) — memasang Google Tag Manager. Tag
   apa pun (GA4, Meta Pixel, dll.) lalu diatur di dashboard
   tagmanager.google.com, tanpa upload tema ulang tiap kali menambah tag baru
@@ -352,18 +352,22 @@ atau keduanya.
 - **Measurement ID GA4** (`G-XXXXXXXXXX`) — memasang GA4 langsung
   (`gtag.js` resmi Google), tanpa perlu menyentuh dashboard GTM sama sekali.
   Paling cepat kalau cuma butuh GA4.
+- **Kode verifikasi Search Console** — membuktikan kepemilikan domain ke
+  Google. Dari Search Console → Tambahkan properti → Awalan URL → metode
+  **Tag HTML** → salin nilai `content="…"`-nya (boleh juga tempel string
+  utuh `google-site-verification=…`, keduanya diterima).
 
-**Jangan isi keduanya untuk properti GA4 yang sama** — kalau Measurement ID
-GA4 di atas terisi, dan *nanti* sebuah tag GA4 Configuration untuk properti
-yang sama juga ditambahkan di dalam GTM, setiap pageview tercatat dua kali.
-Pilih satu jalur untuk satu properti GA4.
+**Jangan isi GTM dan GA4 keduanya untuk properti GA4 yang sama** — kalau
+Measurement ID GA4 di atas terisi, dan *nanti* sebuah tag GA4 Configuration
+untuk properti yang sama juga ditambahkan di dalam GTM, setiap pageview
+tercatat dua kali. Pilih satu jalur untuk satu properti GA4.
 
-Belum punya akun GTM/GA4? Halaman **GameIndo → Analytics** itu sendiri
-berisi langkah-langkah lengkap bikin akun GTM, bikin properti GA4, dan dua
-opsi menyambungkannya (langsung lewat kolom GA4, atau lewat tag di dalam
-GTM). Kalau plugin analytics lain (Site Kit, GTM4WP, MonsterInsights, dsb.)
-sedang aktif, tema otomatis mengalah dan tidak memasang snippetnya sendiri,
-supaya tidak ada tag dobel.
+Belum punya akun GTM/GA4/Search Console? Halaman **GameIndo → Analytics**
+itu sendiri berisi langkah-langkah lengkap untuk ketiganya. Kalau plugin
+analytics lain (Site Kit, GTM4WP, MonsterInsights, dsb.) sedang aktif,
+GTM/GA4 tema otomatis mengalah dan tidak memasang snippetnya sendiri,
+supaya tidak ada tag dobel — kode verifikasi Search Console tetap tayang
+terus karena itu bukan tag SEO yang bisa bentrok.
 
 ---
 

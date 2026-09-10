@@ -33,6 +33,26 @@ function gameindo_seo_active() {
 }
 
 /**
+ * Google Search Console's HTML-tag ownership verification. Deliberately
+ * NOT gated by gameindo_seo_active(): this proves domain ownership, not a
+ * competing description/OG/canonical rendering, and multiple
+ * google-site-verification tags on one page are normal (each just proves a
+ * different Search Console property) — so it should stay live even after
+ * Yoast/RankMath/etc. takes over the rest of the SEO output.
+ */
+function gameindo_seo_search_console_tag() {
+	if ( ! function_exists( 'gameindo_core_gsc_verification' ) ) {
+		return;
+	}
+	$code = gameindo_core_gsc_verification();
+	if ( ! $code ) {
+		return;
+	}
+	echo '<meta name="google-site-verification" content="' . esc_attr( $code ) . "\">\n";
+}
+add_action( 'wp_head', 'gameindo_seo_search_console_tag', 1 );
+
+/**
  * A short, human meta description for the current page. Reuses the same
  * excerpt/trim logic cards already use, so there's no second content-summary
  * codepath to keep in sync with the first.

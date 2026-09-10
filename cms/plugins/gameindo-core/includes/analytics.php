@@ -36,3 +36,18 @@ function gameindo_core_ga4_id() {
 	}
 	return trim( (string) get_option( 'gameindo_ga4_id', '' ) );
 }
+
+/**
+ * Same precedence. The content value of Google Search Console's HTML-tag
+ * verification method (Settings → Ownership verification → HTML tag) —
+ * proves domain ownership, unrelated to GTM/GA4, so the theme prints it
+ * unconditionally (not gated behind an SEO plugin being active/inactive:
+ * multiple google-site-verification tags on one page are normal and
+ * harmless, each just proves a different Search Console property).
+ */
+function gameindo_core_gsc_verification() {
+	if ( defined( 'GAMEINDO_GSC_VERIFICATION' ) && GAMEINDO_GSC_VERIFICATION ) {
+		return GAMEINDO_GSC_VERIFICATION;
+	}
+	return trim( (string) get_option( 'gameindo_gsc_verification', '' ) );
+}

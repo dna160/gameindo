@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 function gameindo_core_analytics_admin_menu() {
 	add_submenu_page(
 		'gameindo',
-		__( 'Analytics', 'gameindo-core' ),
+		__( 'Analytics & Search Console', 'gameindo-core' ),
 		__( 'Analytics', 'gameindo-core' ),
 		'manage_options',
 		'gameindo-analytics',
@@ -39,6 +39,15 @@ function gameindo_core_analytics_register_settings() {
 		array(
 			'type'              => 'string',
 			'sanitize_callback' => 'gameindo_core_analytics_sanitize_ga4_id',
+			'default'           => '',
+		)
+	);
+	register_setting(
+		'gameindo_analytics',
+		'gameindo_gsc_verification',
+		array(
+			'type'              => 'string',
+			'sanitize_callback' => 'gameindo_core_analytics_sanitize_gsc',
 			'default'           => '',
 		)
 	);
@@ -77,6 +86,32 @@ function gameindo_core_analytics_sanitize_ga4_id( $value ) {
 	return $value;
 }
 
+/**
+ * Accepts either the bare token or the full "google-site-verification=TOKEN"
+ * string Search Console shows when you pick the "Domain name provider"/DNS
+ * flow by mistake instead of the HTML-tag flow — either way, only the token
+ * is ever stored.
+ */
+function gameindo_core_analytics_sanitize_gsc( $value ) {
+	$value = trim( sanitize_text_field( (string) $value ) );
+	if ( '' === $value ) {
+		return '';
+	}
+	if ( 0 === stripos( $value, 'google-site-verification=' ) ) {
+		$value = substr( $value, strlen( 'google-site-verification=' ) );
+	}
+	$value = trim( $value );
+	if ( ! preg_match( '/^[A-Za-z0-9_-]{10,128}$/', $value ) ) {
+		add_settings_error(
+			'gameindo_gsc_verification',
+			'gameindo_gsc_verification_invalid',
+			__( 'Format tidak dikenali — tempel persis kode dari Search Console (metode "Tag HTML"), boleh dengan atau tanpa awalan "google-site-verification=". Perubahan tidak disimpan.', 'gameindo-core' )
+		);
+		return get_option( 'gameindo_gsc_verification', '' );
+	}
+	return $value;
+}
+
 function gameindo_core_analytics_admin_page() {
 	if ( ! current_user_can( 'manage_options' ) ) {
 		return;
@@ -85,12 +120,14 @@ function gameindo_core_analytics_admin_page() {
 	$gtm_const  = defined( 'GAMEINDO_GTM_ID' ) && GAMEINDO_GTM_ID;
 	$ga4_id     = gameindo_core_ga4_id();
 	$ga4_const  = defined( 'GAMEINDO_GA4_ID' ) && GAMEINDO_GA4_ID;
+	$gsc_code   = gameindo_core_gsc_verification();
+	$gsc_const  = defined( 'GAMEINDO_GSC_VERIFICATION' ) && GAMEINDO_GSC_VERIFICATION;
 	$gtm_live   = function_exists( 'gameindo_gtm_active' ) && gameindo_gtm_active();
 	$ga4_live   = function_exists( 'gameindo_ga4_active' ) && gameindo_ga4_active();
 	$deferring  = ( $gtm_id && ! $gtm_live ) || ( $ga4_id && ! $ga4_live );
 	?>
 	<div class="wrap">
-		<h1><?php esc_html_e( 'Analytics', 'gameindo-core' ); ?></h1>
+		<h1><?php esc_html_e( 'Analytics & Search Console', 'gameindo-core' ); ?></h1>
 		<p>Dua kolom independen — isi salah satu atau keduanya, tergantung cara
 		Anda ingin mengukur situs:</p>
 		<ul style="list-style:disc;margin-left:20px;max-width:760px">
@@ -120,17 +157,28 @@ function gameindo_core_analytics_admin_page() {
 			<li><strong>Jalur lewat GTM (kalau berencana menambah tag lain juga):</strong> tempel Container ID ke kolom GTM di bawah, lalu di dashboard GTM: <strong>Tag → Baru</strong> → tipe <strong>Google Analytics: Konfigurasi GA4</strong> → isi Measurement ID dari langkah 2 → Pemicu <strong>All Pages</strong> → <strong>Simpan</strong> → <strong>Submit → Publish</strong> di kanan atas (wajib, tanpa ini tag belum tayang). Kalau memilih jalur ini, biarkan kolom GA4 di bawah kosong.</li>
 		</ol>
 
-		<?php if ( $gtm_const || $ga4_const ) : ?>
+		<h2>Google Search Console</h2>
+		<p style="max-width:760px">Membuktikan kepemilikan domain ke Google, supaya Anda bisa memantau performa
+		pencarian, submit sitemap, dan lihat error crawl untuk gameindo.com. Belum
+		punya? Buka <a href="https://search.google.com/search-console" target="_blank" rel="noopener noreferrer">search.google.com/search-console</a>
+		→ <strong>Tambahkan properti</strong> → pilih jenis <strong>Awalan URL</strong> (bukan "Domain") →
+		masukkan <code>https://gameindo.com</code> → pilih metode verifikasi
+		<strong>Tag HTML</strong> → salin nilai di dalam <code>content="…"</code> →
+		tempel ke kolom di bawah → kembali ke Search Console, klik <strong>Verifikasi</strong>.</p>
+
+		<?php if ( $gtm_const || $ga4_const || $gsc_const ) : ?>
 		<div class="notice notice-info inline">
 			<p>
 			<?php if ( $gtm_const ) : ?>Container ID GTM sedang diambil dari konstanta <code>GAMEINDO_GTM_ID</code> di <code>wp-config.php</code>; kolomnya di bawah diabaikan.<br><?php endif; ?>
-			<?php if ( $ga4_const ) : ?>Measurement ID GA4 sedang diambil dari konstanta <code>GAMEINDO_GA4_ID</code> di <code>wp-config.php</code>; kolomnya di bawah diabaikan.<?php endif; ?>
+			<?php if ( $ga4_const ) : ?>Measurement ID GA4 sedang diambil dari konstanta <code>GAMEINDO_GA4_ID</code> di <code>wp-config.php</code>; kolomnya di bawah diabaikan.<br><?php endif; ?>
+			<?php if ( $gsc_const ) : ?>Kode Search Console sedang diambil dari konstanta <code>GAMEINDO_GSC_VERIFICATION</code> di <code>wp-config.php</code>; kolomnya di bawah diabaikan.<?php endif; ?>
 			</p>
 		</div>
 		<?php endif; ?>
 
 		<?php settings_errors( 'gameindo_gtm_id' ); ?>
 		<?php settings_errors( 'gameindo_ga4_id' ); ?>
+		<?php settings_errors( 'gameindo_gsc_verification' ); ?>
 
 		<form method="post" action="options.php">
 			<?php settings_fields( 'gameindo_analytics' ); ?>
@@ -153,6 +201,15 @@ function gameindo_core_analytics_admin_page() {
 						<p class="description">Kosongkan kalau GA4 sudah/akan diatur sebagai tag di dalam GTM sebagai gantinya.</p>
 					</td>
 				</tr>
+				<tr>
+					<th scope="row"><label for="gameindo_gsc_verification">Kode verifikasi Search Console</label></th>
+					<td>
+						<input type="text" class="regular-text" id="gameindo_gsc_verification" name="gameindo_gsc_verification"
+							placeholder="eSMZ9QbvCsmzq8RQiedBd4if82KgOhxL1lMFSfjkzXU" autocomplete="off"
+							value="<?php echo esc_attr( get_option( 'gameindo_gsc_verification', '' ) ); ?>">
+						<p class="description">Dari metode verifikasi "Tag HTML" di Search Console — boleh tempel dengan atau tanpa awalan <code>google-site-verification=</code>, keduanya diterima.</p>
+					</td>
+				</tr>
 			</table>
 			<?php submit_button(); ?>
 		</form>
@@ -164,6 +221,7 @@ function gameindo_core_analytics_admin_page() {
 				<tr><td>GTM terpasang di situs</td><td><?php echo $gtm_live ? '<span style="color:#0f7a50">ya</span>' : '<span style="color:#b32d2e">tidak</span>'; ?></td></tr>
 				<tr><td>Measurement ID GA4 terisi</td><td><?php echo $ga4_id ? '<span style="color:#0f7a50">ya — ' . esc_html( $ga4_id ) . '</span>' : '<span style="color:#b32d2e">belum</span>'; ?></td></tr>
 				<tr><td>GA4 langsung terpasang di situs</td><td><?php echo $ga4_live ? '<span style="color:#0f7a50">ya</span>' : '<span style="color:#b32d2e">tidak</span>'; ?></td></tr>
+				<tr><td>Kode Search Console terisi</td><td><?php echo $gsc_code ? '<span style="color:#0f7a50">ya</span>' : '<span style="color:#b32d2e">belum</span>'; ?></td></tr>
 				<?php if ( $deferring ) : ?>
 				<tr><td colspan="2">ID sudah terisi tapi belum tayang — biasanya karena plugin analytics lain (Site Kit, GTM4WP, MonsterInsights, dsb.) sedang aktif dan tema sengaja mengalah supaya tidak ada tag dobel. Nonaktifkan salah satunya kalau memang cuma mau satu jalur.</td></tr>
 				<?php endif; ?>

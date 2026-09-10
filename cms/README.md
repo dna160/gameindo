@@ -223,6 +223,17 @@ cms/
   dikodekan mati — ganti file itu untuk mengganti logonya.
 - Semua server-rendered (baik untuk SEO). Endpoint REST `gameindo/v1` tersedia
   bila kelak ingin dipakai headless.
+- **Verifikasi Google Search Console** — kolom ketiga di wp-admin →
+  GameIndo → Analytics (atau konstanta `GAMEINDO_GSC_VERIFICATION`):
+  `gameindo_core_gsc_verification()` menyimpannya, `gameindo_seo_search_console_tag()`
+  (tema, `inc/seo.php`) mencetak `<meta name="google-site-verification">`
+  di `wp_head`. Sengaja **tidak** ikut mengalah ke `gameindo_seo_active()` —
+  ini membuktikan kepemilikan domain, bukan tag SEO yang bersaing, dan
+  beberapa tag `google-site-verification` sekaligus di satu halaman itu
+  wajar (masing-masing membuktikan properti Search Console yang beda), jadi
+  tetap tayang meski nanti Yoast/RankMath dipasang. Sanitizer-nya menerima
+  potongan kode maupun string utuh `google-site-verification=KODE` yang
+  disalin langsung dari Search Console.
 - **Google Tag Manager + GA4 langsung** — dua kolom independen di wp-admin →
   GameIndo → Analytics (atau konstanta `GAMEINDO_GTM_ID`/`GAMEINDO_GA4_ID`):
   Container ID GTM dan/atau Measurement ID GA4. `gameindo_core_gtm_id()` /
