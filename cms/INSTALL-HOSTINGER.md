@@ -326,6 +326,19 @@ plugin dan atur dari sana seperti biasa. Yang belum dicetak tema (dan baru
 datang dari plugin SEO bila dipasang): **sitemap XML** dan editor meta
 title/description manual per-artikel di luar ringkasan editor.
 
+### Analytics (Google Tag Manager — bawaan tema, tanpa plugin)
+**GameIndo → Analytics** di wp-admin: satu kolom, Container ID GTM
+(`GTM-XXXXXXX`). Begitu terisi, tema otomatis memasang snippet resminya di
+setiap halaman — tidak perlu plugin GTM/analytics terpisah. Belum punya akun
+GTM/GA4? Halaman itu sendiri berisi langkah-langkah lengkap bikin akun GTM,
+bikin properti GA4, dan menghubungkan keduanya (menambahkan tag GA4 di
+dashboard GTM). **GA4, Meta Pixel, dan tag lain semuanya diatur di dashboard
+GTM** (tagmanager.google.com) setelah Container ID terisi — bukan di
+wp-admin, dan tidak perlu upload tema ulang tiap kali menambah tag baru;
+tinggal **Submit → Publish** di GTM. Kalau plugin analytics lain (Site Kit,
+GTM4WP, MonsterInsights, dsb.) sedang aktif, tema otomatis mengalah dan
+tidak memasang snippetnya sendiri, supaya tidak ada tag dobel.
+
 ---
 
 ## Langkah berikutnya (go-live & Google)
@@ -334,6 +347,8 @@ Setelah situs live di domain:
 - (Opsional) Pasang plugin SEO (mis. Yoast/Rank Math) kalau butuh sitemap XML
   atau ingin menulis meta title/description manual per-artikel — tema akan
   otomatis mengalah begitu plugin itu aktif (lihat bagian SEO di atas).
+- Isi Container ID di **GameIndo → Analytics** untuk mengaktifkan Google Tag
+  Manager (lihat bagian Analytics di atas untuk langkah bikin akun GTM/GA4).
 - Daftarkan situs ke **Google Search Console** dan kirim sitemap.
 - Siapkan otomasi produksi artikel (via REST API / wp-cli / plugin) dengan
   keyword sesuai pilar — model kontennya sudah siap untuk itu.

@@ -2,8 +2,8 @@
 /**
  * Plugin Name:       GameIndo Core
  * Plugin URI:        https://gameindo.com
- * Description:        Content model for the GameIndo theme — article meta (pillar, subcategory, read time, featured/spotlight, reads), author profile fields, and the editable esports widgets (live ticker, hot topics, match center, standings), plus the live PandaScore match schedule for six games. All manageable from wp-admin.
- * Version:           1.3.1
+ * Description:        Content model for the GameIndo theme — article meta (pillar, subcategory, read time, featured/spotlight, reads), author profile fields, and the editable esports widgets (live ticker, hot topics, match center, standings), plus the live PandaScore match schedule for six games and the Google Tag Manager container ID. All manageable from wp-admin.
+ * Version:           1.4.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            GameIndo
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GAMEINDO_CORE_VERSION', '1.3.1' );
+define( 'GAMEINDO_CORE_VERSION', '1.4.0' );
 define( 'GAMEINDO_CORE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'GAMEINDO_CORE_URL', plugin_dir_url( __FILE__ ) );
 
@@ -28,11 +28,13 @@ require_once GAMEINDO_CORE_DIR . 'includes/esports-meta.php';
 require_once GAMEINDO_CORE_DIR . 'includes/helpers.php';
 require_once GAMEINDO_CORE_DIR . 'includes/pandascore.php';
 require_once GAMEINDO_CORE_DIR . 'includes/rawg.php';
+require_once GAMEINDO_CORE_DIR . 'includes/analytics.php';
 require_once GAMEINDO_CORE_DIR . 'includes/rest.php';
 
 if ( is_admin() ) {
 	require_once GAMEINDO_CORE_DIR . 'includes/pandascore-admin.php';
 	require_once GAMEINDO_CORE_DIR . 'includes/rawg-admin.php';
+	require_once GAMEINDO_CORE_DIR . 'includes/analytics-admin.php';
 }
 
 /**
@@ -102,6 +104,7 @@ function gameindo_core_dashboard_page() {
 	echo '<li><a href="' . esc_url( admin_url( 'edit.php?post_type=gi_topic' ) ) . '">Topik Hangat</a> — chip topik di bawah header home.</li>';
 	echo '<li><a href="' . esc_url( admin_url( 'admin.php?page=gameindo-pandascore' ) ) . '">PandaScore</a> — sumber utama jadwal match (ML:BB, CS:GO, Valorant, LoL, DotA 2, Overwatch). Isi token di sini.</li>';
 	echo '<li><a href="' . esc_url( admin_url( 'admin.php?page=gameindo-rawg' ) ) . '">RAWG</a> — daftar <em>Rilis Mendatang</em> di halaman Video Games. Isi API key di sini; kalau kosong, panelnya tidak muncul.</li>';
+	echo '<li><a href="' . esc_url( admin_url( 'admin.php?page=gameindo-analytics' ) ) . '">Analytics</a> — Container ID Google Tag Manager. GA4 dan tag lain diatur di dashboard GTM, bukan di sini.</li>';
 	echo '<li><a href="' . esc_url( admin_url( 'edit.php?post_type=gi_match' ) ) . '">Match Center</a> — jadwal manual. Hanya dipakai sebagai <em>cadangan</em> kalau PandaScore mati atau tokennya kosong.</li>';
 	echo '<li><a href="' . esc_url( admin_url( 'edit.php?post_type=gi_standing' ) ) . '">Klasemen</a> — <em>tidak lagi ditampilkan.</em> Panel klasemen di halaman Esports sudah diganti panel Jadwal; data lama tetap tersimpan di sini.</li>';
 	echo '</ul>';

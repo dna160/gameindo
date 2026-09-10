@@ -223,6 +223,18 @@ cms/
   dikodekan mati — ganti file itu untuk mengganti logonya.
 - Semua server-rendered (baik untuk SEO). Endpoint REST `gameindo/v1` tersedia
   bila kelak ingin dipakai headless.
+- **Google Tag Manager** — satu Container ID (wp-admin → GameIndo → Analytics,
+  atau konstanta `GAMEINDO_GTM_ID`) dipasang lewat GTM langsung, bukan plugin
+  analytics terpisah: `gameindo_core_gtm_id()` (plugin, `includes/analytics.php`)
+  menyimpan/mengambilnya, `inc/analytics.php` (tema) mencetak snippet resminya
+  apa adanya di `wp_head` (prioritas 0, sepagi mungkin) dan `wp_body_open`
+  (hook inti WP, sudah dipanggil di `header.php` persis untuk kasus ini).
+  GA4/Meta Pixel/tag lain diatur di dashboard GTM sendiri, bukan di kode —
+  itulah intinya lewat GTM alih-alih menempel GA4 langsung. Sama seperti
+  `gameindo_seo_active()`, `gameindo_analytics_active()` **otomatis mati**
+  kalau plugin analytics lain (Site Kit, GTM4WP, MonsterInsights/ExactMetrics,
+  Analytify) terdeteksi aktif, supaya tag yang sama tidak terpasang dobel dan
+  menggandakan hitungan pageview.
 - **SEO native, otomatis mengalah ke plugin.** `inc/seo.php` mencetak meta
   description, `canonical`, `robots`, Open Graph + Twitter Card lengkap, dan
   JSON-LD (`Organization`+`WebSite` di semua halaman, `NewsArticle` di
