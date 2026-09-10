@@ -115,8 +115,13 @@ $gi_match_meta  = ( 1 === count( $gi_match_comps ) ) ? $gi_match_comps[0] : 'Jad
     <div class="gi-hero__grid">
       <div class="gi-hero-slider" id="gi-hero-slider" data-autoplay="6000">
         <div class="gi-hero-slider__track" id="gi-hero-slider-track"><?php
+          // Only the first slide is the LCP image; the rest sit off-screen in
+          // the carousel until a reader clicks through, so they load lazily
+          // instead of competing with it for bandwidth.
+          $gi_slide_i = 0;
           foreach ( $gi_hero_slides as $gi_sp ) {
-	          echo gameindo_feature( $gi_sp ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+	          echo gameindo_feature( $gi_sp, array( 'eager' => 0 === $gi_slide_i ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+	          $gi_slide_i++;
           }
         ?></div>
         <?php if ( count( $gi_hero_slides ) > 1 ) : ?>
@@ -221,26 +226,36 @@ $gi_match_meta  = ( 1 === count( $gi_match_comps ) ) ? $gi_match_comps[0] : 'Jad
 
   <div class="gi-container gi-grid-5 gi-pillar-tiles" id="pillars" style="padding-top:24px;padding-bottom:40px">
     <div id="gi-pillar-tiles" style="display:contents"><?php
-      foreach ( gameindo_pillars() as $gi_slug => $gi_name ) {
-	      $gi_term  = get_category_by_slug( $gi_slug );
-	      $gi_count = $gi_term ? (int) $gi_term->count : 0;
+      foreach ( gameindo_nav_pillars() as $gi_slug => $gi_name ) {
+	      if ( 'video-games' === $gi_slug ) {
+		      // Not a term count: the pillar spans its own category, the legacy
+		      // "Video Game" one, and console coverage filed elsewhere.
+		      $gi_count = count( gameindo_video_games_pool() );
+	      } else {
+		      $gi_term  = get_category_by_slug( $gi_slug );
+		      $gi_count = $gi_term ? (int) $gi_term->count : 0;
+	      }
 	      echo gameindo_pillar_tile( $gi_slug, $gi_name, $gi_count, gameindo_pillar_url( $gi_slug ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
       }
     ?></div>
   </div>
 
   <div id="gi-pillar-bands"><?php
-    $gi_band_order = array( 'esports', 'home', 'streamer', 'tech', 'entertainment' );
+    // Video Games leads: it is the site's core beat, and the band order is what
+    // a reader scrolling past the hero meets first.
+    $gi_band_order = array( 'video-games', 'esports', 'streamer', 'tech', 'entertainment' );
     $gi_bi = 0;
     foreach ( $gi_band_order as $gi_slug ) {
-	    $gi_band_posts = get_posts( array(
-		    'post_type'      => 'post',
-		    'post_status'    => 'publish',
-		    'posts_per_page' => 4,
-		    'category_name'  => $gi_slug,
-		    'orderby'        => 'date',
-		    'order'          => 'DESC',
-	    ) );
+	    $gi_band_posts = ( 'video-games' === $gi_slug )
+		    ? gameindo_video_games_posts( array( 'limit' => 4 ) )
+		    : get_posts( array(
+			    'post_type'      => 'post',
+			    'post_status'    => 'publish',
+			    'posts_per_page' => 4,
+			    'category_name'  => $gi_slug,
+			    'orderby'        => 'date',
+			    'order'          => 'DESC',
+		    ) );
 	    if ( empty( $gi_band_posts ) ) {
 		    continue;
 	    }
@@ -253,8 +268,13 @@ $gi_match_meta  = ( 1 === count( $gi_match_comps ) ) ? $gi_match_comps[0] : 'Jad
 	    echo '<a class="gi-section-head__link" href="' . esc_url( gameindo_pillar_url( $gi_slug ) ) . '">View More <span aria-hidden="true">→</span></a></div>';
 	    echo '<div class="gi-grid-4" style="margin-top:20px">';
 	    foreach ( $gi_band_posts as $gi_bp ) {
-		    $gi_sub = gameindo_meta( $gi_bp->ID, 'subcategory' );
-		    echo gameindo_card( $gi_bp, array( 'variant' => 'sm', 'pill_label' => $gi_sub ? $gi_sub : $gi_name ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		    $gi_sub  = gameindo_meta( $gi_bp->ID, 'subcategory' );
+		    $gi_args = array( 'variant' => 'sm', 'pill_label' => $gi_sub ? $gi_sub : $gi_name );
+		    if ( 'video-games' === $gi_slug ) {
+			    // A Switch 2 piece filed under Tech still reads as Video Games here.
+			    $gi_args['pillar'] = $gi_slug;
+		    }
+		    echo gameindo_card( $gi_bp, $gi_args ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	    }
 	    echo '</div></div></section>';
 	    $gi_bi++;

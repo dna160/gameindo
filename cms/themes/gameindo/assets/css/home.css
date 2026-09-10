@@ -217,6 +217,13 @@
   .gi-hottopics__row { height: 46px; }
 }
 
+/* The header nav becomes the drawer at 900px (see main.css), so the scrollable
+   pillar row starts here too — otherwise a tablet reader loses every pillar
+   link from the page itself and has to open the drawer to reach any of them. */
+@media (max-width: 900px) {
+  .gi-mobile-pillars { display: flex; }
+}
+
 @media (max-width: 720px) {
   /* Was display:none, which made the whole bar invisible to most of the
      audience. It scrolls horizontally instead — tighter, but present. */

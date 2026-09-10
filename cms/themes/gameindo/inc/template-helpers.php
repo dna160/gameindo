@@ -13,33 +13,43 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * Resolve a post's pillar slug from its categories (falling back to the
- * _gi_pillar meta hint, then 'home'). Pillars are the five fixed category
+ * _gi_pillar meta hint, then Video Games). Pillars are the fixed category
  * slugs — see gameindo_pillars().
+ *
+ * A post can sit in several pillar categories. 'home' is the legacy catch-all,
+ * so whenever a post also carries a named pillar that one is the answer;
+ * otherwise 'home' resolves to Video Games, the pillar that now covers it.
  */
 function gameindo_get_pillar( $post_id ) {
 	$pillars = gameindo_pillars();
+	$found   = array();
 	$cats    = get_the_category( $post_id );
 	if ( $cats ) {
 		foreach ( $cats as $cat ) {
 			if ( array_key_exists( $cat->slug, $pillars ) ) {
-				return $cat->slug;
+				$found[] = $cat->slug;
 			}
 		}
 	}
+	if ( $found ) {
+		$named = array_values( array_diff( $found, array( 'home' ) ) );
+		return gameindo_canonical_pillar( $named ? $named[0] : $found[0] );
+	}
 	$hint = get_post_meta( $post_id, '_gi_pillar', true );
 	if ( $hint && array_key_exists( $hint, $pillars ) ) {
-		return $hint;
+		return gameindo_canonical_pillar( $hint );
 	}
-	return 'home';
+	return 'video-games';
 }
 
 /**
- * URL for a pillar: the site root for 'home', the category archive otherwise.
+ * URL for a pillar: its category archive. The legacy 'home' slug resolves to
+ * the Video Games archive rather than the front page — it used to point at the
+ * site root, which meant its menu entry and tile led back to the page the
+ * reader was already on instead of to that pillar's articles.
  */
 function gameindo_pillar_url( $slug ) {
-	if ( 'home' === $slug ) {
-		return home_url( '/' );
-	}
+	$slug = gameindo_canonical_pillar( $slug );
 	$term = get_category_by_slug( $slug );
 	return $term ? get_category_link( $term->term_id ) : home_url( '/category/' . $slug . '/' );
 }
@@ -50,6 +60,368 @@ function gameindo_pillar_url( $slug ) {
 function gameindo_pillar_name( $slug ) {
 	$pillars = gameindo_pillars();
 	return isset( $pillars[ $slug ] ) ? $pillars[ $slug ] : ucfirst( $slug );
+}
+
+/**
+ * Standing description for a pillar, used when the category itself has none.
+ * Only Video Games ships one: it is the pillar readers meet without a
+ * hand-written intro, because it was added by a theme update rather than by an
+ * editor filling the term in.
+ */
+function gameindo_pillar_description( $slug ) {
+	$defaults = apply_filters( 'gameindo_pillar_descriptions', array(
+		'video-games' => 'Rilis, review, dan kabar game lintas platform — PS5, PC, Xbox, dan Nintendo Switch.',
+	) );
+	$slug = gameindo_canonical_pillar( $slug );
+	return isset( $defaults[ $slug ] ) ? $defaults[ $slug ] : '';
+}
+
+/* ============================================================
+   VIDEO GAMES PILLAR — the site's game coverage, console-first
+   ============================================================ */
+
+/**
+ * The platforms the Video Games page filters by, in chip order. 'console'
+ * marks the ones that count as console coverage — see
+ * gameindo_platform_keywords(), which the pillar uses to pick its lead story.
+ *
+ * Keywords are matched against a post's headline, excerpt, subcategory, tags
+ * and categories — never its body text, so a passing mention halfway down an
+ * article can't re-file it. Matching is whole-word, which is what keeps "PC"
+ * out of "PCB" and "PS5" out of "PS50".
+ */
+function gameindo_game_platforms() {
+	return apply_filters( 'gameindo_game_platforms', array(
+		'ps5'    => array(
+			'label'    => 'PS5',
+			'console'  => true,
+			// PS4 counts too: on this beat a PlayStation story is a PlayStation
+			// story, and filing last-gen coverage nowhere would hide it.
+			'keywords' => array(
+				'ps5', 'ps4', 'playstation', 'playstation 5', 'playstation 4',
+				'psn', 'ps plus', 'dualsense', 'dualshock',
+			),
+		),
+		'pc'     => array(
+			'label'    => 'PC',
+			'console'  => false,
+			// Games on PC, not PC hardware: a GPU review is Tech's beat, and
+			// pulling RTX/Radeon in here would fill the pillar with parts.
+			'keywords' => array(
+				'pc', 'steam', 'steam deck', 'epic games', 'gog', 'battle.net',
+				'rog ally', 'legion go', 'msi claw',
+			),
+		),
+		'xbox'   => array(
+			'label'    => 'Xbox',
+			'console'  => true,
+			'keywords' => array(
+				'xbox', 'series x', 'series s', 'xbox one', 'game pass', 'xbox live',
+			),
+		),
+		'switch' => array(
+			'label'    => 'Switch',
+			'console'  => true,
+			// "switch" on its own also catches "Switch 2" and "Switch Lite".
+			'keywords' => array( 'switch', 'nintendo', 'joy-con', 'joycon', 'amiibo' ),
+		),
+	) );
+}
+
+/**
+ * Which platform the Video Games page is filtered to, from ?platform=… —
+ * 'all' unless the value names one of the groups.
+ */
+function gameindo_current_platform() {
+	$p = isset( $_GET['platform'] ) ? sanitize_key( wp_unslash( $_GET['platform'] ) ) : 'all'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+	return array_key_exists( $p, gameindo_game_platforms() ) ? $p : 'all';
+}
+
+/**
+ * The text a post is classified on: what an editor actually wrote about it,
+ * not the article body. Memoized — every post gets tested against several
+ * keyword groups per request.
+ */
+function gameindo_post_signal_text( $post_id ) {
+	static $cache = array();
+	$post_id = (int) $post_id;
+	if ( isset( $cache[ $post_id ] ) ) {
+		return $cache[ $post_id ];
+	}
+
+	$parts = array(
+		get_the_title( $post_id ),
+		gameindo_get_excerpt( $post_id, 30 ),
+		gameindo_meta( $post_id, 'subcategory' ),
+	);
+	$tags = get_the_terms( $post_id, 'post_tag' );
+	if ( $tags && ! is_wp_error( $tags ) ) {
+		foreach ( $tags as $tag ) {
+			$parts[] = $tag->name;
+		}
+	}
+	$cats = get_the_category( $post_id );
+	if ( $cats ) {
+		foreach ( $cats as $cat ) {
+			$parts[] = $cat->name;
+		}
+	}
+
+	$text = implode( ' · ', array_filter( $parts ) );
+	$text = function_exists( 'mb_strtolower' ) ? mb_strtolower( $text ) : strtolower( $text );
+
+	$cache[ $post_id ] = $text;
+	return $text;
+}
+
+/**
+ * Does this text name any of these keywords, as whole words?
+ */
+function gameindo_text_mentions( $text, $keywords ) {
+	foreach ( (array) $keywords as $keyword ) {
+		$keyword = trim( strtolower( (string) $keyword ) );
+		if ( '' === $keyword ) {
+			continue;
+		}
+		$pattern = '/(?<![\p{L}\p{N}])' . preg_quote( $keyword, '/' ) . '(?![\p{L}\p{N}])/u';
+		if ( preg_match( $pattern, $text ) ) {
+			return true;
+		}
+	}
+	return false;
+}
+
+/**
+ * Keywords for one platform, or for console coverage as a whole.
+ */
+function gameindo_platform_keywords( $platform ) {
+	$groups = gameindo_game_platforms();
+	if ( isset( $groups[ $platform ] ) ) {
+		return $groups[ $platform ]['keywords'];
+	}
+	// Two collective sets. 'any' is every platform — what decides whether an
+	// article filed in another pillar belongs to this one at all. Anything else
+	// ('console') is the platforms flagged as consoles, which is what "leaning
+	// console" means when picking the page's lead story. Reading the flag rather
+	// than naming groups keeps the gameindo_game_platforms filter able to add a
+	// platform without editing this.
+	$keywords = array();
+	foreach ( $groups as $group ) {
+		if ( 'any' === $platform || ! empty( $group['console'] ) ) {
+			$keywords = array_merge( $keywords, $group['keywords'] );
+		}
+	}
+
+	// Both collective sets also take the generic words. An article that just
+	// says "konsol" is console coverage even when it names no machine — but the
+	// word belongs to no single chip, so it is never a PS5 or an Xbox article.
+	return array_merge( $keywords, (array) apply_filters( 'gameindo_generic_console_words', array( 'konsol', 'console' ) ) );
+}
+
+/**
+ * Is this article console coverage — PS5, Xbox or Switch?
+ */
+function gameindo_is_console_post( $post_id ) {
+	return gameindo_text_mentions( gameindo_post_signal_text( $post_id ), gameindo_platform_keywords( 'console' ) );
+}
+
+/**
+ * Is this article about a game on any platform this pillar covers?
+ *
+ * Wider than gameindo_is_console_post() on purpose: it decides what the pool
+ * pulls in from the other pillars, and a pool that only admitted console
+ * coverage left the PC chip filtering over articles that could never contain a
+ * PC one. The lead-story pick still prefers console — that is the pillar's
+ * slant, not its boundary.
+ */
+function gameindo_is_platform_post( $post_id ) {
+	return gameindo_text_mentions( gameindo_post_signal_text( $post_id ), gameindo_platform_keywords( 'any' ) );
+}
+
+/**
+ * Every article the Video Games pillar covers, newest first. Memoized per
+ * request — the homepage asks for this three times (band, tile count, mega
+ * menu) and that shouldn't cost three round trips.
+ *
+ * Editors don't have to re-file the archive for the pillar to have a page on
+ * day one. The pool is assembled from:
+ *   1. the video-games category — what an editor files there always counts;
+ *   2. the legacy "Video Game" (home) category, which is the same beat under
+ *      the slug the site shipped with;
+ *   3. platform coverage sitting in the other pillars — a Switch 2 hands-on or
+ *      a Steam Deck piece filed under Tech belongs to this reader too.
+ */
+function gameindo_video_games_pool() {
+	static $pool = null;
+	if ( null !== $pool ) {
+		return $pool;
+	}
+
+	$depth = (int) apply_filters( 'gameindo_video_games_pool', 120 );
+	$query = array(
+		'post_type'           => 'post',
+		'post_status'         => 'publish',
+		'posts_per_page'      => $depth,
+		'orderby'             => 'date',
+		'order'               => 'DESC',
+		'no_found_rows'       => true,
+		'ignore_sticky_posts' => true,
+	);
+
+	// Comma-separated slugs are an OR in WP_Query, which is what's wanted here.
+	$filed = get_posts( array_merge( $query, array( 'category_name' => 'video-games,home' ) ) );
+
+	$pool = array();
+	$seen = array();
+	foreach ( $filed as $post ) {
+		$seen[ $post->ID ] = true;
+		$pool[]            = $post;
+	}
+	foreach ( get_posts( $query ) as $post ) {
+		if ( isset( $seen[ $post->ID ] ) || ! gameindo_is_platform_post( $post->ID ) ) {
+			continue;
+		}
+		$seen[ $post->ID ] = true;
+		$pool[]            = $post;
+	}
+
+	usort( $pool, function ( $a, $b ) {
+		return strcmp( $b->post_date_gmt, $a->post_date_gmt );
+	} );
+
+	return $pool;
+}
+
+/**
+ * The Video Games pool, narrowed and cut to size.
+ * $args: platform (group key or 'all'), limit.
+ */
+function gameindo_video_games_posts( $args = array() ) {
+	$args = wp_parse_args( $args, array( 'platform' => 'all', 'limit' => 60 ) );
+
+	$keywords = ( 'all' === $args['platform'] ) ? array() : gameindo_platform_keywords( $args['platform'] );
+
+	$out = array();
+	foreach ( gameindo_video_games_pool() as $post ) {
+		if ( $keywords && ! gameindo_text_mentions( gameindo_post_signal_text( $post->ID ), $keywords ) ) {
+			continue;
+		}
+		$out[] = $post;
+		if ( $args['limit'] && count( $out ) >= (int) $args['limit'] ) {
+			break;
+		}
+	}
+	return $out;
+}
+
+/* ---- Rilis Mendatang (RAWG) ---- */
+
+/**
+ * Upcoming game releases for the Video Games panel, soonest first.
+ *
+ * Comes from the Core plugin, which holds the API key and the cache. Without a
+ * key — or with the plugin inactive — this is empty, and the page falls back to
+ * the Terpopuler rail it showed before. That is deliberate: the panel is opt-in,
+ * so shipping it changes nothing until an editor pastes a key in.
+ */
+function gameindo_upcoming_games( $args = array() ) {
+	if ( ! function_exists( 'gameindo_core_get_upcoming_games' ) ) {
+		return array();
+	}
+	return (array) gameindo_core_get_upcoming_games( $args );
+}
+
+/**
+ * Release date as a reader reads it: "Hari ini", "Besok", "12 Sep" this year,
+ * "12 Sep 2027" beyond it, "TBA" when the studio hasn't said.
+ */
+function gameindo_release_label( $game ) {
+	if ( ! empty( $game['tba'] ) || empty( $game['ts'] ) ) {
+		return 'TBA';
+	}
+	$ts  = (int) $game['ts'];
+	$day = wp_date( 'Ymd', $ts );
+	if ( wp_date( 'Ymd' ) === $day ) {
+		return 'Hari ini';
+	}
+	if ( wp_date( 'Ymd', time() + DAY_IN_SECONDS ) === $day ) {
+		return 'Besok';
+	}
+	return wp_date( 'Y', $ts ) === wp_date( 'Y' ) ? wp_date( 'j M', $ts ) : wp_date( 'j M Y', $ts );
+}
+
+/**
+ * How far off a release is, in whole days, or '' once it is here. Gives the
+ * row a second, softer signal than the date alone.
+ */
+function gameindo_release_countdown( $game ) {
+	if ( empty( $game['ts'] ) ) {
+		return '';
+	}
+	$days = (int) floor( ( (int) $game['ts'] - (int) current_time( 'timestamp' ) ) / DAY_IN_SECONDS );
+	if ( $days < 1 ) {
+		return '';
+	}
+	return $days < 30 ? $days . ' hari lagi' : ( (int) round( $days / 30 ) ) . ' bulan lagi';
+}
+
+/**
+ * One row of the Rilis Mendatang panel.
+ *
+ * Rows link out: to the game's official site when RAWG knows one, otherwise to
+ * its page on RAWG. Both leave the site, so the row says where it goes — the
+ * host is printed next to the arrow, the same way a schedule row names the
+ * broadcaster before you click it. A row with no destination at all stays a
+ * plain block rather than a link that goes nowhere.
+ */
+function gameindo_release_row( $game ) {
+	$cover = ! empty( $game['image'] )
+		? '<span class="gi-release__art"><img src="' . esc_url( $game['image'] ) . '" alt="" loading="lazy" data-gi-fallback="' . esc_url( gameindo_placeholder_url() ) . '"></span>'
+		: '<span class="gi-release__art gi-release__art--none" aria-hidden="true"></span>';
+
+	$count = gameindo_release_countdown( $game );
+	$plats = ! empty( $game['platforms'] ) ? implode( ' · ', (array) $game['platforms'] ) : '';
+	$link  = ! empty( $game['link'] ) ? $game['link'] : '';
+	$host  = ! empty( $game['link_host'] ) ? $game['link_host'] : '';
+
+	$open = $link
+		? '<a class="gi-release gi-release--link" href="' . esc_url( $link ) . '" target="_blank" rel="noopener noreferrer"'
+			. ' aria-label="' . esc_attr( sprintf( 'Buka halaman %s di %s', $game['name'], $host ) ) . '">'
+		: '<div class="gi-release">';
+
+	$html  = $open;
+	$html .= $cover;
+	$html .= '<span class="gi-release__body">';
+	$html .= '<span class="gi-release__name">' . esc_html( $game['name'] ) . '</span>';
+	$html .= '<span class="gi-release__sub">';
+	$html .= $plats ? '<span class="gi-release__platforms">' . esc_html( $plats ) . '</span>' : '';
+	$html .= $host ? '<span class="gi-release__host"><span aria-hidden="true">↗</span>' . esc_html( $host ) . '</span>' : '';
+	$html .= '</span>';
+	$html .= '</span>';
+	$html .= '<span class="gi-release__when">';
+	$html .= '<span class="gi-release__date">' . esc_html( gameindo_release_label( $game ) ) . '</span>';
+	$html .= $count ? '<span class="gi-release__countdown">' . esc_html( $count ) . '</span>' : '';
+	$html .= '</span>';
+	$html .= $link ? '</a>' : '</div>';
+	return $html;
+}
+
+/**
+ * Which article should lead the Video Games page: the newest one with a
+ * console angle, since that is the pillar's brief. Falls back to
+ * the newest article when nothing in the list is console-led. Returns an index
+ * into $posts, or null when there is nothing to lead with.
+ */
+function gameindo_video_games_lead( $posts ) {
+	if ( empty( $posts ) ) {
+		return null;
+	}
+	foreach ( $posts as $i => $post ) {
+		if ( gameindo_is_console_post( $post->ID ) ) {
+			return $i;
+		}
+	}
+	return 0;
 }
 
 /**
@@ -76,6 +448,15 @@ function gameindo_read_time( $post_id ) {
 }
 
 /**
+ * Neutral placeholder image — the server-side fallback when no thumbnail is
+ * assigned, and the client-side fallback (via data-gi-fallback, see theme.js)
+ * when one is assigned but its file 404s.
+ */
+function gameindo_placeholder_url() {
+	return GAMEINDO_URI . '/assets/samples/ph-neutral-1.png';
+}
+
+/**
  * Featured-image <img> URL at a given size, with a pillar-colored placeholder
  * fallback so cards never render an empty media slot.
  */
@@ -84,13 +465,110 @@ function gameindo_image_url( $post_id, $size = 'gameindo-card' ) {
 	if ( $url ) {
 		return $url;
 	}
-	return GAMEINDO_URI . '/assets/samples/ph-neutral-1.png';
+	return gameindo_placeholder_url();
 }
 
 function gameindo_image_alt( $post_id ) {
 	$thumb_id = get_post_thumbnail_id( $post_id );
 	$alt      = $thumb_id ? get_post_meta( $thumb_id, '_wp_attachment_image_alt', true ) : '';
 	return $alt ? $alt : get_the_title( $post_id );
+}
+
+/**
+ * The filename a URL resolves to once WordPress's automatic size suffix is
+ * stripped — "shot-1024x576.jpg" and "shot-300x169.jpg" both key to
+ * "shot.jpg", so any registered *or* ad-hoc crop of the same original upload
+ * compares equal without having to enumerate registered sizes. Comparing
+ * only the trailing filename (not the host/path) also survives a CDN or
+ * image-optimizer rewriting the URL (Photon-style proxies keep the real
+ * filename at the end of the rewritten path; a `?resize=` query string is
+ * dropped by wp_parse_url() before basename() ever sees it).
+ */
+function gameindo_image_basename_key( $url ) {
+	$path = wp_parse_url( (string) $url, PHP_URL_PATH );
+	if ( ! $path ) {
+		return '';
+	}
+	$base = basename( $path );
+	$base = preg_replace( '/-\d+x\d+(?=\.[A-Za-z0-9]+$)/', '', $base );
+	return strtolower( $base );
+}
+
+/**
+ * Article body sometimes repeats the featured image as the very first
+ * inline image (ARTICLE-CONTRACT.md §1 asks the copywriter not to, but not
+ * every article was produced through that pipeline) — the single template
+ * already renders it once as the big hero, so single.php strips that one
+ * leading duplicate rather than showing it twice. Only the leading image is
+ * ever touched: a later reuse of the same photo deeper in the body is left
+ * alone, since that's the author actually referencing it again, not a
+ * production duplicate.
+ *
+ * Two shapes of duplicate, caught two different ways:
+ * - Same WordPress attachment reused in the body (filename match, ignoring
+ *   WordPress's size suffix — see gameindo_image_basename_key()).
+ * - An article rewritten from an external source, where the copywriter
+ *   uploaded the source photo as the featured image but left the original
+ *   hotlinked <img> (a different host entirely, e.g. the source site's own
+ *   CDN, so it shares no filename with the upload) sitting as the leading
+ *   body element. ARTICLE-CONTRACT.md §1 says every body image should live
+ *   in the WP media library, so a leading image on any other host is a
+ *   contract violation on its own — stripped regardless of whether it
+ *   happens to be visually the same photo, since there's no way to compare
+ *   pixels without fetching the external file.
+ *
+ * "Leading" tolerates a little noise ahead of the image, seen in practice
+ * on articles the copywriter mangled worse than usual: a restated-title
+ * line ("<p><strong>Judul:</strong> …</p>") and a body <h1> (itself already
+ * a contract violation — the post title is the only H1). Both are skipped,
+ * unmodified, while scanning for the image; anything else ahead of the
+ * image (an ordinary prose paragraph, a list, a quote) stops the scan
+ * rather than being skipped, so a genuine lead paragraph in front of a
+ * deliberately-reused photo is never misread as noise.
+ */
+function gameindo_dedupe_featured_image_from_content( $content, $post_id ) {
+	$thumb_id = get_post_thumbnail_id( $post_id );
+	if ( ! $thumb_id ) {
+		return $content;
+	}
+	$full = wp_get_attachment_url( $thumb_id );
+	$key  = $full ? gameindo_image_basename_key( $full ) : '';
+	if ( ! $key ) {
+		return $content;
+	}
+	$site_host = wp_parse_url( home_url(), PHP_URL_HOST );
+
+	$img_pattern  = '/^(<figure\b[^>]*>\s*<img\b[^>]*>.*?<\/figure>|<p>\s*<img\b[^>]*>\s*<\/p>|<img\b[^>]*>)/is';
+	$skip_pattern = '/^(<h[1-6]\b[^>]*>.*?<\/h[1-6]>|<p\b[^>]*>\s*(?:<strong>|<b>)?[^<:]{1,40}:(?:(?!<img\b)[\s\S])*?<\/p>)\s*/is';
+
+	$remaining = ltrim( $content );
+	$skipped   = '';
+	for ( $i = 0; $i < 4; $i++ ) {
+		if ( preg_match( $img_pattern, $remaining, $m ) ) {
+			$leading = $m[1];
+			$is_dupe = (bool) preg_match( '/class=(["\'])[^"\']*\bwp-image-' . (int) $thumb_id . '\b/i', $leading );
+			if ( ! $is_dupe && preg_match( '/<img\b[^>]*\bsrc=(["\'])(.*?)\1/i', $leading, $src_m ) ) {
+				$src = $src_m[2];
+				if ( gameindo_image_basename_key( $src ) === $key ) {
+					$is_dupe = true;
+				} elseif ( $site_host ) {
+					$src_host = wp_parse_url( $src, PHP_URL_HOST );
+					$is_dupe  = ( $src_host && strcasecmp( $src_host, $site_host ) !== 0 );
+				}
+			}
+			if ( ! $is_dupe ) {
+				return $content;
+			}
+			return $skipped . ltrim( substr( $remaining, strlen( $leading ) ) );
+		}
+
+		if ( ! preg_match( $skip_pattern, $remaining, $sm ) ) {
+			return $content;
+		}
+		$skipped   .= $sm[0];
+		$remaining  = substr( $remaining, strlen( $sm[0] ) );
+	}
+	return $content;
 }
 
 /**
@@ -115,13 +593,13 @@ function gameindo_time_ago( $post_id ) {
 }
 
 /**
- * Card. $args: variant 'md'|'sm'|'h', pill_label, show_author (bool).
- * Mirrors templates.js `card()`.
+ * Card. $args: variant 'md'|'sm'|'h', pill_label, pillar (override the
+ * [data-pillar] scope), show_author (bool). Mirrors templates.js `card()`.
  */
 function gameindo_card( $post, $args = array() ) {
 	$post_id = is_object( $post ) ? $post->ID : (int) $post;
 	$variant = isset( $args['variant'] ) ? $args['variant'] : 'md';
-	$pillar  = gameindo_get_pillar( $post_id );
+	$pillar  = ! empty( $args['pillar'] ) ? $args['pillar'] : gameindo_get_pillar( $post_id );
 	$pill    = isset( $args['pill_label'] ) ? $args['pill_label'] : gameindo_pillar_name( $pillar );
 
 	$cls      = 'gi-card' . ( 'sm' === $variant ? ' gi-card--sm' : ( 'h' === $variant ? ' gi-card--h' : '' ) );
@@ -144,7 +622,7 @@ function gameindo_card( $post, $args = array() ) {
 	}
 
 	$html  = '<a class="' . esc_attr( $cls ) . '" data-pillar="' . esc_attr( $pillar ) . '"' . $data_attrs . ' href="' . esc_url( get_permalink( $post_id ) ) . '">';
-	$html .= '<div class="gi-card__media"><img src="' . esc_url( gameindo_image_url( $post_id ) ) . '" alt="' . esc_attr( gameindo_image_alt( $post_id ) ) . '" loading="lazy">';
+	$html .= '<div class="gi-card__media"><img src="' . esc_url( gameindo_image_url( $post_id ) ) . '" alt="' . esc_attr( gameindo_image_alt( $post_id ) ) . '" loading="lazy" data-gi-fallback="' . esc_url( gameindo_placeholder_url() ) . '">';
 	$html .= '<span class="' . esc_attr( $pill_cls ) . '">' . esc_html( $pill ) . '</span></div>';
 	$html .= '<div class="gi-card__body"><h3 class="gi-card__title">' . esc_html( get_the_title( $post_id ) ) . '</h3>';
 	if ( $show_ex ) {
@@ -170,18 +648,28 @@ function gameindo_get_excerpt( $post_id, $words = 24 ) {
 }
 
 /**
- * Hero / pillar feature block. $args: sm (bool), pill_label.
+ * Hero / pillar feature block. $args: sm (bool), pill_label, pillar.
  * Mirrors templates.js `feature()`.
  */
 function gameindo_feature( $post, $args = array() ) {
 	$post_id = is_object( $post ) ? $post->ID : (int) $post;
-	$pillar  = gameindo_get_pillar( $post_id );
+	$pillar  = ! empty( $args['pillar'] ) ? $args['pillar'] : gameindo_get_pillar( $post_id );
 	$pill    = isset( $args['pill_label'] ) ? $args['pill_label'] : gameindo_pillar_name( $pillar );
 	$sm      = ! empty( $args['sm'] );
 	$author  = get_the_author_meta( 'display_name', get_post_field( 'post_author', $post_id ) );
 
+	// The only caller that ever renders more than one of these on a page is
+	// the homepage hero slider — up to 5 full-size images stacked in one
+	// horizontally-scrolling track. Loading all 5 eagerly forces the browser
+	// to fight the actual LCP candidate (slide 1) for bandwidth against four
+	// images nobody sees without scrolling the carousel. Every other caller
+	// renders exactly one gameindo_feature() and it always is the LCP
+	// candidate, so `eager` defaults true there.
+	$eager   = ! isset( $args['eager'] ) || $args['eager'];
+	$img_attrs = $eager ? ' fetchpriority="high"' : ' loading="lazy" decoding="async"';
+
 	$html  = '<a class="gi-feature' . ( $sm ? ' gi-feature--sm' : '' ) . '" data-pillar="' . esc_attr( $pillar ) . '" href="' . esc_url( get_permalink( $post_id ) ) . '">';
-	$html .= '<img src="' . esc_url( gameindo_image_url( $post_id, 'gameindo-hero' ) ) . '" alt="' . esc_attr( gameindo_image_alt( $post_id ) ) . '">';
+	$html .= '<img src="' . esc_url( gameindo_image_url( $post_id, 'gameindo-hero' ) ) . '" alt="' . esc_attr( gameindo_image_alt( $post_id ) ) . '"' . $img_attrs . ' data-gi-fallback="' . esc_url( gameindo_placeholder_url() ) . '">';
 	$html .= '<span class="gi-feature__bar" aria-hidden="true"></span>';
 	$html .= '<div class="gi-feature__content">';
 	$html .= '<span class="gi-pill">' . esc_html( $pill ) . '</span>';
@@ -206,7 +694,7 @@ function gameindo_rank_row( $post, $index, $args = array() ) {
 	$cat     = $sub ? $sub : gameindo_pillar_name( $pillar );
 
 	$thumb_html = $thumb
-		? '<span class="gi-rank__thumb"><img src="' . esc_url( gameindo_image_url( $post_id, 'gameindo-thumb' ) ) . '" alt="" loading="lazy"></span>'
+		? '<span class="gi-rank__thumb"><img src="' . esc_url( gameindo_image_url( $post_id, 'gameindo-thumb' ) ) . '" alt="" loading="lazy" data-gi-fallback="' . esc_url( gameindo_placeholder_url() ) . '"></span>'
 		: '';
 
 	// A just-published article has no reads figure yet — show when it landed
@@ -1065,6 +1553,39 @@ function gameindo_rank_popular( $posts, $count = 3 ) {
 }
 
 /**
+ * Same ranking as the "Terpopuler" rails, but over a list you already have
+ * rather than a query: most-read inside the popularity window first, then
+ * topped up with the newest posts from outside it. Returns post IDs.
+ *
+ * Used by the Video Games panel, whose pool is assembled across categories and
+ * so can't be expressed as the single WP_Query gameindo_trending_posts() runs.
+ */
+function gameindo_rank_recent_popular( $posts, $count = 5 ) {
+	$cutoff = time() - gameindo_popular_window_days() * DAY_IN_SECONDS;
+	$ids    = array();
+	$window = array();
+
+	foreach ( $posts as $post ) {
+		$id    = is_object( $post ) ? (int) $post->ID : (int) $post;
+		$ids[] = $id;
+		if ( (int) get_post_time( 'U', true, $id ) >= $cutoff ) {
+			$window[] = $id;
+		}
+	}
+
+	$top = gameindo_rank_popular( $window, $count );
+	foreach ( $ids as $id ) {
+		if ( count( $top ) >= $count ) {
+			break;
+		}
+		if ( ! in_array( $id, $top, true ) ) {
+			$top[] = $id;
+		}
+	}
+	return $top;
+}
+
+/**
  * Posts for the "Terpopuler" rails: the most-read articles of the last seven
  * days, newest first when reads tie. Returns an array of post IDs.
  *
@@ -1189,7 +1710,8 @@ function gameindo_shorten( $text, $max = 42 ) {
  * The old column was four hard-coded strings ("Rilis Baru", "Review", …) that
  * every one of them linked to the same pillar archive, so four different links
  * went to one destination. Now, per pillar:
- *   1. Esports leads with competitions that are live or imminent.
+ *   1. Esports leads with competitions that are live or imminent, and Video
+ *      Games with its platform views.
  *   2. Then tags actually used by that pillar's recent articles.
  *   3. Then recent headlines, which is what fills the column in practice —
  *      three of the five pillars currently have no tagged posts at all, so a
@@ -1236,17 +1758,38 @@ function gameindo_megamenu_column( $slug, $max = 4 ) {
 		}
 	}
 
-	$posts = get_posts( array(
-		'post_type'           => 'post',
-		'post_status'         => 'publish',
-		'posts_per_page'      => 60,
-		'category_name'       => $slug,
-		'orderby'             => 'date',
-		'order'               => 'DESC',
-		'fields'              => 'ids',
-		'no_found_rows'       => true,
-		'ignore_sticky_posts' => true,
-	) );
+	if ( 'video-games' === $slug ) {
+		// Platform views first: they are the pillar's own navigation, and unlike
+		// a category slug they are the thing a reader is choosing between.
+		$vg_url = gameindo_pillar_url( 'video-games' );
+		$taken  = 0;
+		foreach ( gameindo_game_platforms() as $key => $group ) {
+			if ( $taken >= 2 ) {
+				break; // the column holds four entries; leave room for headlines
+			}
+			if ( $push( $group['label'], add_query_arg( 'platform', $key, $vg_url ) ) ) {
+				$taken++;
+			}
+		}
+
+		// …then the pillar's own pool, which spans more than one category.
+		$posts = array();
+		foreach ( gameindo_video_games_posts( array( 'limit' => 60 ) ) as $vg_post ) {
+			$posts[] = (int) $vg_post->ID;
+		}
+	} else {
+		$posts = get_posts( array(
+			'post_type'           => 'post',
+			'post_status'         => 'publish',
+			'posts_per_page'      => 60,
+			'category_name'       => $slug,
+			'orderby'             => 'date',
+			'order'               => 'DESC',
+			'fields'              => 'ids',
+			'no_found_rows'       => true,
+			'ignore_sticky_posts' => true,
+		) );
+	}
 
 	$tally = array();
 	foreach ( $posts as $pid ) {
@@ -1285,16 +1828,15 @@ function gameindo_megamenu_column( $slug, $max = 4 ) {
 }
 
 /**
- * Render the five pillar columns. Cached as markup: this now runs on every
- * page rather than only the homepage, and rebuilding it costs a query per
- * pillar.
+ * Render the pillar columns. Cached as markup: this now runs on every page
+ * rather than only the homepage, and rebuilding it costs a query per pillar.
  */
 function gameindo_render_megamenu_columns() {
 	$html = get_transient( 'gi_megamenu_cols' );
 
 	if ( false === $html ) {
 		ob_start();
-		foreach ( gameindo_pillars() as $slug => $name ) {
+		foreach ( gameindo_nav_pillars() as $slug => $name ) {
 			$url = gameindo_pillar_url( $slug );
 			echo '<div class="gi-megamenu__col" data-pillar="' . esc_attr( $slug ) . '">';
 			echo '<a class="gi-megamenu__col-title" href="' . esc_url( $url ) . '">' . esc_html( $name ) . '</a>';

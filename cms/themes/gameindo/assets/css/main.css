@@ -115,11 +115,17 @@ body { background: var(--surface); overflow-x: hidden; }
   padding-inline: var(--gutter); display: flex; align-items: center; gap: 16px;
 }
 .gi-header__logo { display: flex; align-items: center; flex: none; }
-.gi-header__logo img { height: 24px; width: auto; display: block; }
-.gi-header__nav-wrap { flex: 1; display: flex; justify-content: center; min-width: 0; }
+.gi-header__logo img { height: 44px; width: auto; display: block; }
+/* The nav scrolls rather than overflowing once the pillars outgrow the space
+   between the logo and the actions. `margin-inline:auto` on the row does the
+   centring instead of `justify-content`, because a centred flex row that
+   overflows a scroll container clips its own first item — the pillar a reader
+   is most likely to want. */
+.gi-header__nav-wrap { flex: 1; display: flex; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.gi-header__nav-wrap::-webkit-scrollbar { display: none; }
 .gi-header__actions { display: flex; align-items: center; gap: 4px; flex: none; }
 
-.gi-pillarnav { display: flex; align-items: stretch; gap: 2px; height: var(--header-h); }
+.gi-pillarnav { display: flex; align-items: stretch; gap: 2px; height: var(--header-h); flex: none; margin-inline: auto; }
 .gi-pillarnav__item {
   position: relative; display: inline-flex; align-items: center; padding: 0 16px; height: 100%;
   font-family: var(--font-condensed); font-weight: var(--fw-extra); text-transform: uppercase;
@@ -131,6 +137,9 @@ body { background: var(--surface); overflow-x: hidden; }
   background: var(--pillar); transform: scaleX(0); transform-origin: left;
   transition: transform var(--dur-base) var(--ease-out);
 }
+/* Drawn inside the item: the nav row is a scroll container (see
+   .gi-header__nav-wrap), and an outline offset outwards is clipped by it. */
+.gi-pillarnav__item:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -3px; }
 .gi-pillarnav__item:hover { color: var(--pillar); }
 .gi-pillarnav__item:hover::after,
 .gi-pillarnav__item[aria-current="page"]::after { transform: scaleX(1); }
@@ -168,7 +177,7 @@ body { background: var(--surface); overflow-x: hidden; }
 .gi-drawer.is-open .gi-drawer__scrim { opacity: 1; }
 .gi-drawer.is-open .gi-drawer__panel { transform: translateX(0); }
 .gi-drawer__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
-.gi-drawer__head img { height: 22px; }
+.gi-drawer__head img { height: 40px; }
 .gi-drawer__links { display: flex; flex-direction: column; }
 .gi-drawer__links a {
   padding: 14px 4px; border-bottom: 1px solid var(--line); text-decoration: none;
@@ -357,12 +366,21 @@ body { background: var(--surface); overflow-x: hidden; }
   max-width: var(--container); margin-inline: auto; padding: 28px var(--gutter);
   display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
 }
-.gi-footer__bar img { height: 20px; width: auto; }
+.gi-footer__bar img { height: 36px; width: auto; }
 .gi-footer__tag { font-family: var(--font-condensed); font-size: 12px; letter-spacing: var(--ls-wider); text-transform: uppercase; color: var(--on-night-muted); }
 .gi-footer__pillars { display: flex; gap: 18px; font-family: var(--font-condensed); font-weight: 600; font-size: 12px; letter-spacing: var(--ls-wide); text-transform: uppercase; }
 .gi-footer__pillars a { color: var(--on-night-2); text-decoration: none; }
 .gi-footer__pillars a:hover { color: #fff; }
 .gi-footer__copy { font-family: var(--font-mono); font-size: 10.5px; color: var(--on-night-muted); margin-left: auto; }
+.gi-footer__group {
+  max-width: var(--container); margin-inline: auto; padding: 14px var(--gutter);
+  border-top: 1px solid rgba(255,255,255,.08);
+  display: flex; justify-content: flex-end;
+}
+.gi-footer__group-link { display: inline-flex; align-items: center; gap: 14px; text-decoration: none; opacity: 1; transition: opacity .15s; }
+.gi-footer__group-link:hover { opacity: .8; }
+.gi-footer__group-text { font-family: var(--font-condensed); font-size: 13px; font-weight: 600; letter-spacing: var(--ls-wider); text-transform: uppercase; color: var(--on-night-muted); }
+.gi-footer__group-logo { height: 46px; width: auto; }
 
 /* ============================================================
    GRIDS
@@ -491,7 +509,9 @@ body { background: var(--surface); overflow-x: hidden; }
      <=1100  small laptop / tablet landscape — narrow the rail
      <=900   tablet portrait + foldables opened (Fold inner ~673px)
              — stack; a 300px rail next to a 400px column reads worse
-             than one full-width column
+             than one full-width column. Also where the pillar nav hands
+             over to the drawer: six entries below this either crowd or
+             get clipped away by their own scroll container
      <=720   phones (the original 390px mobile spec)
      <=380   very small phones and folded cover screens
              (Galaxy Fold 280px, Z Fold cover ~344px)
@@ -501,6 +521,15 @@ body { background: var(--surface); overflow-x: hidden; }
   .gi-megamenu__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
   .gi-megamenu__trending { grid-column: 1 / -1; }
 
+  /* Six pillar entries no longer fit at full size between the logo and the
+     search/menu buttons; tightening them keeps the whole row on screen down to
+     the 900px breakpoint where the nav gives way to the drawer. The logo grew
+     to 44px (from 24px) for brand visibility, which eats further into this
+     same row — 8px/12.5px instead of the previous 11px/13px is what keeps
+     901px, the narrowest width the nav still shows at, clipping-free. */
+  .gi-pillarnav__item { padding: 0 8px; font-size: 12.5px; }
+  .gi-pillarnav__item::after { left: 8px; right: 8px; }
+
   .gi-rail-layout { grid-template-columns: minmax(0, 1fr) 300px; gap: 24px; }
   .gi-pillar-layout { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); }
   .gi-grid-4 { grid-template-columns: repeat(3, 1fr); }
@@ -509,6 +538,16 @@ body { background: var(--surface); overflow-x: hidden; }
 @media (max-width: 900px) {
   .gi-megamenu__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
+  /* The pillar row gives way to the drawer here, not at 720px. Six entries
+     only fit below this by shrinking the type until it reads as cramped —
+     and on the width where they stop fitting at all, the scroll container
+     hides the last ones with no scrollbar to hint at them, so Tech and
+     Entertainment simply vanish from the header. The drawer lists all six,
+     and on the front page so does the pillar row beneath the header. */
+  .gi-header__nav-wrap { display: none; }
+  .gi-nav-toggle { display: inline-flex; }
+  .gi-header__logo { margin-right: auto; }
+
   .gi-rail-layout,
   .gi-pillar-layout { grid-template-columns: minmax(0, 1fr); gap: 24px; }
   .gi-grid-4 { grid-template-columns: repeat(2, 1fr); }
@@ -516,11 +555,9 @@ body { background: var(--surface); overflow-x: hidden; }
 }
 
 @media (max-width: 720px) {
-  .gi-header__nav-wrap { display: none; }
-  .gi-nav-toggle { display: inline-flex; }
   .gi-header__bar { height: 56px; padding-inline: 14px; gap: 8px; }
   .gi-header__logo { flex: 1; justify-content: center; }
-  .gi-header__logo img { height: 20px; }
+  .gi-header__logo img { height: 36px; }
 
   .gi-grid-2, .gi-grid-3, .gi-grid-4 { grid-template-columns: 1fr 1fr; gap: 14px; }
   .gi-grid-5 { grid-template-columns: repeat(2, 1fr); gap: 10px; }
@@ -544,6 +581,7 @@ body { background: var(--surface); overflow-x: hidden; }
   .gi-footer__copy { margin-left: 0; }
   .gi-footer__pillars { display: flex; flex-wrap: wrap; gap: 10px 18px; width: 100%; }
   .gi-footer__tag { font-size: 11px; }
+  .gi-footer__group { justify-content: flex-start; padding: 12px 14px; }
 }
 
 /* Very small phones and folded cover screens. Two cards side by side leaves
@@ -554,7 +592,7 @@ body { background: var(--surface); overflow-x: hidden; }
   .gi-grid-5 { grid-template-columns: 1fr 1fr; }
 
   .gi-header__bar { height: 52px; padding-inline: 10px; }
-  .gi-header__logo img { height: 18px; }
+  .gi-header__logo img { height: 32px; }
 
   .gi-card--h { grid-template-columns: 78px 1fr; gap: 10px; }
   .gi-card--h .gi-card__title { font-size: 13.5px; }

@@ -31,10 +31,14 @@ Jika WordPress sudah terpasang, lanjut ke langkah 2.
 1. wp-admin → **Plugin → Tambah Plugin Baru → Unggah Plugin**.
 2. Pilih `gameindo-core-plugin.zip` → **Pasang Sekarang** → **Aktifkan**.
 
-Saat aktif, plugin otomatis membuat 5 kategori pilar dengan slug tetap:
-`home` (Video Game), `esports`, `streamer`, `tech`, `entertainment`.
-**Nama boleh diubah; slug jangan diubah** — slug inilah yang mengendalikan
-warna tiap pilar.
+Saat aktif, plugin otomatis membuat kategori pilar dengan slug tetap:
+`video-games` (Video Games), `esports`, `streamer`, `tech`, `entertainment`,
+ditambah `home` (Video Game) — slug lama yang dipakai artikel-artikel sebelum
+pilar Video Games ada. **Nama boleh diubah; slug jangan diubah** — slug inilah
+yang mengendalikan warna tiap pilar.
+
+Kalau plugin sudah aktif sejak sebelum ada pilar Video Games, tema membuat
+kategori yang kurang saat pertama kali dimuat — tidak ada langkah manual.
 
 ## 3. Pasang & aktifkan tema GameIndo
 
@@ -204,6 +208,82 @@ LoL, DotA 2, Overwatch**.
   Overwatch**) menyaring **panel Jadwal saja**; daftar artikel di bawahnya tetap
   seluruh artikel pilar Esports. Filter tersimpan di URL (`?game=csgo`) jadi bisa
   dibagikan.
+- **Panel Jadwal bisa digulir.** Isinya sampai 20 pertandingan, tapi tingginya
+  dibatasi agar sejajar dengan artikel utama di sebelahnya — jadi halaman tidak
+  memanjang ke bawah dan tidak menyisakan area kosong. Judul hari ikut menempel
+  di atas saat digulir, jadi Anda selalu tahu baris itu hari apa. Di ponsel
+  batasnya mengecil mengikuti tinggi layar.
+
+### Pilar Video Games
+Menu header kini punya entri **Video Games** dengan halamannya sendiri di
+`/category/video-games/`. Halaman itu tidak menunggu Anda memindahkan artikel:
+isinya dirakit dari tiga sumber sekaligus —
+
+1. kategori **Video Games** (apa pun yang Anda taruh di sana selalu masuk),
+2. kategori lama **Video Game** (`home`), yaitu liputan game yang sudah ada, dan
+3. **artikel konsol/handheld dari pilar lain** — misalnya ulasan ROG Ally yang
+   terlanjur masuk Tech.
+
+Yang jadi *headline* halaman adalah artikel konsol terbaru, sesuai fokus pilar
+ini. Chip **Semua / PS5 / PC / Xbox / Switch** menyaring halaman lewat URL
+(`?platform=ps5`) jadi bisa dibagikan. Kalau sebuah chip masih kosong, itu
+berarti belum ada artikel yang menyebut platform itu — halamannya menampilkan
+pesan dan tautan kembali ke Semua, bukan halaman kosong.
+
+### Panel "Rilis Mendatang" (RAWG)
+Di halaman Video Games, panel kanan menampilkan game yang akan rilis beberapa
+bulan ke depan, diurutkan dari yang paling dekat, lengkap dengan hitungan
+mundur. Datanya dari **RAWG**.
+
+1. Ambil API key gratis di [rawg.io/apidocs](https://rawg.io/apidocs).
+2. wp-admin → **GameIndo → RAWG** → tempel key → Simpan.
+
+Tiap baris bisa diklik: ke **situs resmi game** kalau RAWG tahu alamatnya,
+kalau belum ke halaman game di RAWG. Nama tujuannya dicetak kecil di sebelah
+tanda ↗ supaya pembaca tahu ke mana perginya, dan semuanya terbuka di tab baru.
+Situs resmi terisi bertahap — tiap penyegaran menaikkan beberapa judul dan
+hasilnya disimpan seminggu, jadi tidak ada lonjakan permintaan ke RAWG.
+
+**Kalau key dikosongkan, panelnya tidak muncul** dan halaman kembali memakai
+panel *Terpopuler* seperti sebelumnya — jadi ini aman dipasang lebih dulu dan
+diisi belakangan. Chip platform ikut menyaring panelnya. Kalau RAWG sedang mati,
+yang tampil daftar terakhir yang tersimpan, bukan panel kosong.
+
+Penentuan konsol/handheld dibaca dari **judul, ringkasan, subkategori, tag, dan
+kategori** — bukan isi artikel, supaya satu penyebutan di tengah tulisan tidak
+memindahkan artikel ke pilar lain. Mau menambah kata kunci (konsol baru, merek
+handheld baru)? Filter di `functions.php`:
+
+```php
+add_filter( 'gameindo_game_platforms', function ( $groups ) {
+    $groups['konsol']['keywords'][] = 'steam machine';
+    return $groups;
+} );
+```
+
+Artikel lama berkategori **Video Game** tetap di tempatnya dan tetap berwarna
+merah — di situs, keduanya tampil sebagai satu pilar **Video Games**. Kalau
+mau merapikan, cukup pindahkan artikelnya ke kategori Video Games; tampilannya
+tidak berubah.
+
+#### Apa yang terjadi pada menu Anda saat pembaruan
+Menu yang sudah Anda atur di **Tampilan → Menu** menang atas nav otomatis, jadi
+tema merapikannya sendiri **satu kali** saat pertama dimuat setelah pembaruan:
+
+| Menu | Yang terjadi |
+|---|---|
+| **Pilar Utama** (header) | Item **Video Games** ditambahkan tepat setelah "Home" |
+| **Menu Mobile** (drawer) | Ditambahkan di antara pilar — item ekor seperti "Cari" tetap paling bawah |
+| **Footer** | Item lama **Video Game** *diarahkan ulang* ke kategori Video Games, bukan ditambahi entri kedua |
+
+Ini **item menu sungguhan**: bisa Anda urutkan ulang, ganti namanya, atau hapus
+dari wp-admin seperti item lain. Karena hanya berjalan sekali, kalau Anda
+menghapusnya ia tidak akan muncul lagi. Label yang sudah Anda tulis sendiri di
+item footer tidak diubah — yang diganti hanya kalau labelnya masih "Video Game"
+bawaan.
+
+Kalau lokasi menunya belum diatur sama sekali, tidak ada yang ditulis: nav
+otomatis memang sudah memuat Video Games.
 
 ### Cara kerja rail "Terpopuler"
 Aturannya sederhana dan bisa diprediksi:
@@ -232,12 +312,73 @@ peran/jabatan, jumlah artikel, sejak tahun, dibaca/bulan.
 - **Tampilan → Menu** untuk mengatur menu Header/Footer/Drawer. Tambahkan
   kategori, halaman, atau tautan khusus. Nav pilar tetap berwarna otomatis.
 
+### SEO (bawaan tema — tidak perlu plugin untuk mulai)
+Tema sudah mencetak sendiri, di setiap halaman, tanpa perlu diatur:
+- **Meta tag**: `<title>`, `description`, `keywords`, `author`, `publisher`,
+  `canonical`, `robots`.
+- **Open Graph + Twitter Card** lengkap (`article:author`/`article:publisher`
+  di artikel) — tautan yang dibagikan ke Facebook/Twitter/WhatsApp tampil
+  dengan judul, ringkasan, dan gambar yang benar.
+- **JSON-LD** (`Organization`, `WebSite`, `NewsArticle` di tiap artikel) —
+  dibaca Google untuk kartu artikel & breadcrumb di hasil pencarian.
+- **`robots.txt`** (`gameindo.com/robots.txt`) — meng-*allow* Googlebot,
+  Bingbot, dan crawler AI utama (GPTBot, ClaudeBot, Google-Extended,
+  PerplexityBot, dll.) secara eksplisit, plus baris `Sitemap:`.
+- **Sitemap XML** — sitemap bawaan WordPress sendiri (`/wp-sitemap.xml`,
+  aktif otomatis sejak WP 5.5, tanpa plugin), dengan alias di
+  `gameindo.com/sitemap.xml` supaya URL konvensionalnya juga jalan. Artikel
+  baru otomatis muncul, terpisah per kategori/pilar, dan tanggal
+  `lastmod`-nya berubah sendiri begitu artikel diedit — tidak perlu diatur.
+
+Kalau nanti **Yoast SEO / Rank Math / All in One SEO / SEOPress** dipasang
+dan diaktifkan, tema otomatis mendeteksinya dan **mematikan seluruh output
+SEO-nya sendiri** (termasuk robots.txt dan alias sitemap) — tidak akan ada
+tag ganda atau bentrok, tinggal pasang plugin dan atur dari sana seperti
+biasa. Yang belum ada di sini (dan baru datang kalau plugin SEO dipasang):
+editor meta title/description manual per-artikel di luar ringkasan editor.
+
+**Submit sitemap ke Google Search Console**: gunakan URL
+`https://gameindo.com/wp-sitemap.xml` (bukan `/sitemap.xml`) saat submit di
+Search Console — itu lokasi sitemap yang sebenarnya; `/sitemap.xml` cuma
+alias yang mengarah ke sana.
+
+### Analytics & Search Console (bawaan tema, tanpa plugin)
+**GameIndo → Analytics** di wp-admin: tiga kolom independen, isi yang
+relevan saja.
+- **Container ID GTM** (`GTM-XXXXXXX`) — memasang Google Tag Manager. Tag
+  apa pun (GA4, Meta Pixel, dll.) lalu diatur di dashboard
+  tagmanager.google.com, tanpa upload tema ulang tiap kali menambah tag baru
+  (tinggal **Submit → Publish** di sana).
+- **Measurement ID GA4** (`G-XXXXXXXXXX`) — memasang GA4 langsung
+  (`gtag.js` resmi Google), tanpa perlu menyentuh dashboard GTM sama sekali.
+  Paling cepat kalau cuma butuh GA4.
+- **Kode verifikasi Search Console** — membuktikan kepemilikan domain ke
+  Google. Dari Search Console → Tambahkan properti → Awalan URL → metode
+  **Tag HTML** → salin nilai `content="…"`-nya (boleh juga tempel string
+  utuh `google-site-verification=…`, keduanya diterima).
+
+**Jangan isi GTM dan GA4 keduanya untuk properti GA4 yang sama** — kalau
+Measurement ID GA4 di atas terisi, dan *nanti* sebuah tag GA4 Configuration
+untuk properti yang sama juga ditambahkan di dalam GTM, setiap pageview
+tercatat dua kali. Pilih satu jalur untuk satu properti GA4.
+
+Belum punya akun GTM/GA4/Search Console? Halaman **GameIndo → Analytics**
+itu sendiri berisi langkah-langkah lengkap untuk ketiganya. Kalau plugin
+analytics lain (Site Kit, GTM4WP, MonsterInsights, dsb.) sedang aktif,
+GTM/GA4 tema otomatis mengalah dan tidak memasang snippetnya sendiri,
+supaya tidak ada tag dobel — kode verifikasi Search Console tetap tayang
+terus karena itu bukan tag SEO yang bisa bentrok.
+
 ---
 
 ## Langkah berikutnya (go-live & Google)
 
-Setelah situs live di domain, tahap SEO berikutnya (akan kita kerjakan terpisah):
-- Pasang plugin SEO (mis. Yoast/Rank Math) untuk meta title/description & sitemap XML.
+Setelah situs live di domain:
+- (Opsional) Pasang plugin SEO (mis. Yoast/Rank Math) kalau butuh sitemap XML
+  atau ingin menulis meta title/description manual per-artikel — tema akan
+  otomatis mengalah begitu plugin itu aktif (lihat bagian SEO di atas).
+- Isi Container ID di **GameIndo → Analytics** untuk mengaktifkan Google Tag
+  Manager (lihat bagian Analytics di atas untuk langkah bikin akun GTM/GA4).
 - Daftarkan situs ke **Google Search Console** dan kirim sitemap.
 - Siapkan otomasi produksi artikel (via REST API / wp-cli / plugin) dengan
   keyword sesuai pilar — model kontennya sudah siap untuk itu.

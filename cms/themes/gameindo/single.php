@@ -54,13 +54,16 @@ while ( have_posts() ) :
 
     <?php if ( has_post_thumbnail() ) : ?>
     <figure class="gi-article-media" id="gi-article-media">
-      <?php the_post_thumbnail( 'gameindo-hero', array( 'alt' => gameindo_image_alt( $gi_id ) ) ); ?>
+      <?php the_post_thumbnail( 'gameindo-hero', array( 'alt' => gameindo_image_alt( $gi_id ), 'data-gi-fallback' => gameindo_placeholder_url() ) ); ?>
       <?php if ( $gi_caption ) : ?><figcaption><?php echo esc_html( $gi_caption ); ?></figcaption><?php endif; ?>
     </figure>
     <?php endif; ?>
 
     <div class="gi-article-body">
-      <div id="gi-article-body"><?php the_content(); ?></div>
+      <div id="gi-article-body" class="gi-prose"><?php
+      $gi_body = apply_filters( 'the_content', get_the_content( null, false, $gi_id ) );
+      echo gameindo_dedupe_featured_image_from_content( $gi_body, $gi_id ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+      ?></div>
       <?php
       $gi_tags = get_the_tags();
       if ( $gi_tags ) : ?>
