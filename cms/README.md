@@ -251,7 +251,36 @@ cms/
   lalu ke logo situs. Canonical membuang query pemfilteran (`?platform=`,
   `?game=`) supaya varian terfilter satu arsip tidak dianggap konten duplikat
   — halamannya tetap `index,follow`, cuma dikanonikalkan; hanya hasil
-  pencarian yang `noindex,follow`. Font Google (`gameindo_fonts_url()`) dan
+  pencarian yang `noindex,follow`. Juga mencetak `<meta name="author">`,
+  `<meta name="keywords">` (dari tag/subkategori/pilar artikel — sumbernya
+  taksonomi asli, bukan mengarang; Google/Bing sendiri sudah mengabaikan tag
+  ini untuk peringkat sejak ~2009, tapi beberapa alat audit SEO masih
+  mengeceknya, dan tag yang benar-tapi-tidak-berpengaruh tidak merugikan),
+  `<meta name="publisher">`, serta `article:author`/`article:publisher` OG
+  untuk artikel. Separator judul (`document_title_separator`) diganti jadi
+  em dash (`—`) supaya senada dengan tipografi judul di tempat lain situs.
+  **`robots.txt`** (filter `robots_txt`) secara eksplisit meng-*allow*
+  Googlebot/Bingbot (lewat wildcard `User-agent: *`) **dan** crawler
+  AI/answer-engine utama (GPTBot, ChatGPT-User, OAI-SearchBot,
+  Google-Extended, ClaudeBot, anthropic-ai, PerplexityBot, CCBot,
+  Applebot-Extended) satu per satu — supaya niat situs untuk di-crawl dan
+  dikutip mesin AI itu eksplisit, bukan cuma "kebetulan tidak diblokir".
+  Hasil pencarian **sengaja tidak** di-*disallow* di robots.txt meski
+  `noindex` — men-block sekaligus mengandalkan `noindex` adalah jebakan SEO
+  klasik: kalau di-block, Google tidak pernah mengambil halamannya sama
+  sekali, jadi tidak pernah melihat tag `noindex`-nya, dan URL itu bisa
+  tetap muncul di hasil pencarian tanpa cuplikan berdasarkan tautan yang
+  mengarah ke sana. **`/sitemap.xml`** (hook `template_redirect`) me-301
+  ke `/wp-sitemap.xml` — sitemap XML bawaan WordPress sendiri (aktif
+  default sejak WP 5.5, tanpa plugin), yang sudah otomatis memenuhi semua
+  yang biasanya diminta: artikel baru langsung muncul (berbasis query, bukan
+  file cache), terpisah per jenis konten **dan** per taksonomi (jadi pilar —
+  yang memang kategori — dapat sub-sitemap sendiri), dan `<lastmod>` dibaca
+  langsung dari `post_modified_gmt` sehingga berubah begitu artikel diedit.
+  Ketiga tambahan ini (robots.txt, alias sitemap, separator judul) sama-sama
+  mengalah kalau `gameindo_seo_active()` mati (plugin SEO aktif), dan
+  robots.txt/sitemap juga menghormati pengaturan "Discourage search
+  engines" WordPress sendiri kalau itu dicentang. Font Google (`gameindo_fonts_url()`) dan
   `preconnect` ke `fonts.googleapis.com`/`fonts.gstatic.com` (filter
   `wp_resource_hints`) dipisah dari `main.css` supaya tidak ada rantai
   `@import` berurutan yang menunda render — dan slide pertama hero beranda

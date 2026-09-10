@@ -314,17 +314,33 @@ peran/jabatan, jumlah artikel, sejak tahun, dibaca/bulan.
 
 ### SEO (bawaan tema — tidak perlu plugin untuk mulai)
 Tema sudah mencetak sendiri, di setiap halaman, tanpa perlu diatur:
-meta description, `canonical`, `robots`, Open Graph + Twitter Card (jadi
-tautan yang dibagikan ke Facebook/Twitter/WhatsApp tampil dengan judul,
-ringkasan, dan gambar yang benar), serta data terstruktur JSON-LD
-(`Organization`, `WebSite`, dan `NewsArticle` di tiap artikel — ini yang
-dibaca Google untuk kartu artikel & breadcrumb di hasil pencarian).
+- **Meta tag**: `<title>`, `description`, `keywords`, `author`, `publisher`,
+  `canonical`, `robots`.
+- **Open Graph + Twitter Card** lengkap (`article:author`/`article:publisher`
+  di artikel) — tautan yang dibagikan ke Facebook/Twitter/WhatsApp tampil
+  dengan judul, ringkasan, dan gambar yang benar.
+- **JSON-LD** (`Organization`, `WebSite`, `NewsArticle` di tiap artikel) —
+  dibaca Google untuk kartu artikel & breadcrumb di hasil pencarian.
+- **`robots.txt`** (`gameindo.com/robots.txt`) — meng-*allow* Googlebot,
+  Bingbot, dan crawler AI utama (GPTBot, ClaudeBot, Google-Extended,
+  PerplexityBot, dll.) secara eksplisit, plus baris `Sitemap:`.
+- **Sitemap XML** — sitemap bawaan WordPress sendiri (`/wp-sitemap.xml`,
+  aktif otomatis sejak WP 5.5, tanpa plugin), dengan alias di
+  `gameindo.com/sitemap.xml` supaya URL konvensionalnya juga jalan. Artikel
+  baru otomatis muncul, terpisah per kategori/pilar, dan tanggal
+  `lastmod`-nya berubah sendiri begitu artikel diedit — tidak perlu diatur.
+
 Kalau nanti **Yoast SEO / Rank Math / All in One SEO / SEOPress** dipasang
 dan diaktifkan, tema otomatis mendeteksinya dan **mematikan seluruh output
-SEO-nya sendiri** — tidak akan ada tag ganda atau bentrok, tinggal pasang
-plugin dan atur dari sana seperti biasa. Yang belum dicetak tema (dan baru
-datang dari plugin SEO bila dipasang): **sitemap XML** dan editor meta
-title/description manual per-artikel di luar ringkasan editor.
+SEO-nya sendiri** (termasuk robots.txt dan alias sitemap) — tidak akan ada
+tag ganda atau bentrok, tinggal pasang plugin dan atur dari sana seperti
+biasa. Yang belum ada di sini (dan baru datang kalau plugin SEO dipasang):
+editor meta title/description manual per-artikel di luar ringkasan editor.
+
+**Submit sitemap ke Google Search Console**: gunakan URL
+`https://gameindo.com/wp-sitemap.xml` (bukan `/sitemap.xml`) saat submit di
+Search Console — itu lokasi sitemap yang sebenarnya; `/sitemap.xml` cuma
+alias yang mengarah ke sana.
 
 ### Analytics (Google Tag Manager + GA4 — bawaan tema, tanpa plugin)
 **GameIndo → Analytics** di wp-admin: dua kolom independen, isi salah satu

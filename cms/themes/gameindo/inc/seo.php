@@ -129,6 +129,53 @@ function gameindo_seo_robots() {
 }
 
 /**
+ * The byline for the current page — a real person for an article, the site
+ * itself everywhere else. Same value backs <meta name="author">, twitter's
+ * byline convention, and (for articles) article:author.
+ */
+function gameindo_seo_author_name() {
+	if ( is_singular( 'post' ) ) {
+		return get_the_author_meta( 'display_name', get_post_field( 'post_author', get_the_ID() ) );
+	}
+	if ( is_author() ) {
+		return get_the_author_meta( 'display_name', get_queried_object_id() );
+	}
+	return get_bloginfo( 'name' );
+}
+
+/**
+ * Comma-separated topical keywords. Google and Bing have both ignored this
+ * tag for ranking since ~2009 — it's included because some SEO checklists
+ * and third-party audit tools still look for it, and a correct-but-inert
+ * tag costs nothing. Sourced from real taxonomy (tags/subcategory/pillar),
+ * never invented, so it can't drift out of sync with the actual content.
+ */
+function gameindo_seo_keywords() {
+	if ( is_singular( 'post' ) ) {
+		$id  = get_the_ID();
+		$kws = array();
+		$sub = gameindo_meta( $id, 'subcategory' );
+		if ( $sub ) {
+			$kws[] = $sub;
+		}
+		$kws[] = gameindo_pillar_name( gameindo_get_pillar( $id ) );
+		foreach ( (array) get_the_tags( $id ) as $gi_tag ) {
+			$kws[] = $gi_tag->name;
+		}
+		$kws[] = get_bloginfo( 'name' );
+		return implode( ', ', array_unique( array_filter( $kws ) ) );
+	}
+	if ( is_category() || is_tag() || is_tax() ) {
+		$obj  = get_queried_object();
+		$name = ( $obj && isset( $obj->name ) ) ? $obj->name : single_cat_title( '', false );
+		return implode( ', ', array_filter( array( $name, get_bloginfo( 'name' ) ) ) );
+	}
+	$kws = array_values( gameindo_nav_pillars() );
+	$kws[] = get_bloginfo( 'name' );
+	return implode( ', ', $kws );
+}
+
+/**
  * Print the description, OG, Twitter, canonical, and robots tags.
  */
 function gameindo_seo_meta_tags() {
@@ -146,8 +193,17 @@ function gameindo_seo_meta_tags() {
 		$title = get_bloginfo( 'name' ) . ' — ' . get_bloginfo( 'description' );
 	}
 
+	$author   = gameindo_seo_author_name();
+	$keywords = gameindo_seo_keywords();
+	$img_alt  = $is_article ? gameindo_image_alt( get_the_ID() ) : get_bloginfo( 'name' );
+
 	echo "\n<!-- GameIndo SEO -->\n";
 	echo '<meta name="description" content="' . esc_attr( $description ) . "\">\n";
+	if ( $keywords ) {
+		echo '<meta name="keywords" content="' . esc_attr( $keywords ) . "\">\n";
+	}
+	echo '<meta name="author" content="' . esc_attr( $author ) . "\">\n";
+	echo '<meta name="publisher" content="' . esc_attr( get_bloginfo( 'name' ) ) . "\">\n";
 	echo '<meta name="robots" content="' . esc_attr( $robots ) . "\">\n";
 	echo '<link rel="canonical" href="' . esc_url( $canonical ) . "\">\n";
 
@@ -160,11 +216,15 @@ function gameindo_seo_meta_tags() {
 	echo '<meta property="og:image" content="' . esc_url( $image ) . "\">\n";
 	echo '<meta property="og:image:width" content="' . (int) $img_w . "\">\n";
 	echo '<meta property="og:image:height" content="' . (int) $img_h . "\">\n";
+	echo '<meta property="og:image:alt" content="' . esc_attr( $img_alt ) . "\">\n";
 
 	if ( $is_article ) {
+		$gi_id = get_the_ID();
 		echo '<meta property="article:published_time" content="' . esc_attr( get_the_date( 'c' ) ) . "\">\n";
 		echo '<meta property="article:modified_time" content="' . esc_attr( get_the_modified_date( 'c' ) ) . "\">\n";
-		$pillar = gameindo_get_pillar( get_the_ID() );
+		echo '<meta property="article:author" content="' . esc_url( get_author_posts_url( get_post_field( 'post_author', $gi_id ) ) ) . "\">\n";
+		echo '<meta property="article:publisher" content="' . esc_url( home_url( '/' ) ) . "\">\n";
+		$pillar = gameindo_get_pillar( $gi_id );
 		echo '<meta property="article:section" content="' . esc_attr( gameindo_pillar_name( $pillar ) ) . "\">\n";
 		foreach ( (array) get_the_tags() as $gi_tag ) {
 			echo '<meta property="article:tag" content="' . esc_attr( $gi_tag->name ) . "\">\n";
@@ -243,3 +303,87 @@ function gameindo_seo_json_ld() {
 		. "</script>\n";
 }
 add_action( 'wp_head', 'gameindo_seo_json_ld', 2 );
+
+/**
+ * "Post Title — GameIndo" instead of WP's default "Post Title - GameIndo" —
+ * matches the em dash used in headlines/titles everywhere else on the site.
+ * Purely cosmetic; WP's own title/site-name ordering (title first, brand
+ * last) already follows current best practice, so nothing else here changes.
+ */
+function gameindo_seo_title_separator( $sep ) {
+	return gameindo_seo_active() ? '—' : $sep;
+}
+add_filter( 'document_title_separator', 'gameindo_seo_title_separator' );
+
+/**
+ * robots.txt: an explicit, deliberate allow for search engines and the major
+ * AI/answer-engine crawlers — GameIndo wants to be crawled and cited by
+ * them, not just left un-blocked by omission — on top of the one thing
+ * every site should keep out, /wp-admin/. Deferred if an SEO plugin is
+ * active (those all ship their own robots.txt editor — two rewrites of the
+ * same file is worse than one) and if the site's own "discourage search
+ * engines" setting is on ($public === false): that's a deliberate
+ * site-owner choice this shouldn't override.
+ *
+ * Search results are intentionally NOT disallowed here even though they're
+ * noindex — see gameindo_seo_robots(). Blocking a URL in robots.txt AND
+ * relying on its meta robots tag to keep it out of the index is a classic
+ * SEO foot-gun: a blocked page is never fetched, so Google never sees the
+ * noindex tag and can still index the bare URL from links pointing to it,
+ * usually with no snippet. Letting it be crawled is what makes the noindex
+ * tag actually work.
+ */
+function gameindo_seo_robots_txt( $output, $public ) {
+	if ( ! gameindo_seo_active() || ! $public ) {
+		return $output;
+	}
+
+	$lines   = array( 'User-agent: *', 'Disallow: /wp-admin/', 'Allow: /wp-admin/admin-ajax.php', '' );
+	$ai_bots = array(
+		'GPTBot',
+		'ChatGPT-User',
+		'OAI-SearchBot',
+		'Google-Extended',
+		'ClaudeBot',
+		'anthropic-ai',
+		'PerplexityBot',
+		'CCBot',
+		'Applebot-Extended',
+	);
+	foreach ( $ai_bots as $bot ) {
+		$lines[] = 'User-agent: ' . $bot;
+		$lines[] = 'Allow: /';
+		$lines[] = '';
+	}
+	$lines[] = 'Sitemap: ' . home_url( '/wp-sitemap.xml' );
+
+	return implode( "\n", $lines ) . "\n";
+}
+add_filter( 'robots_txt', 'gameindo_seo_robots_txt', 10, 2 );
+
+/**
+ * /sitemap.xml is the URL every SEO tool, backlink checker, and habit
+ * expects; WordPress core's own sitemap — on by default since WP 5.5, no
+ * plugin needed, and already exactly what was asked for (new posts appear
+ * automatically because it's query-driven rather than a cached file, it's
+ * split by post type *and* taxonomy so pillars — which are categories —
+ * get their own sub-sitemap, and <lastmod> reads straight from
+ * post_modified_gmt so it changes the moment a post is edited) — lives at
+ * /wp-sitemap.xml instead. This 301-redirects the conventional path to it,
+ * so either URL works and crawlers that follow the redirect index the
+ * canonical one. Deferred if an SEO plugin is active: those disable WP's
+ * native sitemap and serve their own, often at this exact path, so forcing
+ * this redirect on top of that would send crawlers to a sitemap the plugin
+ * turned off.
+ */
+function gameindo_seo_sitemap_alias() {
+	if ( ! gameindo_seo_active() ) {
+		return;
+	}
+	$path = trim( (string) wp_parse_url( (string) ( $_SERVER['REQUEST_URI'] ?? '' ), PHP_URL_PATH ), '/' );
+	if ( 'sitemap.xml' === $path ) {
+		wp_safe_redirect( home_url( '/wp-sitemap.xml' ), 301 );
+		exit;
+	}
+}
+add_action( 'template_redirect', 'gameindo_seo_sitemap_alias' );
