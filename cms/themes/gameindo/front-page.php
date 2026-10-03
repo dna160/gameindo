@@ -35,7 +35,16 @@ if ( ! $gi_featured && ! empty( $gi_all ) ) {
 }
 $gi_featured_pillar = $gi_featured ? gameindo_get_pillar( $gi_featured->ID ) : '';
 
+// Hero side: upcoming game releases (RAWG) lead when there's data to show —
+// same opt-in, degrade-gracefully contract as the Video Games pillar page's
+// panel (gameindo_upcoming_games() returns an empty array without a RAWG
+// key, or if the API is down). Falls back to the old spotlight-trending
+// cards when there's nothing to show, so an unconfigured key never produces
+// an empty box.
+$gi_releases = gameindo_upcoming_games( array( 'limit' => 6 ) );
+
 // Hero side trending: spotlight from other pillars (2), else first two others.
+// Only actually used when $gi_releases is empty — see above.
 $gi_hero_trending = array();
 foreach ( $gi_spotlight as $gi_p ) {
 	if ( gameindo_get_pillar( $gi_p->ID ) !== $gi_featured_pillar ) {
@@ -81,6 +90,25 @@ foreach ( $gi_hero_slides as $gi_p ) {
 foreach ( $gi_hero_trending as $gi_p ) {
 	$gi_exclude[] = $gi_p->ID;
 }
+
+// Small news strip under the hero slider, filling the column down to the
+// side panel's height (see .gi-hero__more — it's a flex:1 cell, so however
+// tall the release/trending panel ends up, this grows to meet it instead of
+// leaving empty space below the slider). Excluded from every other rail
+// below so the same article never appears twice on the homepage.
+$gi_hero_more = array();
+foreach ( $gi_all as $gi_p ) {
+	if ( ! in_array( $gi_p->ID, $gi_exclude, true ) ) {
+		$gi_hero_more[] = $gi_p;
+	}
+	if ( count( $gi_hero_more ) >= 3 ) {
+		break;
+	}
+}
+foreach ( $gi_hero_more as $gi_p ) {
+	$gi_exclude[] = $gi_p->ID;
+}
+
 $gi_latest = array();
 foreach ( $gi_all as $gi_p ) {
 	if ( ! in_array( $gi_p->ID, $gi_exclude, true ) ) {
@@ -113,29 +141,53 @@ $gi_match_meta  = ( 1 === count( $gi_match_comps ) ) ? $gi_match_comps[0] : 'Jad
 <main>
   <section class="gi-hero" data-pillar="<?php echo esc_attr( $gi_featured_pillar ? $gi_featured_pillar : 'home' ); ?>">
     <div class="gi-hero__grid">
-      <div class="gi-hero-slider" id="gi-hero-slider" data-autoplay="6000">
-        <div class="gi-hero-slider__track" id="gi-hero-slider-track"><?php
-          // Only the first slide is the LCP image; the rest sit off-screen in
-          // the carousel until a reader clicks through, so they load lazily
-          // instead of competing with it for bandwidth.
-          $gi_slide_i = 0;
-          foreach ( $gi_hero_slides as $gi_sp ) {
-	          echo gameindo_feature( $gi_sp, array( 'eager' => 0 === $gi_slide_i ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-	          $gi_slide_i++;
+      <div class="gi-hero__main">
+        <div class="gi-hero-slider" id="gi-hero-slider" data-autoplay="6000">
+          <div class="gi-hero-slider__track" id="gi-hero-slider-track"><?php
+            // Only the first slide is the LCP image; the rest sit off-screen in
+            // the carousel until a reader clicks through, so they load lazily
+            // instead of competing with it for bandwidth.
+            $gi_slide_i = 0;
+            foreach ( $gi_hero_slides as $gi_sp ) {
+	            echo gameindo_feature( $gi_sp, array( 'eager' => 0 === $gi_slide_i ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+	            $gi_slide_i++;
+            }
+          ?></div>
+          <?php if ( count( $gi_hero_slides ) > 1 ) : ?>
+          <div class="gi-hero-slider__dots" id="gi-hero-slider-dots"></div>
+          <button type="button" class="gi-hero-slider__arrow gi-hero-slider__arrow--prev" data-slider-prev aria-label="Slide sebelumnya">‹</button>
+          <button type="button" class="gi-hero-slider__arrow gi-hero-slider__arrow--next" data-slider-next aria-label="Slide berikutnya">›</button>
+          <?php endif; ?>
+        </div>
+        <?php if ( ! empty( $gi_hero_more ) ) : ?>
+        <div class="gi-hero__more" id="gi-hero-more"><?php
+          foreach ( $gi_hero_more as $gi_p ) {
+	          echo gameindo_card( $gi_p, array( 'variant' => 'sm' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
           }
         ?></div>
-        <?php if ( count( $gi_hero_slides ) > 1 ) : ?>
-        <div class="gi-hero-slider__dots" id="gi-hero-slider-dots"></div>
-        <button type="button" class="gi-hero-slider__arrow gi-hero-slider__arrow--prev" data-slider-prev aria-label="Slide sebelumnya">‹</button>
-        <button type="button" class="gi-hero-slider__arrow gi-hero-slider__arrow--next" data-slider-next aria-label="Slide berikutnya">›</button>
         <?php endif; ?>
       </div>
       <div class="gi-hero__side" id="gi-hero-side">
+        <?php if ( ! empty( $gi_releases ) ) : ?>
+        <div class="gi-night-panel gi-night-panel--release">
+          <div class="gi-night-panel__head">
+            <span class="gi-night-panel__head-title">Rilis Mendatang</span>
+            <span class="gi-night-panel__head-meta">Semua Platform</span>
+          </div>
+          <div class="gi-release-list"><?php
+            foreach ( $gi_releases as $gi_rg ) {
+	            echo gameindo_release_row( $gi_rg ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+            }
+          ?></div>
+          <span class="gi-release__source">Data rilis: RAWG</span>
+        </div>
+        <?php else : ?>
         <div class="gi-hero__trending" id="gi-hero-trending"><?php
           foreach ( $gi_hero_trending as $gi_p ) {
 	          echo gameindo_card( $gi_p, array( 'variant' => 'h' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
           }
         ?></div>
+        <?php endif; ?>
         <?php if ( ! empty( $gi_matches ) ) : ?>
         <div class="gi-matchpanel" data-pillar="esports">
           <div class="gi-matchpanel__head">

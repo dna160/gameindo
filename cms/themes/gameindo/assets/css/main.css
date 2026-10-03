@@ -385,10 +385,17 @@ body { background: var(--surface); overflow-x: hidden; }
 /* ============================================================
    GRIDS
    ============================================================ */
-.gi-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-.gi-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-.gi-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
-.gi-grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+/* minmax(0, 1fr), not bare 1fr: a plain 1fr track has an implicit minimum of
+   "auto" (its content's own min-content width), so a grid item with enough
+   unbreakable text — a pillar tile's "1,167 artikel →", a long card title —
+   refuses to shrink with its column and overflows instead. body already
+   hides that overflow (overflow-x: hidden, above) so it never shows up as a
+   scrollbar; it shows up as silently clipped/cropped content at narrow
+   widths instead, which is worse because nothing hints it's happening. */
+.gi-grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.gi-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.gi-grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; }
+.gi-grid-5 { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; }
 .gi-stack { display: flex; flex-direction: column; gap: 14px; }
 
 /* ============================================================
@@ -532,7 +539,7 @@ body { background: var(--surface); overflow-x: hidden; }
 
   .gi-rail-layout { grid-template-columns: minmax(0, 1fr) 300px; gap: 24px; }
   .gi-pillar-layout { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); }
-  .gi-grid-4 { grid-template-columns: repeat(3, 1fr); }
+  .gi-grid-4 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 @media (max-width: 900px) {
@@ -550,8 +557,8 @@ body { background: var(--surface); overflow-x: hidden; }
 
   .gi-rail-layout,
   .gi-pillar-layout { grid-template-columns: minmax(0, 1fr); gap: 24px; }
-  .gi-grid-4 { grid-template-columns: repeat(2, 1fr); }
-  .gi-grid-5 { grid-template-columns: repeat(3, 1fr); }
+  .gi-grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .gi-grid-5 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 @media (max-width: 720px) {
@@ -559,8 +566,8 @@ body { background: var(--surface); overflow-x: hidden; }
   .gi-header__logo { flex: 1; justify-content: center; }
   .gi-header__logo img { height: 36px; }
 
-  .gi-grid-2, .gi-grid-3, .gi-grid-4 { grid-template-columns: 1fr 1fr; gap: 14px; }
-  .gi-grid-5 { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .gi-grid-2, .gi-grid-3, .gi-grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .gi-grid-5 { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .gi-card--sm.gi-grid-item-lead { grid-column: 1 / -1; }
 
   .gi-feature { height: 300px; }
@@ -588,8 +595,8 @@ body { background: var(--surface); overflow-x: hidden; }
    ~150px each, where a headline wraps to five lines — one column reads far
    better than two cramped ones. */
 @media (max-width: 380px) {
-  .gi-grid-2, .gi-grid-3, .gi-grid-4 { grid-template-columns: 1fr; gap: 16px; }
-  .gi-grid-5 { grid-template-columns: 1fr 1fr; }
+  .gi-grid-2, .gi-grid-3, .gi-grid-4 { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .gi-grid-5 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
   .gi-header__bar { height: 52px; padding-inline: 10px; }
   .gi-header__logo img { height: 32px; }

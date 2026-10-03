@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GAMEINDO_VERSION', '1.15.0' );
+define( 'GAMEINDO_VERSION', '1.16.0' );
 define( 'GAMEINDO_DIR', get_template_directory() );
 define( 'GAMEINDO_URI', get_template_directory_uri() );
 
@@ -284,7 +284,12 @@ function gameindo_assets() {
 	if ( is_singular( 'post' ) || is_page() ) {
 		wp_enqueue_style( 'gameindo-article', $css . '/article.css', array( 'gameindo-main' ), GAMEINDO_VERSION );
 	}
-	if ( is_category() || is_tag() || is_tax() || ( is_home() && ! is_front_page() ) ) {
+	if ( is_category() || is_tag() || is_tax() || ( is_home() && ! is_front_page() ) || is_front_page() ) {
+		// Also loaded on the front page for .gi-night-panel--release/.gi-release-*
+		// — the homepage hero's side panel reuses the exact same "Rilis
+		// Mendatang" widget the Video Games pillar page renders. Every other
+		// selector in this sheet (.gi-masthead, .gi-filters, …) targets markup
+		// that simply doesn't exist on the front page, so it's inert there.
 		wp_enqueue_style( 'gameindo-pillar', $css . '/pillar.css', array( 'gameindo-main' ), GAMEINDO_VERSION );
 	}
 	if ( is_author() ) {

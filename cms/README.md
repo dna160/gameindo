@@ -77,6 +77,30 @@ cms/
   dan judul yang belum terjangkau tetap punya tautan RAWG — panel tidak pernah
   tanpa tautan sambil terisi. Barisnya menyebut host tujuan sebelum diklik, sama
   seperti baris jadwal menyebut penyiarnya.
+- **Hero beranda — panel Rilis Mendatang di sisi slider juga.** Kolom kanan
+  hero (dulu 2 kartu "trending") sekarang memakai widget **Rilis Mendatang**
+  yang sama persis dengan halaman Video Games — `gameindo_upcoming_games()`
+  tanpa filter platform — dan jatuh ke kartu trending lama kalau RAWG kosong,
+  persis pola *opt-in, degradasi anggun* yang sama. `.gi-hero__main` adalah
+  wrapper baru yang menampung slider **dan** `.gi-hero__more` (3 kartu berita
+  kecil) — sebelum ini, kolom kiri hero cuma berisi slider yang tingginya
+  tetap (`.gi-feature { height:460px }`), sementara grid `.gi-hero__grid`
+  men-stretch BARIS ke tinggi kolom kanan yang lebih tinggi (panel rilis +
+  Jadwal Match bisa jauh lebih tinggi dari 460px) — sisa tingginya dulu cuma
+  kotak hitam kosong di bawah slider. `.gi-hero__more` adalah sel `flex:1`
+  yang mengisi persis sisa ruang itu dengan artikel nyata (bukan slider yang
+  di-stretch jadi lebih tinggi — itu akan meng-crop foto hero jauh lebih
+  agresif dari yang dimaksud). Tiga artikel yang dipakainya dikeluarkan dari
+  daftar exclude sebelum "Latest News" dihitung, jadi tidak ada artikel yang
+  tampil dua kali di beranda.
+- **`minmax(0, 1fr)`, bukan `1fr` polos, di semua `.gi-grid-*`.** Track grid
+  `1fr` punya minimum tersirat "auto" (lebar min-content kontennya sendiri) —
+  jadi kartu/tile dengan teks yang tidak bisa dipotong cukup panjang (mis.
+  tile pilar "1,167 artikel →") menolak menyusut bersama kolomnya dan meluber.
+  `body` sudah pakai `overflow-x:hidden` sehingga ini tidak pernah tampil sebagai
+  scrollbar — melubernya jadi **konten yang diam-diam terpotong** di lebar
+  sempit (≤380px, termasuk cover screen Galaxy Z Fold), yang lebih berbahaya
+  karena tidak ada petunjuk apa pun bahwa itu terjadi.
 - **Pilar baru masuk ke menu lewat dua jalur.** Menu yang diatur di Tampilan →
   Menu menang atas nav otomatis, jadi pilar yang lahir dari pembaruan tema tidak
   akan terlihat justru di situs yang mengikuti panduan pasang. (1)

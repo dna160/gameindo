@@ -58,8 +58,22 @@
 .gi-hero__side { display: flex; flex-direction: column; gap: 16px; }
 .gi-hero__trending { display: flex; flex-direction: column; gap: 12px; }
 
+/* .gi-hero__main holds the slider plus the "more news" strip beneath it.
+   The grid row above is as tall as the taller column — usually the side
+   panel, once it's carrying a release list or a full match panel — and
+   without this wrapper the slider (a fixed height, see .gi-feature) just
+   sat at the top of that row with the leftover height showing as empty
+   space below it. .gi-hero__more is the flex:1 cell that actually fills
+   that space, rather than stretching the slider image itself taller
+   (which would crop hero photos far more aggressively than intended). */
+.gi-hero__main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.gi-hero__more {
+  flex: 1; min-height: 0; align-content: center;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px;
+}
+
 /* ---- Hero slider (auto-advancing latest-articles carousel) ---- */
-.gi-hero-slider { position: relative; min-width: 0; align-self: start; }
+.gi-hero-slider { position: relative; min-width: 0; }
 .gi-hero-slider__track {
   display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth;
   scrollbar-width: none; border-radius: var(--radius-md); height: 100%;
