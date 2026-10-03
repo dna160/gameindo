@@ -1150,6 +1150,26 @@ function gameindo_mobile_match_card( $m ) {
 }
 
 /**
+ * Mobile release card (the "Rilis Mendatang" strip below the hero, same
+ * shape as gameindo_mobile_match_card() beside it).
+ */
+function gameindo_mobile_release_card( $game ) {
+	$link = ! empty( $game['link'] ) ? $game['link'] : '';
+	$art  = ! empty( $game['image'] )
+		? '<span class="gi-mobile-releasecard__art"><img src="' . esc_url( $game['image'] ) . '" alt="" loading="lazy" data-gi-fallback="' . esc_url( gameindo_placeholder_url() ) . '"></span>'
+		: '<span class="gi-mobile-releasecard__art" aria-hidden="true"></span>';
+
+	$html  = $link
+		? '<a class="gi-mobile-releasecard" href="' . esc_url( $link ) . '" target="_blank" rel="noopener noreferrer" aria-label="' . esc_attr( sprintf( 'Buka halaman %s', $game['name'] ) ) . '">'
+		: '<div class="gi-mobile-releasecard">';
+	$html .= $art;
+	$html .= '<span class="gi-mobile-releasecard__name">' . esc_html( $game['name'] ) . '</span>';
+	$html .= '<span class="gi-mobile-releasecard__date">' . esc_html( gameindo_release_label( $game ) ) . '</span>';
+	$html .= $link ? '</a>' : '</div>';
+	return $html;
+}
+
+/**
  * Schedule row for the esports page panel — roomier than the homepage row, so
  * it names the tournament stage and links to the official stream when there is
  * one. $with_game hides the redundant game chip on a filtered panel.

@@ -141,6 +141,26 @@
 }
 .gi-matchpanel__cta:hover { background: rgba(255,255,255,.14); }
 
+/* "Rilis Mendatang" reuses archive.php's .gi-night-panel--release shell as-is
+   — same markup, same pillar.css rules, which style its rows in --ink (near
+   black) because on the archive page the panel sits over the light --surface
+   rail. Here it sits inside .gi-hero, a --night background, and the rows
+   carry no background of their own (only the dark panel head does), so the
+   dark text and pale light-surface accents just read as a near-black box.
+   Re-skin to the on-night palette .gi-matchpanel beside it already uses,
+   scoped to this one placement so the archive page is untouched. */
+#gi-hero-side .gi-night-panel--release .gi-release:not(:last-child) { border-bottom-color: var(--on-night-line); }
+#gi-hero-side .gi-night-panel--release .gi-release__name { color: var(--on-night); }
+#gi-hero-side .gi-night-panel--release .gi-release__platforms,
+#gi-hero-side .gi-night-panel--release .gi-release__countdown { color: var(--on-night-muted); }
+#gi-hero-side .gi-night-panel--release .gi-release__art,
+#gi-hero-side .gi-night-panel--release .gi-release__art--none { background: rgba(255,255,255,.08); }
+#gi-hero-side .gi-night-panel--release .gi-release--link:hover { background: rgba(255,255,255,.08); }
+#gi-hero-side .gi-night-panel--release .gi-release--link:hover .gi-release__name { color: var(--on-night); }
+#gi-hero-side .gi-night-panel--release .gi-release__source {
+  background: transparent; border-top-color: var(--on-night-line); color: var(--on-night-muted);
+}
+
 /* ============================================================
    LATEST NEWS + sidebar (Terpopuler rail + newsletter)
    ============================================================ */
@@ -200,6 +220,34 @@
 }
 .gi-mobile-pill[aria-current="page"] { background: var(--pillar); color: var(--pillar-contrast); }
 
+/* "Rilis Mendatang" strip — same horizontal-card pattern as the match strip
+   below it, so phones and the Fold cover screen get the release schedule too
+   instead of losing it along with the rest of .gi-hero__side. */
+.gi-mobile-releases { display: none; }
+.gi-mobile-releases__inner { padding: 16px 0 4px; }
+.gi-mobile-releases__head { display: flex; align-items: center; gap: 8px; padding: 0 14px 10px; }
+.gi-mobile-releases__tick { width: 6px; height: 16px; background: var(--pillar); border-radius: 2px; }
+.gi-mobile-releases__title { font-family: var(--font-display); font-weight: 900; font-style: italic; text-transform: uppercase; font-size: 15px; color: var(--ink); }
+.gi-mobile-releases__row { display: flex; gap: 10px; padding: 0 14px; overflow-x: auto; scrollbar-width: none; }
+.gi-mobile-releases__row::-webkit-scrollbar { display: none; }
+.gi-mobile-releasecard {
+  flex: none; width: 150px; background: var(--night); border-radius: var(--radius-md); padding: 12px 14px;
+  color: var(--on-night); display: flex; flex-direction: column; gap: 8px; text-decoration: none;
+}
+.gi-mobile-releasecard__art {
+  width: 100%; height: 72px; border-radius: var(--radius-sm); overflow: hidden; background: rgba(255,255,255,.08);
+  display: block;
+}
+.gi-mobile-releasecard__art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.gi-mobile-releasecard__name {
+  font-family: var(--font-condensed); font-weight: 700; font-size: 13px; line-height: 1.25;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.gi-mobile-releasecard__date {
+  font-family: var(--font-mono); font-size: 9.5px; letter-spacing: var(--ls-wide); text-transform: uppercase;
+  color: var(--pillar-strong);
+}
+
 .gi-mobile-matches { display: none; }
 .gi-mobile-matches__inner { padding: 16px 0 4px; }
 .gi-mobile-matches__head { display: flex; align-items: center; gap: 8px; padding: 0 14px 10px; }
@@ -246,13 +294,25 @@
   .gi-hottopics__item { font-size: 12px; }
 
   .gi-mobile-pillars { display: flex; }
+  .gi-mobile-releases { display: block; }
   .gi-mobile-matches { display: block; }
   .gi-hero__side { display: none; }
 
-  .gi-hero__grid { grid-template-columns: 1fr; padding: 18px 14px; gap: 18px; }
-  .gi-latest-layout { grid-template-columns: 1fr; }
+  .gi-hero__grid { grid-template-columns: minmax(0, 1fr); padding: 18px 14px; gap: 18px; }
+  .gi-latest-layout { grid-template-columns: minmax(0, 1fr); }
   .gi-pillarband__inner { padding: 24px 14px 28px; }
 
   .gi-hero-slider__arrow { display: none; }
   .gi-hero-slider__dots { bottom: 12px; }
+
+  /* Three "more news" cards below the slider used to wrap onto a second row
+     here (the grid's auto-fit only fits ~2 across a phone's width), pushing
+     everything after the hero further down the page. One scrollable row
+     keeps all three one swipe away instead of trading width for height. */
+  .gi-hero__more {
+    display: flex; grid-template-columns: none; overflow-x: auto; scroll-snap-type: x mandatory;
+    scrollbar-width: none; align-content: unset;
+  }
+  .gi-hero__more::-webkit-scrollbar { display: none; }
+  .gi-hero__more > * { flex: 0 0 46%; min-width: 150px; scroll-snap-align: start; }
 }

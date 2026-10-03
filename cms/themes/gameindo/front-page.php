@@ -214,6 +214,22 @@ $gi_match_meta  = ( 1 === count( $gi_match_comps ) ) ? $gi_match_comps[0] : 'Jad
     </div>
   </section>
 
+  <?php if ( ! empty( $gi_releases ) ) : ?>
+  <div class="gi-mobile-releases" data-pillar="video-games">
+    <div class="gi-mobile-releases__inner">
+      <div class="gi-mobile-releases__head">
+        <span class="gi-mobile-releases__tick" aria-hidden="true"></span>
+        <span class="gi-mobile-releases__title">Rilis Mendatang</span>
+      </div>
+      <div class="gi-mobile-releases__row" id="gi-mobile-releases-row"><?php
+        foreach ( $gi_releases as $gi_rg ) {
+	        echo gameindo_mobile_release_card( $gi_rg ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+        }
+      ?></div>
+    </div>
+  </div>
+  <?php endif; ?>
+
   <?php if ( ! empty( $gi_matches ) ) :
 	// Mobile match strip: the same two leading rows the side panel opens with.
 	$gi_mobile = array_slice( $gi_matches, 0, 2 );

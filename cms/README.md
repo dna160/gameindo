@@ -123,6 +123,31 @@ cms/
   lebih sedikit (bukan ditambal pos yang bukan tentang game). **Belum
   tercakup** (sengaja, sesuai permintaan aslinya): hero slider, panel
   trending di sisinya, dan rail Terpopuler — ketiganya tetap apa adanya.
+- **Panel Rilis Mendatang di beranda: teks putih, dan sekarang tampil juga
+  di mobile.** Markup `.gi-night-panel--release` dipakai apa adanya dari
+  `archive.php`, lengkap dengan warna `.gi-release__name { color: var(--ink) }`
+  (nyaris hitam) — benar di halaman Video Games karena di sana panelnya duduk
+  di atas `--surface` (putih), tapi di beranda panel itu duduk di dalam
+  `.gi-hero` yang `--night` (nyaris hitam juga), dan barisnya sendiri tidak
+  punya background — jadilah teks gelap di atas latar gelap. Diperbaiki
+  dengan override yang di-scope ke `#gi-hero-side .gi-night-panel--release`
+  saja (nama, platform, countdown, border, footer sumber data, semua pindah
+  ke palet `--on-night`/`--on-night-muted` yang sudah dipakai `.gi-matchpanel`
+  di sebelahnya) — halaman arsip pilar sama sekali tidak tersentuh. Widgetnya
+  sendiri dulu ikut lenyap di `≤720px` bersama seluruh `.gi-hero__side`
+  (`display:none`); sekarang ada jalur mobile terpisah — strip geser
+  horizontal baru `.gi-mobile-releases` (kartu `gameindo_mobile_release_card()`
+  di `inc/template-helpers.php`, pola yang sama persis dengan
+  `.gi-mobile-matches`/`gameindo_mobile_match_card()` yang sudah ada untuk
+  jadwal match) — jadi jadwal rilis game dan jadwal pertandingan sama-sama
+  bisa digeser di mobile, bukan cuma salah satunya. `.gi-hero__more` (3 kartu
+  "berita lainnya" di bawah slider) yang tadinya menyusun ulang jadi 2 baris
+  di layar sempit sekarang juga jadi strip geser horizontal `scroll-snap`
+  pada breakpoint yang sama, supaya tinggi beranda tidak melonjak di mobile.
+  Sekalian ditemukan dan diperbaiki satu bug `1fr` polos lagi (lihat poin
+  `minmax(0, 1fr)` di atas) yang luput sebelumnya: `.gi-hero__grid` dan
+  `.gi-latest-layout` di breakpoint `≤720px` — ini yang membuat beranda
+  meluber horizontal persis di lebar cover screen Galaxy Z Fold (~344px).
 - **Pilar baru masuk ke menu lewat dua jalur.** Menu yang diatur di Tampilan →
   Menu menang atas nav otomatis, jadi pilar yang lahir dari pembaruan tema tidak
   akan terlihat justru di situs yang mengikuti panduan pasang. (1)
