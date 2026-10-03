@@ -101,6 +101,28 @@ cms/
   scrollbar — melubernya jadi **konten yang diam-diam terpotong** di lebar
   sempit (≤380px, termasuk cover screen Galaxy Z Fold), yang lebih berbahaya
   karena tidak ada petunjuk apa pun bahwa itu terjadi.
+- **Beranda hanya menampilkan berita yang benar-benar soal game — kanal
+  sendiri tetap tampil apa adanya.** "Latest News" dan keempat band pilar
+  non-Video-Games (Esports/Streamer/Tech/Entertainment) di beranda disaring
+  lewat `gameindo_is_about_games()` (`inc/template-helpers.php`) sebelum
+  dirender; halaman arsip pilar sendiri (`archive.php`) **tidak disentuh** —
+  tetap menampilkan semua yang benar-benar difile di sana, tak tersaring,
+  karena di situlah pembaca pergi untuk keluasan penuh pilarnya (termasuk,
+  misalnya, berita tech umum yang di-file di Tech). Video Games dan Esports
+  lolos otomatis lewat pilarnya saja (`gameindo_pillar_implies_gaming()`) —
+  keduanya memang soal game secara definisi; tiga pilar lain dicek lewat
+  `gameindo_gaming_keywords()` (kata umum seperti "game"/"gaming"/"esports",
+  seluruh `gameindo_platform_keywords('any')`, plus judul waralaba besar
+  seperti Genshin/Valorant/MLBB) atas `gameindo_post_signal_text()` yang
+  sama dipakai `gameindo_is_console_post()` — heuristik kata kunci terbaik
+  yang bisa dicapai, bisa saja salah menilai artikel yang tidak pernah
+  menyebut nama game secara eksplisit. Band non-Video-Games mengambil lebih
+  banyak kandidat (`posts_per_page => 20`) sebelum disaring ke 4, supaya
+  band tidak kosong begitu saja kalau kebetulan pos terbaru pilar itu bukan
+  soal game; kalau yang lolos kurang dari 4, band-nya tampil dengan jumlah
+  lebih sedikit (bukan ditambal pos yang bukan tentang game). **Belum
+  tercakup** (sengaja, sesuai permintaan aslinya): hero slider, panel
+  trending di sisinya, dan rail Terpopuler — ketiganya tetap apa adanya.
 - **Pilar baru masuk ke menu lewat dua jalur.** Menu yang diatur di Tampilan →
   Menu menang atas nav otomatis, jadi pilar yang lahir dari pembaruan tema tidak
   akan terlihat justru di situs yang mengikuti panduan pasang. (1)

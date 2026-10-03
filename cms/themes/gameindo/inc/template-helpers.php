@@ -239,6 +239,61 @@ function gameindo_is_platform_post( $post_id ) {
 }
 
 /**
+ * Keywords broad enough to say "this article is about games" at all — wider
+ * than gameindo_platform_keywords(), which only identifies a platform/console
+ * and would miss an article that names a title but no hardware (a Genshin
+ * guide mentions no console). Specific franchises are listed because a
+ * generic word list alone misses an article that only ever names the game.
+ * Used solely to curate the homepage (see gameindo_is_about_games()) — never
+ * to decide what belongs on a pillar's own archive page.
+ */
+function gameindo_gaming_keywords() {
+	return apply_filters(
+		'gameindo_gaming_keywords',
+		array_merge(
+			array( 'game', 'games', 'gaming', 'gamer', 'gamers', 'videogame', 'video game', 'esports', 'e-sports' ),
+			gameindo_platform_keywords( 'any' ),
+			array(
+				'genshin', 'honkai', 'valorant', 'mobile legends', 'mlbb', 'dota', 'dota 2',
+				'pubg', 'free fire', 'call of duty', 'warzone', 'fifa', 'fortnite', 'minecraft',
+				'roblox', 'league of legends', 'overwatch', 'apex legends', 'counter-strike',
+				'cs2', 'csgo', 'cs:go', 'zelda', 'mario', 'pokemon', 'pokémon', 'final fantasy',
+				'elden ring', 'gta', 'grand theft auto', 'rawg', 'hollow knight', 'silksong',
+			)
+		)
+	);
+}
+
+/**
+ * Pillars whose own assignment already settles it — a post filed under
+ * Video Games or Esports is, definitionally, about games. Streamer, Tech and
+ * Entertainment legitimately mix gaming and non-gaming coverage (a streamer
+ * drama with no game in it, a Snapdragon laptop, an anime dub announcement),
+ * so those three also need the keyword check below.
+ */
+function gameindo_pillar_implies_gaming( $pillar ) {
+	return in_array( $pillar, array( 'video-games', 'esports', 'home' ), true );
+}
+
+/**
+ * Best-effort "is this actually about games?", for curating the homepage
+ * only — front-page.php's "Latest News" grid and its Streamer/Tech/
+ * Entertainment pillar bands — a keyword heuristic over the same
+ * editor-facing signal text gameindo_is_console_post() reads (title,
+ * excerpt, subcategory, tags, categories), so it can misjudge an article
+ * that never names its game explicitly. Deliberately never applied to
+ * archive.php: a pillar's own page still shows everything actually filed
+ * there, unfiltered — this only curates what the front page picks to lead
+ * with.
+ */
+function gameindo_is_about_games( $post_id ) {
+	if ( gameindo_pillar_implies_gaming( gameindo_get_pillar( $post_id ) ) ) {
+		return true;
+	}
+	return gameindo_text_mentions( gameindo_post_signal_text( $post_id ), gameindo_gaming_keywords() );
+}
+
+/**
  * Every article the Video Games pillar covers, newest first. Memoized per
  * request — the homepage asks for this three times (band, tile count, mega
  * menu) and that shouldn't cost three round trips.

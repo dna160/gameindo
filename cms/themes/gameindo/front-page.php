@@ -109,9 +109,17 @@ foreach ( $gi_hero_more as $gi_p ) {
 	$gi_exclude[] = $gi_p->ID;
 }
 
+// "Latest News" only shows articles that are actually about games — the
+// homepage is a gaming site's front door, and a Samsung laptop or an AI
+// partnership announcement filed under Tech shouldn't lead it even when it's
+// the newest post. gameindo_is_about_games() is a best-effort heuristic
+// (title/excerpt/tags/subcategory keyword match, see inc/template-helpers.php)
+// — this is a homepage-only curation choice. The pillar's own archive page
+// (archive.php) is untouched and still shows everything filed there,
+// unfiltered, same as before.
 $gi_latest = array();
 foreach ( $gi_all as $gi_p ) {
-	if ( ! in_array( $gi_p->ID, $gi_exclude, true ) ) {
+	if ( ! in_array( $gi_p->ID, $gi_exclude, true ) && gameindo_is_about_games( $gi_p->ID ) ) {
 		$gi_latest[] = $gi_p;
 	}
 	if ( count( $gi_latest ) >= 4 ) {
@@ -298,16 +306,34 @@ $gi_match_meta  = ( 1 === count( $gi_match_comps ) ) ? $gi_match_comps[0] : 'Jad
     $gi_band_order = array( 'video-games', 'esports', 'streamer', 'tech', 'entertainment' );
     $gi_bi = 0;
     foreach ( $gi_band_order as $gi_slug ) {
-	    $gi_band_posts = ( 'video-games' === $gi_slug )
-		    ? gameindo_video_games_posts( array( 'limit' => 4 ) )
-		    : get_posts( array(
+	    if ( 'video-games' === $gi_slug ) {
+		    $gi_band_posts = gameindo_video_games_posts( array( 'limit' => 4 ) );
+	    } else {
+		    // Same homepage-only "really about games" curation as Latest News
+		    // (see gameindo_is_about_games()) — Esports passes everything by
+		    // pillar alone, but Streamer/Tech/Entertainment mix in non-gaming
+		    // coverage, so fetch more than 4 candidates up front or the band
+		    // could come up short once the filter runs. The pillar's own
+		    // archive page is untouched and still shows every post filed
+		    // there, unfiltered.
+		    $gi_candidates = get_posts( array(
 			    'post_type'      => 'post',
 			    'post_status'    => 'publish',
-			    'posts_per_page' => 4,
+			    'posts_per_page' => 20,
 			    'category_name'  => $gi_slug,
 			    'orderby'        => 'date',
 			    'order'          => 'DESC',
 		    ) );
+		    $gi_band_posts = array();
+		    foreach ( $gi_candidates as $gi_cp ) {
+			    if ( gameindo_is_about_games( $gi_cp->ID ) ) {
+				    $gi_band_posts[] = $gi_cp;
+			    }
+			    if ( count( $gi_band_posts ) >= 4 ) {
+				    break;
+			    }
+		    }
+	    }
 	    if ( empty( $gi_band_posts ) ) {
 		    continue;
 	    }
