@@ -66,21 +66,51 @@ if ( count( $gi_hero_trending ) < 2 ) {
 	}
 }
 
-// Hero slider: editor-picked "featured" post leads (if set), then the next
-// latest articles fill the rest — an auto-advancing feed of what's new.
+// Hero slider: editor-picked "featured" post leads (if it's actually a
+// gaming post), then the next latest gaming articles fill the rest. The
+// hero is the single most prominent slot on the homepage, so it uses the
+// stricter gameindo_is_hero_gaming_post() (pillar-implied, or a named
+// platform/franchise) rather than gameindo_is_about_games() — a Tech or
+// Entertainment post that only name-drops "gaming" in passing is enough to
+// pass the looser check Latest News uses, but reads as off-topic leading
+// the hero. Falls back to the unfiltered newest posts when curation finds
+// nothing at all, so the hero is never empty during a dry spell.
 $gi_hero_slides = array();
-if ( $gi_featured ) {
-	$gi_hero_slides[] = $gi_featured;
-}
 foreach ( $gi_all as $gi_p ) {
 	if ( count( $gi_hero_slides ) >= 5 ) {
 		break;
 	}
-	if ( $gi_featured && $gi_p->ID === $gi_featured->ID ) {
-		continue;
+	if ( gameindo_is_hero_gaming_post( $gi_p->ID ) ) {
+		$gi_hero_slides[] = $gi_p;
 	}
-	$gi_hero_slides[] = $gi_p;
 }
+if ( $gi_featured && gameindo_is_hero_gaming_post( $gi_featured->ID ) ) {
+	$gi_hero_slides = array_values( array_filter(
+		$gi_hero_slides,
+		function ( $gi_p ) use ( $gi_featured ) {
+			return $gi_p->ID !== $gi_featured->ID;
+		}
+	) );
+	array_unshift( $gi_hero_slides, $gi_featured );
+	$gi_hero_slides = array_slice( $gi_hero_slides, 0, 5 );
+}
+if ( empty( $gi_hero_slides ) ) {
+	if ( $gi_featured ) {
+		$gi_hero_slides[] = $gi_featured;
+	}
+	foreach ( $gi_all as $gi_p ) {
+		if ( count( $gi_hero_slides ) >= 5 ) {
+			break;
+		}
+		if ( $gi_featured && $gi_p->ID === $gi_featured->ID ) {
+			continue;
+		}
+		$gi_hero_slides[] = $gi_p;
+	}
+}
+// The hero section's accent color follows whichever post actually leads the
+// slider now, not the (possibly filtered-out) editor "featured" pick.
+$gi_hero_lead_pillar = ! empty( $gi_hero_slides ) ? gameindo_get_pillar( $gi_hero_slides[0]->ID ) : $gi_featured_pillar;
 
 // Latest grid: posts excluding hero slides + hero trending, first 4.
 $gi_exclude = array();
@@ -96,12 +126,12 @@ foreach ( $gi_hero_trending as $gi_p ) {
 // tall the release/trending panel ends up, this grows to meet it instead of
 // leaving empty space below the slider). Excluded from every other rail
 // below so the same article never appears twice on the homepage. Same
-// homepage-only "really about games" curation as Latest News and the pillar
-// bands below — this strip sits right under the Video Games-led hero, so a
-// Tech or Entertainment piece with no gaming angle reads as off-topic here.
+// strict curation as the hero slider above (gameindo_is_hero_gaming_post(),
+// not the looser gameindo_is_about_games() Latest News uses) — this strip
+// sits right under it, so it holds to the same bar.
 $gi_hero_more = array();
 foreach ( $gi_all as $gi_p ) {
-	if ( ! in_array( $gi_p->ID, $gi_exclude, true ) && gameindo_is_about_games( $gi_p->ID ) ) {
+	if ( ! in_array( $gi_p->ID, $gi_exclude, true ) && gameindo_is_hero_gaming_post( $gi_p->ID ) ) {
 		$gi_hero_more[] = $gi_p;
 	}
 	if ( count( $gi_hero_more ) >= 3 ) {
@@ -150,7 +180,7 @@ $gi_match_meta  = ( 1 === count( $gi_match_comps ) ) ? $gi_match_comps[0] : 'Jad
 ?>
 
 <main>
-  <section class="gi-hero" data-pillar="<?php echo esc_attr( $gi_featured_pillar ? $gi_featured_pillar : 'home' ); ?>">
+  <section class="gi-hero" data-pillar="<?php echo esc_attr( $gi_hero_lead_pillar ? $gi_hero_lead_pillar : 'home' ); ?>">
     <div class="gi-hero__grid">
       <div class="gi-hero__main">
         <div class="gi-hero-slider" id="gi-hero-slider" data-autoplay="6000">

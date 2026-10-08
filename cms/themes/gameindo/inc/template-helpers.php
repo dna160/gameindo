@@ -252,6 +252,23 @@ function gameindo_gaming_keywords() {
 		'gameindo_gaming_keywords',
 		array_merge(
 			array( 'game', 'games', 'gaming', 'gamer', 'gamers', 'videogame', 'video game', 'esports', 'e-sports' ),
+			gameindo_gaming_keywords_strong()
+		)
+	);
+}
+
+/**
+ * The subset of gameindo_gaming_keywords() that actually names a platform or
+ * a specific franchise, with the generic words ("game", "gaming", "esports")
+ * left out. Those generic words are enough to decide the looser Latest News
+ * curation, but they're also what lets a passing mention ("cocok untuk
+ * gaming" in a gadget review, a tie-in arcade card game) slip a Tech or
+ * Entertainment post past the filter — see gameindo_is_hero_gaming_post().
+ */
+function gameindo_gaming_keywords_strong() {
+	return apply_filters(
+		'gameindo_gaming_keywords_strong',
+		array_merge(
 			gameindo_platform_keywords( 'any' ),
 			array(
 				'genshin', 'honkai', 'valorant', 'mobile legends', 'mlbb', 'dota', 'dota 2',
@@ -291,6 +308,23 @@ function gameindo_is_about_games( $post_id ) {
 		return true;
 	}
 	return gameindo_text_mentions( gameindo_post_signal_text( $post_id ), gameindo_gaming_keywords() );
+}
+
+/**
+ * Stricter than gameindo_is_about_games() — for the hero slider and the
+ * "more news" strip beneath it, the homepage's single most prominent slot.
+ * Outside a pillar that's gaming by definition, a post has to actually name
+ * a platform or a specific franchise (gameindo_gaming_keywords_strong());
+ * the generic words alone ("game", "gaming", "esports") are enough for the
+ * rest of the homepage but not enough to lead it — that's what let a gadget
+ * review's one "cocok untuk gaming" aside, or an idol franchise's tie-in
+ * arcade card game, pass as the hero's lead story.
+ */
+function gameindo_is_hero_gaming_post( $post_id ) {
+	if ( gameindo_pillar_implies_gaming( gameindo_get_pillar( $post_id ) ) ) {
+		return true;
+	}
+	return gameindo_text_mentions( gameindo_post_signal_text( $post_id ), gameindo_gaming_keywords_strong() );
 }
 
 /**

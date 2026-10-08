@@ -123,11 +123,30 @@ cms/
   kandidat yang sama tanpa filter — band tetap tampil penuh 4 kartu, bukan
   setengah kosong, karena kurasi ini preferensi tampilan beranda, bukan aturan
   mutlak seperti di Latest News (yang memang bisa tampil kurang dari 4 kalau
-  kandidatnya tidak cukup). Strip "berita lainnya" di bawah slider hero
-  (`.gi-hero__more`, 3 kartu) ikut disaring dengan filter yang sama — tanpa
-  tambalan, karena posisinya tepat di bawah hero yang sudah bertema game.
-  **Belum tercakup** (sengaja, sesuai permintaan aslinya): hero slider sendiri,
-  panel trending di sisinya, dan rail Terpopuler — ketiganya tetap apa adanya.
+  kandidatnya tidak cukup). **Belum tercakup** (sengaja, sesuai permintaan
+  aslinya): panel trending di sisi hero, dan rail Terpopuler — keduanya
+  tetap apa adanya.
+- **Hero slider dan strip "berita lainnya" di bawahnya pakai kurasi yang
+  lebih ketat dari Latest News.** Slider dan `.gi-hero__more` awalnya tidak
+  disaring sama sekali, lalu sempat dipakaikan `gameindo_is_about_games()`
+  yang sama dengan Latest News — tapi di produksi itu masih meloloskan
+  "Review Lengkap Smart Glasses VITURE Pro 2" (Tech, cuma menyebut kata
+  umum "gaming" sekilas di satu kalimat) dan "Aikatsu! Encore..." (Entertainment,
+  menyebut "game" karena waralabanya punya mesin kartu arcade) memimpin
+  hero — keduanya lolos filter kata kunci generik tapi bukan artikel yang
+  pembaca maksud dengan "video games". `gameindo_is_hero_gaming_post()`
+  (fungsi baru, `inc/template-helpers.php`) mengecek pilar yang sudah pasti
+  game sama seperti sebelumnya, tapi di luar itu HARUS menyebut nama
+  platform atau waralaba spesifik lewat `gameindo_gaming_keywords_strong()`
+  — pecahan `gameindo_gaming_keywords()` tanpa kata generik
+  "game"/"gaming"/"esports" yang berdiri sendiri. Dipakai di slider (pilihan
+  editor "featured" tetap memimpin kalau dia lolos cek ini, kalau tidak
+  giliran artikel game terbaru yang memimpin) dan di `.gi-hero__more`; kalau
+  kurasi ketat ini sampai tidak menyisakan satu pun artikel (kemarau
+  konten), slider jatuh balik ke artikel terbaru apa adanya supaya hero
+  tidak pernah kosong. Latest News dan band pilar tetap pakai
+  `gameindo_is_about_games()` yang lebih longgar — belum ada laporan
+  masalah di situ, dan posisinya memang lebih rendah di halaman.
 - **Panel Rilis Mendatang di beranda: teks putih, dan sekarang tampil juga
   di mobile.** Markup `.gi-night-panel--release` dipakai apa adanya dari
   `archive.php`, lengkap dengan warna `.gi-release__name { color: var(--ink) }`
