@@ -117,12 +117,17 @@ cms/
   sama dipakai `gameindo_is_console_post()` — heuristik kata kunci terbaik
   yang bisa dicapai, bisa saja salah menilai artikel yang tidak pernah
   menyebut nama game secara eksplisit. Band non-Video-Games mengambil lebih
-  banyak kandidat (`posts_per_page => 20`) sebelum disaring ke 4, supaya
-  band tidak kosong begitu saja kalau kebetulan pos terbaru pilar itu bukan
-  soal game; kalau yang lolos kurang dari 4, band-nya tampil dengan jumlah
-  lebih sedikit (bukan ditambal pos yang bukan tentang game). **Belum
-  tercakup** (sengaja, sesuai permintaan aslinya): hero slider, panel
-  trending di sisinya, dan rail Terpopuler — ketiganya tetap apa adanya.
+  banyak kandidat (`posts_per_page => 20`) sebelum disaring ke 4; artikel yang
+  lolos `gameindo_is_about_games()` memimpin band-nya, tapi kalau yang lolos
+  kurang dari 4 (paling sering kena Streamer), sisa slotnya ditambal dari
+  kandidat yang sama tanpa filter — band tetap tampil penuh 4 kartu, bukan
+  setengah kosong, karena kurasi ini preferensi tampilan beranda, bukan aturan
+  mutlak seperti di Latest News (yang memang bisa tampil kurang dari 4 kalau
+  kandidatnya tidak cukup). Strip "berita lainnya" di bawah slider hero
+  (`.gi-hero__more`, 3 kartu) ikut disaring dengan filter yang sama — tanpa
+  tambalan, karena posisinya tepat di bawah hero yang sudah bertema game.
+  **Belum tercakup** (sengaja, sesuai permintaan aslinya): hero slider sendiri,
+  panel trending di sisinya, dan rail Terpopuler — ketiganya tetap apa adanya.
 - **Panel Rilis Mendatang di beranda: teks putih, dan sekarang tampil juga
   di mobile.** Markup `.gi-night-panel--release` dipakai apa adanya dari
   `archive.php`, lengkap dengan warna `.gi-release__name { color: var(--ink) }`

@@ -95,10 +95,13 @@ foreach ( $gi_hero_trending as $gi_p ) {
 // side panel's height (see .gi-hero__more — it's a flex:1 cell, so however
 // tall the release/trending panel ends up, this grows to meet it instead of
 // leaving empty space below the slider). Excluded from every other rail
-// below so the same article never appears twice on the homepage.
+// below so the same article never appears twice on the homepage. Same
+// homepage-only "really about games" curation as Latest News and the pillar
+// bands below — this strip sits right under the Video Games-led hero, so a
+// Tech or Entertainment piece with no gaming angle reads as off-topic here.
 $gi_hero_more = array();
 foreach ( $gi_all as $gi_p ) {
-	if ( ! in_array( $gi_p->ID, $gi_exclude, true ) ) {
+	if ( ! in_array( $gi_p->ID, $gi_exclude, true ) && gameindo_is_about_games( $gi_p->ID ) ) {
 		$gi_hero_more[] = $gi_p;
 	}
 	if ( count( $gi_hero_more ) >= 3 ) {
@@ -341,12 +344,31 @@ $gi_match_meta  = ( 1 === count( $gi_match_comps ) ) ? $gi_match_comps[0] : 'Jad
 			    'order'          => 'DESC',
 		    ) );
 		    $gi_band_posts = array();
+		    $gi_band_ids   = array();
 		    foreach ( $gi_candidates as $gi_cp ) {
 			    if ( gameindo_is_about_games( $gi_cp->ID ) ) {
 				    $gi_band_posts[] = $gi_cp;
+				    $gi_band_ids[]   = $gi_cp->ID;
 			    }
 			    if ( count( $gi_band_posts ) >= 4 ) {
 				    break;
+			    }
+		    }
+		    // A pillar with little gaming-angled coverage (Streamer, often) would
+		    // otherwise show a visibly half-empty band next to the others. The
+		    // curation is a homepage *preference*, not a hard rule the way it is
+		    // for Latest News — once gaming candidates run out, fill the rest of
+		    // the slot with the pillar's other latest posts so the band always
+		    // reads as a normal 4-card row, gaming articles still leading it.
+		    if ( count( $gi_band_posts ) < 4 ) {
+			    foreach ( $gi_candidates as $gi_cp ) {
+				    if ( count( $gi_band_posts ) >= 4 ) {
+					    break;
+				    }
+				    if ( in_array( $gi_cp->ID, $gi_band_ids, true ) ) {
+					    continue;
+				    }
+				    $gi_band_posts[] = $gi_cp;
 			    }
 		    }
 	    }
