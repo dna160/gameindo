@@ -32,11 +32,12 @@ function gameindo_core_render_post_metabox( $post ) {
 
 	$pillars = array(
 		''              => '— Ikuti kategori —',
-		'home'          => 'Video Game',
+		'video-games'   => 'Video Games',
 		'esports'       => 'Esports',
 		'streamer'      => 'Streamer',
 		'tech'          => 'Tech',
 		'entertainment' => 'Entertainment',
+		'home'          => 'Video Game (slug lama → tampil sebagai Video Games)',
 	);
 	$pillar      = get_post_meta( $post->ID, '_gi_pillar', true );
 	$subcategory = get_post_meta( $post->ID, '_gi_subcategory', true );

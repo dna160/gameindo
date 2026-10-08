@@ -4,5 +4,16 @@
    Mono/meta:        JetBrains Mono (timestamps, tech stats, scores)
    NOTE: these are the closest Google Fonts matches to the GameIndo house
    type seen in the source art. If official brand fonts exist, swap the
-   @import + --font-* tokens for the licensed families. */
-@import url('https://fonts.googleapis.com/css2?family=Saira:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,600;1,700;1,800;1,900&family=Saira+Condensed:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500;1,600&family=JetBrains+Mono:wght@400;500;700&display=swap');
+   stylesheet URL below (gameindo_assets() in functions.php) + --font-*
+   tokens for the licensed families.
+
+   The stylesheet itself is enqueued separately (gameindo-fonts, in
+   gameindo_assets()) rather than @import'd from here. A nested @import
+   — main.css importing this file, this file importing Google's CSS — makes
+   the browser discover the font stylesheet only after fetching and parsing
+   two local files first, and only then discover the actual font files: three
+   serial round trips before any text can render in its real face, on top of
+   a cold DNS+TLS handshake to a host the page never announced. Enqueuing it
+   as its own <link>, alongside main.css and with the preconnect hints in
+   gameindo_resource_hints(), lets the browser start all of it in parallel
+   from the initial HTML instead of waiting on that chain. */

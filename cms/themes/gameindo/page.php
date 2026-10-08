@@ -23,7 +23,7 @@ while ( have_posts() ) :
     <figure class="gi-article-media"><?php the_post_thumbnail( 'gameindo-hero' ); ?></figure>
     <?php endif; ?>
     <div class="gi-article-body">
-      <div class="gi-page-content"><?php the_content(); ?></div>
+      <div class="gi-page-content gi-prose"><?php the_content(); ?></div>
       <?php
       wp_link_pages( array(
 	      'before' => '<div class="gi-page-links">' . __( 'Halaman:', 'gameindo' ),

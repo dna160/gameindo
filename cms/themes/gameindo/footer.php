@@ -17,6 +17,7 @@ if ( has_custom_logo() ) {
 	}
 }
 $gi_year = wp_date( 'Y' );
+$gi_popshck_logo_url = GAMEINDO_URI . '/assets/logo/popshck-logo.png';
 ?>
 
 <footer class="gi-footer" data-pillar="home">
@@ -27,6 +28,12 @@ $gi_year = wp_date( 'Y' );
       <?php gameindo_flat_menu( 'footer' ); ?>
     </nav>
     <span class="gi-footer__copy">© <?php echo esc_html( $gi_year . ' ' . mb_strtoupper( get_bloginfo( 'name' ) ) ); ?></span>
+  </div>
+  <div class="gi-footer__group">
+    <a href="https://popshck.com" target="_blank" rel="noopener noreferrer" class="gi-footer__group-link">
+      <img src="<?php echo esc_url( $gi_popshck_logo_url ); ?>" alt="PopShck" class="gi-footer__group-logo">
+      <span class="gi-footer__group-text">Part of PopShck Group</span>
+    </a>
   </div>
 </footer>
 

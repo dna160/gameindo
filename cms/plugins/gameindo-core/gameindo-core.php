@@ -2,8 +2,8 @@
 /**
  * Plugin Name:       GameIndo Core
  * Plugin URI:        https://gameindo.com
- * Description:        Content model for the GameIndo theme — article meta (pillar, subcategory, read time, featured/spotlight, reads), author profile fields, and the editable esports widgets (live ticker, hot topics, match center, standings), plus the live PandaScore match schedule for six games. All manageable from wp-admin.
- * Version:           1.1.0
+ * Description:        Content model for the GameIndo theme — article meta (pillar, subcategory, read time, featured/spotlight, reads), author profile fields, and the editable esports widgets (live ticker, hot topics, match center, standings), plus the live PandaScore match schedule for six games and the Google Tag Manager container ID. All manageable from wp-admin.
+ * Version:           1.6.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            GameIndo
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'GAMEINDO_CORE_VERSION', '1.1.0' );
+define( 'GAMEINDO_CORE_VERSION', '1.6.0' );
 define( 'GAMEINDO_CORE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'GAMEINDO_CORE_URL', plugin_dir_url( __FILE__ ) );
 
@@ -27,15 +27,19 @@ require_once GAMEINDO_CORE_DIR . 'includes/user-meta.php';
 require_once GAMEINDO_CORE_DIR . 'includes/esports-meta.php';
 require_once GAMEINDO_CORE_DIR . 'includes/helpers.php';
 require_once GAMEINDO_CORE_DIR . 'includes/pandascore.php';
+require_once GAMEINDO_CORE_DIR . 'includes/rawg.php';
+require_once GAMEINDO_CORE_DIR . 'includes/analytics.php';
 require_once GAMEINDO_CORE_DIR . 'includes/rest.php';
 
 if ( is_admin() ) {
 	require_once GAMEINDO_CORE_DIR . 'includes/pandascore-admin.php';
+	require_once GAMEINDO_CORE_DIR . 'includes/rawg-admin.php';
+	require_once GAMEINDO_CORE_DIR . 'includes/analytics-admin.php';
 }
 
 /**
  * On activation: register CPTs then flush rewrite rules, and make sure the
- * five pillar categories exist with the exact slugs the theme/CSS expect.
+ * pillar categories exist with the exact slugs the theme/CSS expect.
  */
 function gameindo_core_activate() {
 	gameindo_core_register_cpts();
@@ -52,12 +56,19 @@ function gameindo_core_deactivate() {
 register_deactivation_hook( __FILE__, 'gameindo_core_deactivate' );
 
 /**
- * Ensure the five pillar categories exist (idempotent). Slugs are fixed;
- * names can be edited freely in wp-admin afterwards.
+ * Ensure the pillar categories exist (idempotent). Slugs are fixed; names can
+ * be edited freely in wp-admin afterwards.
+ *
+ * 'home' is the legacy slug for the site's game coverage and stays put so old
+ * posts keep their category; 'video-games' is the pillar that now presents it,
+ * with its own menu entry and archive. The theme creates any missing pillar
+ * term on init too, for sites where this plugin was activated before a pillar
+ * was added.
  */
 function gameindo_core_ensure_pillars() {
 	$pillars = array(
 		'home'          => 'Video Game',
+		'video-games'   => 'Video Games',
 		'esports'       => 'Esports',
 		'streamer'      => 'Streamer',
 		'tech'          => 'Tech',
@@ -92,6 +103,8 @@ function gameindo_core_dashboard_page() {
 	echo '<li><a href="' . esc_url( admin_url( 'edit.php?post_type=gi_ticker' ) ) . '">Live Ticker</a> — <em>tidak lagi dipakai.</em> Teks berjalan di atas header kini terisi otomatis dari 12 artikel terbaru, jadi item di menu ini tidak muncul di situs.</li>';
 	echo '<li><a href="' . esc_url( admin_url( 'edit.php?post_type=gi_topic' ) ) . '">Topik Hangat</a> — chip topik di bawah header home.</li>';
 	echo '<li><a href="' . esc_url( admin_url( 'admin.php?page=gameindo-pandascore' ) ) . '">PandaScore</a> — sumber utama jadwal match (ML:BB, CS:GO, Valorant, LoL, DotA 2, Overwatch). Isi token di sini.</li>';
+	echo '<li><a href="' . esc_url( admin_url( 'admin.php?page=gameindo-rawg' ) ) . '">RAWG</a> — daftar <em>Rilis Mendatang</em> di halaman Video Games. Isi API key di sini; kalau kosong, panelnya tidak muncul.</li>';
+	echo '<li><a href="' . esc_url( admin_url( 'admin.php?page=gameindo-analytics' ) ) . '">Analytics & Search Console</a> — Container ID GTM, Measurement ID GA4, dan kode verifikasi Google Search Console.</li>';
 	echo '<li><a href="' . esc_url( admin_url( 'edit.php?post_type=gi_match' ) ) . '">Match Center</a> — jadwal manual. Hanya dipakai sebagai <em>cadangan</em> kalau PandaScore mati atau tokennya kosong.</li>';
 	echo '<li><a href="' . esc_url( admin_url( 'edit.php?post_type=gi_standing' ) ) . '">Klasemen</a> — <em>tidak lagi ditampilkan.</em> Panel klasemen di halaman Esports sudah diganti panel Jadwal; data lama tetap tersimpan di sini.</li>';
 	echo '</ul>';

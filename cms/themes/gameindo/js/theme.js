@@ -306,4 +306,21 @@
     }
   })();
 
+  /* ---- Broken-image fallback ---------------------------------
+     A featured image can 404 (media deleted, import gap, dead RAWG
+     art URL) even though PHP already resolved a real thumbnail ID,
+     so the server-side placeholder in gameindo_image_url() never
+     fires. Every such <img> carries data-gi-fallback; catch the load
+     failure here instead. 'error' doesn't bubble, so this listens on
+     the capture phase at the document root, which also covers images
+     inserted later (load-more, ticker refresh). */
+  document.addEventListener("error", function (e) {
+    var img = e.target;
+    if (!img || img.tagName !== "IMG") return;
+    var fallback = img.getAttribute("data-gi-fallback");
+    if (!fallback || img.src === fallback) return;
+    img.removeAttribute("data-gi-fallback");
+    img.src = fallback;
+  }, true);
+
 })();

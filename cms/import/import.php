@@ -94,11 +94,15 @@ WP_CLI::log( '== GameIndo import ==' );
 
 /* -------------------------------------------------- 1. Pillar categories */
 $pillars = array(
-	'home'          => 'Video Game',
+	'video-games'   => 'Video Games',
 	'esports'       => 'Esports',
 	'streamer'      => 'Streamer',
 	'tech'          => 'Tech',
 	'entertainment' => 'Entertainment',
+	// Legacy slug: the fixtures still say "home", and live sites have articles
+	// filed there. Created so nothing dangles; the demo files posts under
+	// video-games instead (see $pillar below).
+	'home'          => 'Video Game',
 );
 $pillar_term = array();
 foreach ( $pillars as $slug => $name ) {
@@ -110,6 +114,7 @@ foreach ( $pillars as $slug => $name ) {
 	// Add a description used by the pillar masthead.
 	$descs = array(
 		'esports'       => 'Berita kompetitif MLBB, Valorant, Free Fire, dan skena esports Indonesia — jadwal, hasil, klasemen, dan transfer roster.',
+		'video-games'   => 'Rilis, review, dan panduan video game — dengan sorotan ekstra untuk konsol dan handheld: PlayStation, Xbox, Nintendo, Steam Deck, dan ROG Ally.',
 		'home'          => 'Rilis baru, review, dan panduan video game lintas platform.',
 		'streamer'      => 'Kreator konten, VTuber, dan dinamika dunia streaming Indonesia.',
 		'tech'          => 'PC, komponen, handheld, dan gadget untuk gaming.',
@@ -213,7 +218,10 @@ foreach ( $posts as $p ) {
 	$author = ( isset( $emb['author'][0]['slug'] ) && isset( $author_user[ $emb['author'][0]['slug'] ] ) )
 		? $author_user[ $emb['author'][0]['slug'] ] : 0;
 	$meta   = isset( $p['gi_meta'] ) ? $p['gi_meta'] : array();
-	$pillar = isset( $meta['pillar'] ) ? $meta['pillar'] : 'home';
+	$pillar = isset( $meta['pillar'] ) ? $meta['pillar'] : 'video-games';
+	if ( 'home' === $pillar ) {
+		$pillar = 'video-games'; // fixtures predate the Video Games pillar
+	}
 
 	$date = str_replace( 'T', ' ', $p['date'] );
 	$postarr = array(
@@ -376,17 +384,18 @@ $link = function ( $title, $url ) {
 	);
 };
 
+// "Home" is the front page; Video Games is the pillar that covers games.
 gi_build_menu( 'Pilar Utama', 'primary', array(
 	$link( 'Home', home_url( '/' ) ),
+	$cat( 'video-games' ),
 	$cat( 'esports' ),
 	$cat( 'streamer' ),
 	$cat( 'tech' ),
 	$cat( 'entertainment' ),
 ) );
 
-// Footer uses Video Game (home pillar) + the rest.
 gi_build_menu( 'Footer', 'footer', array(
-	array_merge( $cat( 'home' ), array( 'menu-item-title' => 'Video Game' ) ),
+	$cat( 'video-games' ),
 	$cat( 'esports' ),
 	$cat( 'streamer' ),
 	$cat( 'tech' ),
@@ -395,6 +404,7 @@ gi_build_menu( 'Footer', 'footer', array(
 
 gi_build_menu( 'Menu Mobile', 'drawer', array(
 	$link( 'Home', home_url( '/' ) ),
+	$cat( 'video-games' ),
 	$cat( 'esports' ),
 	$cat( 'streamer' ),
 	$cat( 'tech' ),

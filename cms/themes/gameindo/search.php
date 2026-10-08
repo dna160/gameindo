@@ -40,7 +40,7 @@ $gi_initial = 5;
       </form>
       <div class="gi-search-filters" id="gi-search-filters">
         <span class="gi-filter" data-pillar="" aria-current="true">Semua</span>
-        <?php foreach ( gameindo_pillars() as $gi_slug => $gi_name ) : ?>
+        <?php foreach ( gameindo_nav_pillars() as $gi_slug => $gi_name ) : ?>
         <span class="gi-filter" data-pillar="<?php echo esc_attr( $gi_slug ); ?>"><?php echo esc_html( $gi_name ); ?></span>
         <?php endforeach; ?>
         <span class="gi-search-count" id="gi-search-count"><?php echo esc_html( count( $gi_results ) ); ?> hasil</span>
