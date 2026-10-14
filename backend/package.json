@@ -1,0 +1,54 @@
+{
+  "name": "synthetic-newsroom-backend",
+  "version": "1.0.0",
+  "description": "Synthetic Newsroom POC - Backend",
+  "main": "src/server.ts",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc && cp -r src/agents/social_media/assets dist/agents/social_media/assets",
+    "start": "node dist/server.js",
+    "db:generate": "node scripts/with-root-env.js npx prisma generate",
+    "db:push": "node scripts/with-root-env.js npx prisma db push",
+    "db:studio": "node scripts/with-root-env.js npx prisma studio",
+    "pipeline:run": "tsx src/continuous-pipeline.ts",
+    "pipeline:trigger": "tsx src/continuous-pipeline.ts",
+    "social:test": "tsx src/agents/social_media/test-sandbox.ts",
+    "social:test:fast": "tsx src/agents/social_media/test-sandbox.ts --skip-vision",
+    "test:gate": "tsx src/agents/gaming-platform-gate.test.ts",
+    "test:scouts": "tsx src/agents/scout-agreement.test.ts",
+    "test:taxonomy": "tsx src/services/wp-taxonomy.test.ts",
+    "test:all": "npm run test:gate && npm run test:taxonomy"
+  },
+  "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "@prisma/client": "^5.10.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.3",
+    "ffmpeg-static": "^5.3.0",
+    "fluent-ffmpeg": "^2.1.3",
+    "marked": "^12.0.0",
+    "node-cron": "^3.0.3",
+    "rss-parser": "^3.13.0",
+    "sharp": "^0.33.3",
+    "synthetic-newsroom-poc": "file:.."
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/fluent-ffmpeg": "^2.1.24",
+    "@types/node": "^20.11.25",
+    "@types/node-cron": "^3.0.11",
+    "prisma": "^5.10.0",
+    "tsx": "^4.7.1",
+    "typescript": "^5.4.2"
+  },
+  "allowScripts": {
+    "@prisma/client@5.22.0": true,
+    "@prisma/engines@5.22.0": true,
+    "esbuild@0.27.4": true,
+    "ffmpeg-static@5.3.0": true,
+    "prisma@5.22.0": true,
+    "sharp@0.33.5": true
+  }
+}

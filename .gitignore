@@ -1,1 +1,36 @@
+# ── Secrets ───────────────────────────────────────────────────────────────────
+# `env` (no dot) is the hand-maintained config this deployment is driven from.
+# It holds the WordPress application password, the Serper key and the database
+# password. It was untracked but NOT ignored in this repo before, so a plain
+# `git add .` would have published those. Never commit it.
+env
+.env
+.env.*
+!.env.example
+
+# ── Dependencies & build output ───────────────────────────────────────────────
+node_modules/
+dist/
+build/
+backend/public/
+.next/
+out/
+
+# ── Runtime state (regenerated; not source) ───────────────────────────────────
+# feed-memory / topic-bank / underquota-memory are per-deployment caches.
+backend/data/
+ops/logs/
+ops/backup/
+backend/server.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ── Editors / OS ──────────────────────────────────────────────────────────────
 .DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+.claude/
+.gemini/
