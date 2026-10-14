@@ -25,7 +25,7 @@ $ErrorActionPreference = 'Stop'
 
 $TaskName  = 'GameIndo Newsroom'
 $PgService = 'postgresql-x64-16'
-$Root      = 'C:\Claude Home\gameindo-newsroom'
+$Root      = Split-Path -Parent $PSScriptRoot   # repo root = parent of ops/
 $BackupDir = Join-Path $Root 'ops\backup'
 
 # == Must be elevated ========================================================

@@ -15,9 +15,11 @@
 
 $ErrorActionPreference = 'Stop'
 
-$Runtime = 'C:\Claude Home\runtime'
+# Node/PostgreSQL client location. Override with GAMEINDO_RUNTIME when the
+# portable runtime lives elsewhere; otherwise fall back to PATH.
+$Runtime = if ($env:GAMEINDO_RUNTIME) { $env:GAMEINDO_RUNTIME } else { Join-Path (Join-Path $env:SystemDrive 'Claude Home') 'runtime' }
 $PgBin   = Join-Path $Runtime 'pgsql\bin'    # client tools only
-$Root    = 'C:\Claude Home\gameindo-newsroom'
+$Root    = Split-Path -Parent $PSScriptRoot   # repo root = parent of ops/
 
 $env:PGPASSWORD = 'postgres'
 

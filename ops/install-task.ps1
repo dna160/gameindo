@@ -11,7 +11,7 @@
 #>
 
 $TaskName = 'GameIndo Newsroom'
-$Script   = 'C:\Claude Home\gameindo-newsroom\ops\supervise.ps1'
+$Script   = Join-Path $PSScriptRoot 'supervise.ps1'
 
 $action = New-ScheduledTaskAction `
     -Execute 'powershell.exe' `

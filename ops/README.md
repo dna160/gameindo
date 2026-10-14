@@ -1,3 +1,28 @@
+# GameIndo newsroom — deployment
+
+Clone, configure, run:
+
+```
+git clone https://github.com/dna160/gameindo.git
+cd gameindo
+copy .env.example .env          # fill it in -- every key is read by the code
+powershell -ExecutionPolicy Bypass -File opssetup.ps1
+powershell -ExecutionPolicy Bypass -File opsinstall-task.ps1
+```
+
+`opssetup.ps1` installs dependencies, generates the Prisma client, pushes the
+schema, builds the dashboard into `backendpublic` and compiles the backend.
+Re-run it after a `git pull` to rebuild. `opsinstall-task.ps1` registers the
+always-on scheduled task.
+
+Paths are resolved from the scripts' own location (`$PSScriptRoot`), so the
+checkout works wherever it lands. The portable Node/PostgreSQL-client folder
+defaults to `%SystemDrive%Claude Homeuntime`; set `GAMEINDO_RUNTIME` to
+point elsewhere, or just have Node 22 on `PATH`.
+
+Not installed by setup: Node 22, PostgreSQL 16, and an OpenAI-compatible LLM
+server (LM Studio) with the model in `LLM_MODEL` available.
+
 # GameIndo newsroom — local always-on deployment
 
 A second instance of the popshck synthetic-newsroom app, configured for
